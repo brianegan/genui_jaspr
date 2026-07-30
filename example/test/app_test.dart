@@ -65,6 +65,54 @@ void main() {
       expect(response.document?.querySelector('.composer button'), isNotNull);
     });
 
+    testServer('lets Enter send the prompt', (tester) async {
+      tester.pumpComponent(
+        Document(
+          title: 'GenUI for Jaspr',
+          styles: appStyles,
+          body: const App(),
+        ),
+      );
+
+      final response = await tester.request('/');
+
+      // Enter submits because the composer is a real form with a submit button,
+      // which is the browser's implicit submission. A plain button would leave
+      // the keystroke doing nothing, and no click test would notice.
+      expect(response.document?.querySelector('.composer form'), isNotNull);
+      expect(
+        response.document
+            ?.querySelector('.composer button')
+            ?.attributes['type'],
+        'submit',
+      );
+    });
+
+    testServer('renders the anchor the conversation scrolls to', (
+      tester,
+    ) async {
+      tester.pumpComponent(
+        Document(
+          title: 'GenUI for Jaspr',
+          styles: appStyles,
+          body: const App(),
+        ),
+      );
+
+      final response = await tester.request('/');
+      final transcript = response.document?.querySelector('.transcript');
+
+      // Following the conversation scrolls this element into view, so it has to
+      // exist and has to be last. The scroll itself needs a browser; this only
+      // guards against the anchor being dropped or moved.
+      expect(transcript?.children.last.className, 'transcript__end');
+      expect(
+        response.body,
+        contains('scroll-margin-bottom'),
+        reason: 'the anchor must reserve room for the fixed composer',
+      );
+    });
+
     testServer('includes the catalog styles the surfaces need', (tester) async {
       tester.pumpComponent(
         Document(

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:genkit/genkit.dart';
 import 'package:genkit_google_genai/genkit_google_genai.dart';
 
@@ -5,7 +7,12 @@ import '../prompt.dart';
 import 'chat_route.dart';
 
 /// The model this example talks to.
-const modelName = 'gemini-flash-latest';
+///
+/// Override with `MODEL=<name>` to try another without editing this file. Any
+/// name the Gemini API accepts works: the plugin passes it straight through and
+/// does not check it against a list.
+final String modelName =
+    Platform.environment['MODEL'] ?? 'gemini-3.5-flash-lite';
 
 /// Builds a [ReplyStream] backed by Gemini through Genkit.
 ///

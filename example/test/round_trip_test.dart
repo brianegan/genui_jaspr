@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genkit/client.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr_example/interaction.dart';
 import 'package:genui_jaspr_example/server/chat_route.dart';
 import 'package:jaspr/server.dart';
 import 'package:jaspr_test/jaspr_test.dart';
@@ -29,6 +30,7 @@ void main() {
     late HttpServer server;
     late String url;
     final prompts = <String>[];
+    final interactions = <A2uiClientAction>[];
 
     setUpAll(() async {
       Jaspr.initializeApp(useIsolates: false);
@@ -112,6 +114,56 @@ void main() {
 
       expect(result.prose, "Here's a short form.");
       expect(result.html, isNot(contains('short form')));
+    });
+
+    test('an interaction with the generated UI becomes the next turn', () async {
+      // Turn one: the model builds a form.
+      final action = defineRemoteAction<String, String, String, void>(
+        url: url,
+        fromStreamChunk: (json) => json as String,
+        fromResponse: (json) => json as String,
+      );
+      final processor = MessageProcessor<JasprComponent>(
+        catalogs: [minimalJasprCatalog()],
+        onAction: (a) => interactions.add(a),
+      );
+      final adapter = A2uiTransportAdapter();
+      adapter.incomingMessages.listen(
+        (message) => processor.processMessages([message]),
+      );
+
+      await for (final chunk in action.stream(input: 'make me a form')) {
+        adapter.addChunk(chunk);
+      }
+      await adapter.flush();
+      adapter.dispose();
+
+      final surface = processor.groupModel.getSurface('s1')!;
+
+      // The user fills the field in. A bound input writes straight to the model,
+      // so this is what typing leaves behind.
+      surface.dataModel.set('/name', 'Ada');
+
+      // The user presses the button the model generated.
+      await surface.dispatchAction({
+        'event': {'name': 'submit'},
+      }, 'send');
+
+      expect(interactions, hasLength(1));
+
+      // Turn two: what the model is told about that interaction.
+      final prompt = describeInteraction(
+        interactions.single,
+        surface.dataModel.get('/'),
+      );
+      await for (final _ in action.stream(input: prompt)) {}
+
+      expect(prompts.last, contains('submit'));
+      expect(
+        prompts.last,
+        contains('Ada'),
+        reason: 'the model must be told what the user entered',
+      );
     });
   });
 }

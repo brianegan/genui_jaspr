@@ -53,7 +53,9 @@ List<StyleRule> get appStyles => [
       raw: {
         'max-width': '46rem',
         'margin': '0 auto',
-        'padding': '2rem 1rem 4rem',
+        // The bottom padding keeps the last turn clear of the pinned composer,
+        // which is out of flow and would otherwise cover it.
+        'padding': '2rem 1rem 8rem',
       },
     ),
   ),
@@ -66,6 +68,13 @@ List<StyleRule> get appStyles => [
     styles: const Styles(
       raw: {'display': 'flex', 'flex-direction': 'column', 'gap': '1rem'},
     ),
+  ),
+  // The anchor the conversation scrolls to. `scrollIntoView` would align it with
+  // the bottom of the viewport, which the composer covers, so this reserves the
+  // composer's height and the newest turn ends up above it rather than behind it.
+  StyleRule(
+    selector: const Selector('.transcript__end'),
+    styles: const Styles(raw: {'scroll-margin-bottom': '6rem'}),
   ),
   StyleRule(
     selector: const Selector('.turn'),
@@ -84,10 +93,35 @@ List<StyleRule> get appStyles => [
       raw: {'background': '#eef3fd', 'border-color': '#d3e2fd'},
     ),
   ),
+  // Pinned to the bottom of the viewport, so the prompt stays reachable however
+  // long the conversation gets.
   StyleRule(
     selector: const Selector('.composer'),
     styles: const Styles(
-      raw: {'display': 'flex', 'gap': '0.5rem', 'margin-top': '1.5rem'},
+      raw: {
+        'position': 'fixed',
+        'left': '0',
+        'right': '0',
+        'bottom': '0',
+        'padding': '1rem',
+        'background': '#fbfbfb',
+        'border-top': '1px solid #e3e3e3',
+        // Above a generated surface, which can be tall.
+        'z-index': '10',
+      },
+    ),
+  ),
+  // Kept to the same column as the page content, since the bar itself spans the
+  // full width.
+  StyleRule(
+    selector: const Selector('.composer__inner'),
+    styles: const Styles(
+      raw: {
+        'display': 'flex',
+        'gap': '0.5rem',
+        'max-width': '46rem',
+        'margin': '0 auto',
+      },
     ),
   ),
   StyleRule(

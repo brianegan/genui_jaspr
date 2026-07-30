@@ -3,6 +3,9 @@ import 'package:genkit/client.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
+import 'package:universal_web/web.dart' as web;
+
+import 'interaction.dart';
 
 /// One entry in the transcript.
 class Turn {
@@ -50,6 +53,14 @@ class _ChatState extends State<Chat> {
   /// Surfaces are numbered so each reply renders into its own.
   int _replies = 0;
 
+  /// An empty element after the last turn, scrolled into view to follow the
+  /// conversation.
+  ///
+  /// Scrolling to an anchor rather than to a computed offset means the browser
+  /// works out the distance, which matters here because a generated surface's
+  /// height is not known until it has been laid out.
+  final _end = GlobalNodeKey<web.Element>();
+
   @override
   void initState() {
     super.initState();
@@ -66,16 +77,10 @@ class _ChatState extends State<Chat> {
   void _onSurfaceAction(A2uiClientAction action) {
     final SurfaceModel<JasprComponent>? surface = _processor.groupModel
         .getSurface(action.surfaceId);
-    final Object? data = surface?.dataModel.get('/');
-
-    final description = StringBuffer('The user triggered "${action.name}".');
-    if (action.context.isNotEmpty) {
-      description.write(' Context: ${action.context}.');
-    }
-    if (data is Map && data.isNotEmpty) {
-      description.write(' They had entered: $data.');
-    }
-    _send(description.toString(), show: 'Submitted "${action.name}"');
+    _send(
+      describeInteraction(action, surface?.dataModel.get('/')),
+      show: summariseInteraction(action),
+    );
   }
 
   Future<void> _sendDraft() async {
@@ -102,7 +107,7 @@ class _ChatState extends State<Chat> {
     // so a model that reuses an id cannot overwrite an earlier answer.
     adapter.incomingMessages.listen((message) {
       try {
-        _processor.processMessages([_retarget(message, surfaceId)]);
+        _processor.processMessages([retargetSurface(message, surfaceId)]);
       } catch (error) {
         setState(() => _error = '$error');
       }
@@ -121,40 +126,48 @@ class _ChatState extends State<Chat> {
       setState(() => _error = '$error');
     } finally {
       adapter.dispose();
+      final SurfaceModel<JasprComponent>? surface = _processor.groupModel
+          .getSurface(surfaceId);
+      final String text = prose.toString().trim();
       setState(() {
         _busy = false;
-        _turns.add(
-          Turn.model(
-            prose.toString().trim(),
-            _processor.groupModel.getSurface(surfaceId),
-          ),
-        );
+        // A turn with neither words nor a surface would render as an empty
+        // bubble, which is what a failed request used to leave behind.
+        if (text.isNotEmpty || surface != null) {
+          _turns.add(Turn.model(text, surface));
+        }
       });
     }
   }
 
-  /// Rewrites a message to target this reply's surface.
-  A2uiMessage _retarget(A2uiMessage message, String surfaceId) {
-    final Map<String, dynamic> json = message.toJson();
-    for (final Object? body in json.values) {
-      if (body is Map<String, dynamic> && body.containsKey('surfaceId')) {
-        body['surfaceId'] = surfaceId;
-      }
-    }
-    return A2uiMessage.fromJson(json);
+  /// Follows the conversation after the next frame is laid out.
+  ///
+  /// Reading the DOM before then would measure the previous content. The key
+  /// yields null when there is no browser, so this is inert during server
+  /// rendering.
+  void _followConversation(BuildContext context) {
+    context.binding.addPostFrameCallback(() {
+      _end.currentNode?.scrollIntoView(
+        web.ScrollIntoViewOptions(behavior: 'smooth', block: 'end'),
+      );
+    });
   }
 
   @override
   Component build(BuildContext context) {
+    _followConversation(context);
     return div([
-      div([for (final turn in _turns) _turnView(turn)], classes: 'transcript'),
-      if (_busy) p([Component.text('Thinking...')], classes: 'status'),
-      if (_error != null)
-        p(
-          [Component.text(_error!)],
-          classes: 'error',
-          attributes: const {'role': 'alert'},
-        ),
+      div([
+        for (final turn in _turns) _turnView(turn),
+        if (_busy) p([Component.text('Thinking...')], classes: 'status'),
+        if (_error != null)
+          p(
+            [Component.text(_error!)],
+            classes: 'error',
+            attributes: const {'role': 'alert'},
+          ),
+        div([], key: _end, classes: 'transcript__end'),
+      ], classes: 'transcript'),
       _composer(),
     ], classes: 'chat');
   }
@@ -166,23 +179,40 @@ class _ChatState extends State<Chat> {
     ], classes: turn.fromUser ? 'turn turn--user' : 'turn turn--model');
   }
 
+  /// The prompt bar, pinned to the bottom of the viewport.
+  ///
+  /// It is a real form with a submit button, which is what makes Enter send the
+  /// prompt. The browser's implicit submission handles the keystroke, so there is
+  /// no key handling here, and clicking the button takes the same path.
   Component _composer() {
     return div([
-      input<String>(
-        type: InputType.text,
-        value: _draft,
-        disabled: _busy,
-        attributes: const {
-          'placeholder': 'Ask for a form, a quiz, a checklist',
+      form(
+        [
+          input<String>(
+            type: InputType.text,
+            value: _draft,
+            disabled: _busy,
+            attributes: const {
+              'placeholder': 'Ask for a form, a quiz, a checklist',
+              'autocomplete': 'off',
+            },
+            onInput: (value) => _draft = value,
+            onChange: (value) => _draft = value,
+          ),
+          button(
+            [Component.text('Send')],
+            type: ButtonType.submit,
+            disabled: _busy,
+          ),
+        ],
+        classes: 'composer__inner',
+        events: {
+          'submit': (event) {
+            // Without this the browser navigates and the page reloads.
+            event.preventDefault();
+            _sendDraft();
+          },
         },
-        onInput: (value) => _draft = value,
-        onChange: (value) => _draft = value,
-      ),
-      button(
-        [Component.text('Send')],
-        type: ButtonType.button,
-        disabled: _busy,
-        onClick: _sendDraft,
       ),
     ], classes: 'composer');
   }

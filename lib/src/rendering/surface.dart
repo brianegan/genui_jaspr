@@ -117,6 +117,7 @@ class _A2uiComponentState extends State<A2uiComponent> {
   void initState() {
     super.initState();
     _bind();
+    _watchForReplacement(component.surface);
   }
 
   @override
@@ -125,9 +126,45 @@ class _A2uiComponentState extends State<A2uiComponent> {
     if (oldComponent.componentId != component.componentId ||
         oldComponent.basePath != component.basePath ||
         oldComponent.surface != component.surface) {
+      if (oldComponent.surface != component.surface) {
+        _stopWatching(oldComponent.surface);
+        _watchForReplacement(component.surface);
+      }
       _unbind();
       _bind();
     }
+  }
+
+  void _watchForReplacement(SurfaceModel<JasprComponent> surface) {
+    surface.componentsModel.onCreated.addListener(_onComponentCreated);
+    surface.componentsModel.onDeleted.addListener(_onComponentDeleted);
+  }
+
+  void _stopWatching(SurfaceModel<JasprComponent> surface) {
+    surface.componentsModel.onCreated.removeListener(_onComponentCreated);
+    surface.componentsModel.onDeleted.removeListener(_onComponentDeleted);
+  }
+
+  /// Re-binds when this component's model is replaced rather than edited.
+  ///
+  /// Changing a component's type is applied by removing it and adding a fresh
+  /// model under the same id. The id did not change, so nothing else here would
+  /// notice, and this would keep rendering the previous type against a model that
+  /// is no longer in the surface.
+  void _onComponentCreated(ComponentModel model) {
+    if (model.id != component.componentId || model == _model) return;
+    if (!mounted) return;
+    setState(() {
+      _unbind();
+      _bind();
+    });
+  }
+
+  void _onComponentDeleted(String id) {
+    if (id != component.componentId || !mounted) return;
+    // Only drop the binding. A replacement usually follows in the same message,
+    // and the create handler picks it up.
+    setState(_unbind);
   }
 
   void _bind() {
@@ -157,6 +194,7 @@ class _A2uiComponentState extends State<A2uiComponent> {
 
   @override
   void dispose() {
+    _stopWatching(component.surface);
     _unbind();
     super.dispose();
   }
