@@ -52,3 +52,8 @@ gate:
       model: fable
     - name: test
       run: dart test
+    # The example is a separate workspace member, so a root `dart test` does not
+    # reach it. Without this the gate would not cover the server route or the
+    # HTTP round trip.
+    - name: example-test
+      run: cd example && dart test
