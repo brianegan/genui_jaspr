@@ -41,7 +41,7 @@ writing_style: humanizer
 
 # The quality gate `sapa gate` runs. `steps:` is a list run in order; a step
 # either invokes a skill or runs a shell command. Replace this example with your
-# project's own checks.
+# project's own checks.1
 gate:
   # How many fixes `/sapa-gate` applies and re-runs for one failing gate before
   # it stops and hands the stream back. 0 never autofixes. Default: 3.
@@ -49,5 +49,6 @@ gate:
   steps:
     - name: review
       skill: code-review
+      model: fable
     - name: test
       run: dart test
