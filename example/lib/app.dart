@@ -7,8 +7,8 @@ import 'chat.dart';
 /// The server-rendered page.
 ///
 /// The heading and layout arrive as HTML on first paint. The conversation itself
-/// is a client island, because a generated surface only exists after the model has
-/// answered.
+/// is a `@client` component, because a generated surface only exists after the
+/// model has answered.
 class App extends StatelessComponent {
   const App({super.key});
 

@@ -26,7 +26,7 @@ void main() {
       expect(response.document?.querySelector('h1')?.text, 'GenUI for Jaspr');
     });
 
-    testServer('mounts the chat island for the browser to take over', (
+    testServer('mounts the chat component for the browser to take over', (
       tester,
     ) async {
       tester.pumpComponent(
@@ -40,8 +40,8 @@ void main() {
       final response = await tester.request('/');
       final String body = response.body;
 
-      // Jaspr brackets the island in comments so the client knows what to
-      // hydrate. Without them the page renders once and never responds to
+      // Jaspr brackets the @client component in comments so the client knows
+      // what to hydrate. Without them the page renders once and never responds to
       // anything, which looks fine in a screenshot and is broken in a browser.
       expect(body, contains('<!--@chat-->'));
       expect(body, contains('<!--/@chat-->'));

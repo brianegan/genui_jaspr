@@ -111,14 +111,14 @@ static stylesheet reacts to a colour the model picked at runtime.
 The renderer imports no `dart:html` or `dart:js_interop`, so it compiles on the
 server. A generated surface still cannot be server-rendered in any useful way,
 because it only exists once the model has answered something the user did. Render
-the shell on the server and let a client island own the conversation, which is
-what the example does.
+the shell on the server and let a `@client` component own the conversation, which
+is what the example does.
 
 ## Running the example
 
 The example is a Jaspr app with a server-rendered shell, the chat as a `@client`
-island, and the model call behind a server route so the API key never reaches the
-browser. It talks to Gemini through [Genkit](https://pub.dev/packages/genkit).
+component, and the model call behind a server route so the API key never reaches
+the browser. It talks to Gemini through [Genkit](https://pub.dev/packages/genkit).
 
 ```sh
 dart pub global activate jaspr_cli

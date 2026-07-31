@@ -15,4 +15,4 @@ First release. Renders A2UI generative user interfaces in Jaspr, building on
   surface publishes its theme as CSS custom properties.
 - `SignalBuilder` bridges `preact_signals` to Jaspr rebuilds.
 - The example app serves a server-rendered shell with the conversation as a
-  `@client` island, and calls Gemini through Genkit from a server route.
+  `@client` component, and calls Gemini through Genkit from a server route.

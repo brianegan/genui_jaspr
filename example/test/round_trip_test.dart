@@ -55,7 +55,7 @@ void main() {
 
     tearDownAll(() => server.close(force: true));
 
-    /// Runs one turn the way the browser island does.
+    /// Runs one turn the way the browser's @client component does.
     Future<({String html, String prose})> turn(String prompt) async {
       final action = defineRemoteAction<String, String, String, void>(
         url: url,

@@ -16,15 +16,16 @@ dependencies:
   genui_jaspr: ^0.1.0
   jaspr: ^0.23.2
   shelf: ^1.4.0
-  # Used by the chat island to scroll the conversation. Safe on the server too:
+  # Used by the chat component to scroll the conversation. Safe on the server
+  # too:
   # it is the same package Jaspr's own event types come from.
   universal_web: ^1.1.1
 
 dev_dependencies:
   build_runner: ^2.4.0
   # Compiles the generated client entrypoint to the JavaScript the page loads.
-  # Without it there is no main.client.dart.js, so the island never hydrates and
-  # the page renders once and then ignores every click.
+  # Without it there is no main.client.dart.js, so the @client component never
+  # hydrates and the page renders once and then ignores every click.
   build_web_compilers: ^4.8.0
   jaspr_builder: ^0.23.2
   jaspr_test: ^0.23.2
