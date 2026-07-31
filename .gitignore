@@ -8,3 +8,6 @@ pubspec.lock
 
 # jaspr build output
 example/build/
+
+# Coverage output from `dart test --coverage` and `very_good dart test`
+coverage/

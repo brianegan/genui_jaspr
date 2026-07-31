@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:test/test.dart';
@@ -151,6 +153,120 @@ void main() {
         expect(textsOf(events), isNotEmpty);
       },
     );
+
+    test('emits unparseable unfenced content as text', () async {
+      // Balanced braces, so the parser takes it for a bare message and only
+      // finds out it is not JSON once it tries to decode it.
+      final events = await parse(['{not json, just braces}']);
+
+      expect(messagesOf(events), isEmpty);
+      expect(textsOf(events), ['{not json, just braces}']);
+    });
+
+    test(
+      'emits a half-finished message as text when the stream ends',
+      () async {
+        // The model stopped mid-object. Holding the buffer back forever would
+        // swallow whatever it did manage to write.
+        final events = await parse([
+          'Here you go: ',
+          '{"version":"v0.9","createSurface"',
+        ]);
+
+        expect(messagesOf(events), isEmpty);
+        expect(textsOf(events), [
+          'Here you go:',
+          '{"version":"v0.9","createSurface"',
+        ]);
+      },
+    );
+
+    test('parses every message in a JSON array', () async {
+      final events = await parse([
+        '```json\n[$createSurfaceJson,'
+            '{"version":"v0.9","deleteSurface":{"surfaceId":"main"}}]\n```',
+      ]);
+
+      final messages = messagesOf(events);
+      expect(messages, hasLength(2));
+      expect(messages.first, isA<CreateSurfaceMessage>());
+      expect(messages.last, isA<DeleteSurfaceMessage>());
+    });
+
+    test('skips array entries that are not objects', () async {
+      final events = await parse([
+        '```json\n[$createSurfaceJson, 42, null]\n```',
+      ]);
+
+      expect(messagesOf(events), hasLength(1));
+    });
+
+    test('reports the version it was given when the version is wrong', () async {
+      final stream = Stream.fromIterable([
+        '```json\n{"version":"v0.8",'
+            '"deleteSurface":{"surfaceId":"main"}}\n```',
+      ]).transform(const A2uiParserTransformer());
+
+      // The underlying message names the version it actually saw. Replacing it
+      // with the generic "must have a version field" text would hide that.
+      await expectLater(
+        stream,
+        emitsError(
+          isA<A2uiValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains("got 'v0.8'"),
+          ),
+        ),
+      );
+    });
+
+    test('pauses and resumes the source while the output is paused', () async {
+      final input = StreamController<String>();
+      final events = <GenerationEvent>[];
+      final subscription = input.stream
+          .transform(const A2uiParserTransformer())
+          .listen(events.add);
+
+      input.add('Thinking. ');
+      await Future<void>.delayed(Duration.zero);
+      expect(events, hasLength(1));
+
+      subscription.pause();
+      input.add('```json\n$createSurfaceJson\n```');
+      await Future<void>.delayed(Duration.zero);
+      expect(events, hasLength(1), reason: 'paused output must not be fed');
+
+      subscription.resume();
+      await Future<void>.delayed(Duration.zero);
+      expect(events.whereType<A2uiMessageEvent>(), hasLength(1));
+
+      await input.close();
+      await subscription.cancel();
+    });
+  });
+
+  group('A2uiValidationException', () {
+    test('prints only its message when there is nothing underneath', () {
+      final error = A2uiValidationException('Bad message');
+
+      expect(error.toString(), 'A2uiValidationException: Bad message');
+    });
+
+    test('prints the cause and the payload when it has them', () {
+      final error = A2uiValidationException(
+        'Bad message',
+        json: {'version': 'v0.8'},
+        cause: 'the underlying complaint',
+      );
+
+      expect(
+        error.toString(),
+        'A2uiValidationException: Bad message\n'
+        'Cause: the underlying complaint\n'
+        'JSON: {version: v0.8}',
+      );
+    });
   });
 
   group('A2uiTransportAdapter', () {

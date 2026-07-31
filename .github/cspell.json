@@ -1,0 +1,25 @@
+{
+  "version": "0.2",
+  "language": "en,en-GB",
+  "globRoot": "..",
+  "ignorePaths": [
+    ".dart_tool/**",
+    ".git/**",
+    "build/**",
+    "coverage/**",
+    "example/build/**",
+    "pubspec.lock",
+    "**/*.g.dart",
+    "**/*.options.dart"
+  ],
+  "words": [
+    "flexbox",
+    "genai",
+    "Genkit",
+    "genui",
+    "Jaspr",
+    "lede",
+    "preact",
+    "unparseable"
+  ]
+}
