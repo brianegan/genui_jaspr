@@ -9,12 +9,12 @@ import '../support/test_catalog.dart';
 
 /// A surface and the processor still driving it, so a test can keep pushing
 /// messages in after the tree is mounted.
-typedef _Stream = ({
+typedef _LiveSurface = ({
   MessageProcessor<JasprComponent> processor,
   SurfaceModel<JasprComponent> surface,
 });
 
-_Stream _emptySurface() {
+_LiveSurface _emptySurface() {
   final processor = MessageProcessor<JasprComponent>(
     catalogs: [buildTestCatalog()],
   );
@@ -34,8 +34,8 @@ _Stream _emptySurface() {
   );
 }
 
-void _send(_Stream stream, List<Map<String, dynamic>> components) {
-  stream.processor.processMessages([
+void _send(_LiveSurface surface, List<Map<String, dynamic>> components) {
+  surface.processor.processMessages([
     A2uiMessage.fromJson({
       'version': 'v0.9',
       'updateComponents': {'surfaceId': 'main', 'components': components},

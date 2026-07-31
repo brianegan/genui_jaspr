@@ -9,5 +9,8 @@ pubspec.lock
 # jaspr build output
 example/build/
 
+# Test-run build artifacts (unit_test_assets, native_assets)
+build/
+
 # Coverage output from `dart test --coverage` and `very_good dart test`
 coverage/

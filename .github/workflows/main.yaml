@@ -21,6 +21,10 @@ jobs:
       # There is no bloc in this package, so the default lint pass would only
       # activate bloc_tools for nothing.
       run_bloc_lint: false
+      # `test_optimization` is deliberately left on. The generated entrypoint
+      # only chokes on `test/browser` when the run has no `--platform vm`, and
+      # `platform` defaults to vm here, so all 84 tests compile and pass under
+      # the optimizer. Drop the optimization only if that default ever changes.
 
   # The hops a VM test cannot reach: a real keystroke in a real input element
   # writing to the data model, and a real click on a generated button.
