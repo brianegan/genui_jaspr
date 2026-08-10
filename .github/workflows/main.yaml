@@ -10,9 +10,9 @@ jobs:
   # Formatting, analysis, and the VM suite for the published library. Coverage is
   # held at 100%: everything `lib/` exposes is reachable from a VM test.
   #
-  # `example/` is a workspace member and is deliberately not checked here. Its
-  # `chat.dart` is an `@client` component that no VM test can enter, so its bar
-  # and its browser coverage are decided separately.
+  # `example/` is a workspace member with its own bar, checked by verify-example
+  # below: its `chat.dart` is an `@client` component that no VM test can enter,
+  # so its 100% needs VM and browser coverage merged.
   verify-dart:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/dart_package.yml@v1
     with:
@@ -51,15 +51,47 @@ jobs:
       - name: 🧪 Run Browser Tests
         run: dart test -p chrome test/browser
 
-  # 140 is the score this package gets today. The 20 missing points are a missing
-  # LICENSE and pana not recognising `example/` as an example, both tracked
-  # separately. The version is pinned so a pana release cannot move the bar on
-  # its own.
+  # The example package, at the same bar as the library. This is hand-written
+  # rather than a `dart_package.yml` job with `working_directory: example`
+  # because the reusable workflow runs one `very_good dart test` and cannot
+  # merge a browser coverage report into the VM one, which is the only way
+  # `chat.dart` gets counted. tool/coverage.sh holds the merged bar at 100%,
+  # and the local gate runs the same script.
+  verify-example:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: example
+
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v6
+
+      - name: 🎯 Setup Dart
+        uses: dart-lang/setup-dart@v1.7.2
+        with:
+          sdk: stable
+
+      - name: 📦 Install Dependencies
+        run: dart pub get
+
+      - name: ✨ Check Formatting
+        run: dart format --set-exit-if-changed lib test tool
+
+      - name: 🕵️ Analyze
+        run: dart analyze --fatal-infos lib test tool
+
+      - name: 🧪 Test With Merged Coverage
+        run: ./tool/coverage.sh
+
+  # The full score: the LICENSE and the example README closed the last two gaps.
+  # The version is pinned so a pana release cannot move the bar on its own.
   verify-pana:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/pana.yml@v1
     with:
       pana_version: 0.23.15
-      min_score: 140
+      min_score: 160
 
   # PR titles become squash-merge commit titles, so they are the changelog.
   verify-semantic-pull-request:

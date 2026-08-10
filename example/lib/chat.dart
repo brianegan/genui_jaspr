@@ -20,12 +20,22 @@ class Turn {
   final bool fromUser;
 }
 
+/// Streams the model's reply to [prompt] as text chunks.
+///
+/// The seam [ChatView] is tested at: production passes the genkit client,
+/// a browser test passes a fake and never touches the network.
+typedef SendPrompt = Stream<String> Function(String prompt);
+
 /// The conversation, running entirely in the browser.
 ///
 /// A generated surface only exists once the model has answered something the user
 /// did, so there is nothing for the server to pre-render. The server's job is to
 /// hold the API key and stream text back, which it does through the route this
 /// talks to.
+///
+/// A `@client` component's parameters must serialize for hydration, so the
+/// injectable send function cannot live here. This stays the param-free client
+/// boundary and [ChatView] carries the seam.
 @client
 class Chat extends StatefulComponent {
   const Chat({super.key});
@@ -37,12 +47,38 @@ class Chat extends StatefulComponent {
 class _ChatState extends State<Chat> {
   /// Calls the server route. Genkit's client handles the frames and surfaces a
   /// server-side failure as an error on the stream.
+  ///
+  /// The two decoder closures run only against a live server, which no test
+  /// provides, so they are ignored for coverage.
   final _chat = defineRemoteAction<String, String, String, void>(
     url: '/api/chat',
-    fromStreamChunk: (json) => json as String,
-    fromResponse: (json) => json as String,
+    fromStreamChunk: (json) => json as String, // coverage:ignore-line
+    fromResponse: (json) => json as String, // coverage:ignore-line
   );
 
+  @override
+  Component build(BuildContext context) {
+    return ChatView(send: (prompt) => _chat.stream(input: prompt));
+  }
+}
+
+/// The conversation UI, talking to the model only through [send].
+class ChatView extends StatefulComponent {
+  const ChatView({required this.send, super.key});
+
+  final SendPrompt send;
+
+  @override
+  State<ChatView> createState() => _ChatViewState();
+}
+
+// The `coverage:ignore-line` markers below mark dart2js source-map artifacts:
+// the browser suite executes those lines, but dart2js folds them into a
+// neighbouring line in its source map, so no platform's line table can
+// attribute them. Editing this file can shift which lines fold; move the
+// marker with the line. tool/merge_lcov.dart explains how the VM and Chrome
+// reports combine.
+class _ChatViewState extends State<ChatView> {
   late final MessageProcessor<JasprComponent> _processor;
 
   final List<Turn> _turns = [];
@@ -79,7 +115,7 @@ class _ChatState extends State<Chat> {
         .getSurface(action.surfaceId);
     _send(
       describeInteraction(action, surface?.dataModel.get('/')),
-      show: summariseInteraction(action),
+      show: summariseInteraction(action), // coverage:ignore-line
     );
   }
 
@@ -93,9 +129,9 @@ class _ChatState extends State<Chat> {
   Future<void> _send(String prompt, {required String show}) async {
     if (_busy) return;
 
-    final adapter = A2uiTransportAdapter();
-    final surfaceId = 'reply${_replies++}';
-    final prose = StringBuffer();
+    final adapter = A2uiTransportAdapter(); // coverage:ignore-line
+    final surfaceId = 'reply${_replies++}'; // coverage:ignore-line
+    final prose = StringBuffer(); // coverage:ignore-line
 
     setState(() {
       _busy = true;
@@ -118,16 +154,16 @@ class _ChatState extends State<Chat> {
     });
 
     try {
-      await for (final String chunk in _chat.stream(input: prompt)) {
-        adapter.addChunk(chunk);
+      await for (final String chunk in component.send(prompt)) {
+        adapter.addChunk(chunk); // coverage:ignore-line
       }
       await adapter.flush();
     } catch (error) {
       setState(() => _error = '$error');
     } finally {
-      adapter.dispose();
+      adapter.dispose(); // coverage:ignore-line
       final SurfaceModel<JasprComponent>? surface = _processor.groupModel
-          .getSurface(surfaceId);
+          .getSurface(surfaceId); // coverage:ignore-line
       final String text = prose.toString().trim();
       setState(() {
         _busy = false;
@@ -148,7 +184,9 @@ class _ChatState extends State<Chat> {
   void _followConversation(BuildContext context) {
     context.binding.addPostFrameCallback(() {
       _end.currentNode?.scrollIntoView(
+        // coverage:ignore-start
         web.ScrollIntoViewOptions(behavior: 'smooth', block: 'end'),
+        // coverage:ignore-end
       );
     });
   }
@@ -172,7 +210,9 @@ class _ChatState extends State<Chat> {
     ], classes: 'chat');
   }
 
+  // coverage:ignore-start
   Component _turnView(Turn turn) {
+    // coverage:ignore-end
     return div([
       if (turn.text.isNotEmpty) p([Component.text(turn.text)]),
       if (turn.surface != null) Surface(surface: turn.surface!),

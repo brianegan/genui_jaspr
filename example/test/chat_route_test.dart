@@ -75,6 +75,34 @@ void main() {
       expect(frames.single, contains('model unavailable'));
     });
 
+    test('reads the prompt out of a map payload', () async {
+      final seen = <String>[];
+      final handler = chatRoute((prompt) {
+        seen.add(prompt);
+        return const Stream<String>.empty();
+      });
+
+      await post(handler, {
+        'data': {'prompt': 'plan me a trip'},
+      });
+
+      expect(seen, ['plan me a trip']);
+    });
+
+    test('rejects a body that is not JSON', () async {
+      final handler = chatRoute((prompt) => const Stream<String>.empty());
+
+      final response = await handler(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/chat'),
+          body: 'not json',
+        ),
+      );
+
+      expect(response.statusCode, 400);
+    });
+
     test('rejects a request with no prompt', () async {
       final handler = chatRoute((prompt) => const Stream<String>.empty());
 

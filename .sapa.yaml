@@ -53,10 +53,12 @@ gate:
     - name: test
       run: dart test
     # The example is a separate workspace member, so a root `dart test` does not
-    # reach it. Without this the gate would not cover the server route or the
-    # HTTP round trip.
+    # reach it. Its script runs the VM suite, the browser suite for `chat.dart`,
+    # and merges the two coverage reports to hold 100% — the same command CI's
+    # verify-example job runs, so the gate and CI share one definition of the
+    # bar. Needs Chrome.
     - name: example-test
-      run: cd example && dart test
+      run: cd example && ./tool/coverage.sh
     # Browser-only tests, marked `@TestOn('browser')` so the runs above skip
     # them. They cover the hops a VM test cannot reach: a real keystroke in a
     # real input element writing to the data model, and a real click on a
