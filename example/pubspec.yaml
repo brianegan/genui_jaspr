@@ -27,6 +27,7 @@ dev_dependencies:
   # Without it there is no main.client.dart.js, so the @client component never
   # hydrates and the page renders once and then ignores every click.
   build_web_compilers: ^4.8.0
+  coverage: ^1.15.1
   jaspr_builder: ^0.23.2
   jaspr_test: ^0.23.2
   lints: ^6.0.0
