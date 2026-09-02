@@ -2,8 +2,8 @@
 
 A model replies with [A2UI](https://a2ui.org) messages instead of plain text, and
 your web app renders them as real HTML. Headings become real headings, inputs
-become real inputs, and the browser's own keyboard handling and validation work
-out of the box. You don't need to ship Flutter web.
+become real inputs. The browser's own keyboard handling and validation work out
+of the box. You don't need to ship Flutter web.
 
 This is the [Jaspr](https://jaspr.site) counterpart to Flutter's
 [`genui`](https://github.com/flutter/genui/tree/main/packages/genui).
@@ -24,10 +24,8 @@ restating them, which is worth keeping if you adapt it.
 
 Right now it renders the five components from the A2UI minimal catalog: `Text`,
 `Row`, `Column`, `Button`, and `TextField`. Their schemas come from `a2ui_core`
-unchanged, and the catalog keeps that catalog's own id, so what a model is told
-it may send and what this renders cannot drift apart. If the model sends a
-component the catalog doesn't know about, you get a visible placeholder instead
-of an exception, so one unknown component won't take down the rest of the surface.
+unchanged, so what a model is told it may send and what this renders cannot drift
+apart.
 
 ## Getting started
 
@@ -101,8 +99,8 @@ what the example does.
 
 ## Running the example
 
-The example is a Jaspr app. The page shell renders on the server, the chat runs
-in the browser as a `@client` component, and the model call sits behind a server
+The example is a Jaspr app. The page shell renders on the server and the chat
+runs in the browser as a `@client` component. The model call sits behind a server
 route so the API key never reaches the browser. It talks to Gemini through
 [Genkit](https://pub.dev/packages/genkit).
 
