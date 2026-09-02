@@ -1,61 +1,37 @@
 # genui_jaspr
 
-Render A2UI generative user interfaces in [Jaspr](https://jaspr.site), so a web
-app can offer a generative UI without shipping Flutter web.
+A model replies with [A2UI](https://a2ui.org) messages instead of plain text, and
+your web app renders them as real HTML. Headings are headings, inputs are inputs,
+and the browser handles keyboards, validation, and focus. No Flutter web required.
 
-A model replies with [A2UI](https://a2ui.org) messages instead of prose, and this
-package turns them into real HTML: headings are headings, inputs are inputs, and
-the browser supplies its own keyboards, validation, and focus handling.
+This is the [Jaspr](https://jaspr.site) counterpart to Flutter's
+[`genui`](https://github.com/flutter/genui/tree/main/packages/genui). Same
+protocol, different render target.
 
-This is the Jaspr counterpart to Flutter's
-[`genui`](https://github.com/flutter/genui/tree/main/packages/genui). It renders
-the same protocol to a different target.
+## What it gives you
 
-## How it fits together
+The protocol runtime lives in
+[`a2ui_core`](https://pub.dev/packages/a2ui_core), which is pure Dart and handles
+the message model, data model, expression evaluation, and property binding. This
+package adds the Jaspr-specific parts: a surface renderer, a catalog of components
+that emit HTML, a transport adapter that turns a model's text stream into A2UI
+messages, and a default stylesheet you can use or replace.
 
-The protocol runtime is not reimplemented here. It lives in
-[`a2ui_core`](https://pub.dev/packages/a2ui_core), which is pure Dart and owns the
-message model, the data model, expression evaluation, and the binder that resolves
-a component's properties into concrete values. This package adds the parts that
-have to know about Jaspr:
+Right now it renders the five components from the A2UI minimal catalog: `Text`,
+`Row`, `Column`, `Button`, and `TextField`. If the model sends a component the
+catalog doesn't know about, you get a visible placeholder instead of an exception,
+so one unknown component won't take down the rest of the surface.
 
-| | |
-|---|---|
-| `Surface` | renders a surface, and keeps rendering as messages arrive |
-| `minimalJasprCatalog()` | the components a model may use, and how each becomes HTML |
-| `A2uiTransportAdapter` | turns a model's text stream into A2UI messages |
-| `genuiJasprStyles` | a default appearance you can use, extend, or replace |
-| `SignalBuilder` | rebuilds a component when the data it reads changes |
+## Getting started
 
-## Components
+Add the dependency:
 
-This release renders the five components of the A2UI **minimal catalog**:
-`Text`, `Row`, `Column`, `Button`, and `TextField`.
+```yaml
+dependencies:
+  genui_jaspr: ^0.1.0
+```
 
-Their schemas come from `a2ui_core` unchanged, and the catalog keeps that
-catalog's own id, so what a model is told it may send and what this renders cannot
-drift apart.
-
-`Text` becomes `h1` through `h5`, `small`, or `p` depending on its variant.
-`Row` and `Column` become flex containers. `Button` dispatches an action and
-disables itself while its `checks` fail. `TextField` becomes an `input` or
-`textarea`, picks an input type from its variant, and writes what the user types
-back to the data model so the next request carries it.
-
-A component the catalog does not implement renders a visible placeholder rather
-than throwing, so one unknown component does not take down the surface around it.
-
-### Not included yet
-
-Flutter's `genui` ships a larger basic catalog. `Card`, `Divider`, `List`,
-`Image`, `Icon`, `Modal`, `Tabs`, `Slider`, `DateTimeInput`, `ChoicePicker`,
-`AudioPlayer`, and `Video` are not here. Most are inexpensive in HTML, so the gap
-is scope rather than difficulty.
-
-There is also no prompt builder. The system prompt that teaches a model this
-protocol lives in the app, and `example/lib/prompt.dart` is a working one you can
-copy. It generates the component schemas from the catalog rather than restating
-them, which is worth keeping if you adapt it.
+Then `dart pub get`.
 
 ## Usage
 
@@ -85,7 +61,7 @@ await adapter.flush();
 Surface(surface: processor.groupModel.getSurface('main')!);
 ```
 
-Add `genuiJasprStyles` to your app's styles for a usable default appearance:
+Add `genuiJasprStyles` to your app's styles for a default appearance:
 
 ```dart
 runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
@@ -94,31 +70,32 @@ runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
 ### Styling
 
 Components emit stable class names, all prefixed `a2ui-`. Two kinds of styling
-are deliberately kept apart:
+are kept apart on purpose:
 
-- Layout the model chose per component, such as `justify` and `align`, is written
-  inline, because it varies per instance and cannot live in a stylesheet.
-- Appearance goes through class names, so `genuiJasprStyles` can be replaced
+- Layout the model chose per component (like `justify` and `align`) is written
+  inline, because it varies per instance and can't live in a stylesheet.
+- Appearance goes through class names, so you can replace `genuiJasprStyles`
   wholesale without touching the renderer.
 
-A surface publishes the theme from its `createSurface` message as CSS custom
-properties on its root element, kebab-cased and `--a2ui-` prefixed. So
-`{"primaryColor": "#0b57d0"}` arrives as `--a2ui-primary-color`, which is how a
-static stylesheet reacts to a colour the model picked at runtime.
+A surface also publishes the theme from its `createSurface` message as CSS custom
+properties on the root element, kebab-cased and `--a2ui-` prefixed. So
+`{"primaryColor": "#0b57d0"}` arrives as `--a2ui-primary-color`, and that's how
+your stylesheet reacts to a colour the model picked at runtime.
 
-### Rendering on the server
+### Server rendering
 
 The renderer imports no `dart:html` or `dart:js_interop`, so it compiles on the
-server. A generated surface still cannot be server-rendered in any useful way,
+server. That said, a generated surface can't be server-rendered in any useful way,
 because it only exists once the model has answered something the user did. Render
-the shell on the server and let a `@client` component own the conversation, which
-is what the example does.
+the shell on the server and let a `@client` component own the conversation. That's
+what the example does.
 
 ## Running the example
 
-The example is a Jaspr app with a server-rendered shell, the chat as a `@client`
-component, and the model call behind a server route so the API key never reaches
-the browser. It talks to Gemini through [Genkit](https://pub.dev/packages/genkit).
+The example is a Jaspr app with a server-rendered shell, the chat running as a
+`@client` component, and the model call behind a server route so the API key
+never reaches the browser. It talks to Gemini through
+[Genkit](https://pub.dev/packages/genkit).
 
 ```sh
 dart pub global activate jaspr_cli
@@ -128,41 +105,21 @@ dart run build_runner build            # generates the client and server options
 jaspr serve
 ```
 
-Then open http://localhost:8080 and ask for something: "a signup form", "a
+Open http://localhost:8080 and ask for something: "a signup form", "a
 three-question quiz", "a checklist for moving house".
 
-It uses `gemini-3.5-flash-lite`. Set `MODEL` to try another:
+It uses `gemini-3.5-flash-lite` by default. Set `MODEL` to try another:
 
 ```sh
 MODEL=gemini-3.5-flash jaspr serve
 ```
 
-The generated `lib/main.*.options.dart` files are committed, so the tests run
-without a build step. Re-run `build_runner` after adding or removing an `@client`
-component.
+One important note: there's no prompt builder in the package. The system prompt
+that teaches a model this protocol lives in the app, and
+`example/lib/prompt.dart` is a working one you can copy. It generates the
+component schemas from the catalog rather than restating them, which is worth
+keeping if you adapt it.
 
-## Tests
+## Contributing
 
-```sh
-dart test                          # the package
-dart test -p chrome test/browser   # the browser-only tests, needs Chrome
-cd example && dart test            # the example, including a real HTTP round trip
-```
-
-The example's round-trip test starts a real server and drives the real route with
-a stand-in for the model, so everything between browser and model is covered
-without a key. Only the model call itself needs one.
-
-The browser tests are marked `@TestOn('browser')`, so the plain `dart test` runs
-skip them. They exist because two hops cannot be reached from the VM: a real
-keystroke in a real input element reaching the data model, and a real click on a
-generated button. Deleting a field's `onInput` handler passes every VM test and
-fails there.
-
-## Additional information
-
-Issues and pull requests: https://github.com/brianegan/genui_jaspr
-
-- A2UI protocol: https://a2ui.org
-- Jaspr: https://jaspr.site
-- Flutter's genui: https://github.com/flutter/genui
+See [CONTRIBUTING.md](CONTRIBUTING.md) for test commands and development details.
