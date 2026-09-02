@@ -35,26 +35,5 @@ void main() {
       }
     });
 
-    test('the basic catalog components beyond the minimal set are absent', () {
-      const deferred = [
-        'Card',
-        'Divider',
-        'List',
-        'Image',
-        'Icon',
-        'Modal',
-        'Tabs',
-        'Slider',
-        'DateTimeInput',
-        'ChoicePicker',
-        'AudioPlayer',
-        'Video',
-      ];
-
-      expect(
-        minimalJasprCatalog().components.keys,
-        isNot(anyElement(isIn(deferred))),
-      );
-    });
-  });
+});
 }

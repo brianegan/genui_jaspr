@@ -1,13 +1,12 @@
 # genui_jaspr
 
 A model replies with [A2UI](https://a2ui.org) messages instead of plain text, and
-your web app renders them as real HTML. Headings are headings, inputs are inputs,
-and the browser handles keyboards, validation, and focus, without shipping
-Flutter web.
+your web app renders them as real HTML. Headings become real headings, inputs
+become real inputs, and the browser's own keyboard handling and validation work
+out of the box. You don't need to ship Flutter web.
 
 This is the [Jaspr](https://jaspr.site) counterpart to Flutter's
-[`genui`](https://github.com/flutter/genui/tree/main/packages/genui). It renders
-the same protocol to a different target.
+[`genui`](https://github.com/flutter/genui/tree/main/packages/genui).
 
 ## What it gives you
 
@@ -32,11 +31,13 @@ of an exception, so one unknown component won't take down the rest of the surfac
 
 ## Getting started
 
-Add the dependency:
+The package is not on pub.dev yet. Add it as a git dependency:
 
 ```yaml
 dependencies:
-  genui_jaspr: ^0.1.0
+  genui_jaspr:
+    git:
+      url: https://github.com/brianegan/genui_jaspr.git
 ```
 
 Then `dart pub get`.
@@ -80,10 +81,10 @@ runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
 Components emit stable class names, all prefixed `a2ui-`. Two kinds of styling
 are kept apart on purpose:
 
-- Layout the model chose per component, such as `justify` and `align`, is written
-  inline, because it varies per instance and can't live in a stylesheet.
-- Appearance goes through class names, so you can replace `genuiJasprStyles`
-  wholesale without touching the renderer.
+Layout the model chose per component, such as `justify` and `align`, is written
+inline because it varies per instance and can't live in a stylesheet. Appearance
+goes through class names, so you can replace `genuiJasprStyles` wholesale without
+touching the renderer.
 
 A surface also publishes the theme from its `createSurface` message as CSS custom
 properties on the root element, kebab-cased and `--a2ui-` prefixed. So
@@ -93,16 +94,16 @@ your stylesheet reacts to a colour the model picked at runtime.
 ### Server rendering
 
 The renderer imports no `dart:html` or `dart:js_interop`, so it compiles on the
-server. That said, a generated surface can't be server-rendered in any useful way,
+server. A generated surface still can't be server-rendered in any useful way,
 because it only exists once the model has answered something the user did. Render
 the shell on the server and let a `@client` component own the conversation. That's
 what the example does.
 
 ## Running the example
 
-The example is a Jaspr app with a server-rendered shell, the chat running as a
-`@client` component, and the model call behind a server route so the API key
-never reaches the browser. It talks to Gemini through
+The example is a Jaspr app. The page shell renders on the server, the chat runs
+in the browser as a `@client` component, and the model call sits behind a server
+route so the API key never reaches the browser. It talks to Gemini through
 [Genkit](https://pub.dev/packages/genkit).
 
 ```sh
@@ -113,8 +114,8 @@ dart run build_runner build            # generates the client and server options
 jaspr serve
 ```
 
-Open http://localhost:8080 and ask for something: "a signup form", "a
-three-question quiz", "a checklist for moving house".
+Open http://localhost:8080 and ask for something: "a signup form", "a checklist
+for moving house".
 
 It uses `gemini-3.5-flash-lite` by default. Set `MODEL` to try another:
 

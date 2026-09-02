@@ -35,6 +35,6 @@ cd example && dart run build_runner build
 ### Example coverage
 
 The example is a separate workspace member, so a root `dart test` does not reach
-it. Its `tool/coverage.sh` script runs the VM suite, the browser suite for
-`chat.dart`, and merges the two coverage reports. CI holds the merged number at
+it. Its `tool/coverage.sh` script runs the VM suite and the browser suite for
+`chat.dart`, then merges the two coverage reports. CI holds the merged number at
 100%.
