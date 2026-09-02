@@ -2,10 +2,10 @@ import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:test/test.dart';
 
-/// Checks the claims the README makes about scope.
+/// Checks the catalog's scope against what the README describes.
 ///
-/// Documentation drifts silently, and the scope statement is the part a reader
-/// relies on most, so the parts of it that are machine-checkable are checked.
+/// Documentation drifts silently, so the parts of the scope statement that are
+/// machine-checkable are checked here.
 void main() {
   group('documented scope', () {
     test('renders exactly the five minimal-catalog components', () {
@@ -35,7 +35,7 @@ void main() {
       }
     });
 
-    test('the components the README defers are genuinely absent', () {
+    test('the basic catalog components beyond the minimal set are absent', () {
       const deferred = [
         'Card',
         'Divider',

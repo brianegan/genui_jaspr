@@ -22,6 +22,16 @@ keystroke in a real input element reaching the data model, and a real click on a
 generated button. Deleting a field's `onInput` handler passes every VM test and
 fails there.
 
+### Generated files
+
+The `example/lib/main.*.options.dart` files are committed so the tests run
+without a build step. Re-run `build_runner` after adding or removing a `@client`
+component:
+
+```sh
+cd example && dart run build_runner build
+```
+
 ### Example coverage
 
 The example is a separate workspace member, so a root `dart test` does not reach

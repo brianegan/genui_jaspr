@@ -2,11 +2,12 @@
 
 A model replies with [A2UI](https://a2ui.org) messages instead of plain text, and
 your web app renders them as real HTML. Headings are headings, inputs are inputs,
-and the browser handles keyboards, validation, and focus. No Flutter web required.
+and the browser handles keyboards, validation, and focus, without shipping
+Flutter web.
 
 This is the [Jaspr](https://jaspr.site) counterpart to Flutter's
-[`genui`](https://github.com/flutter/genui/tree/main/packages/genui). Same
-protocol, different render target.
+[`genui`](https://github.com/flutter/genui/tree/main/packages/genui). It renders
+the same protocol to a different target.
 
 ## What it gives you
 
@@ -17,10 +18,17 @@ package adds the Jaspr-specific parts: a surface renderer, a catalog of componen
 that emit HTML, a transport adapter that turns a model's text stream into A2UI
 messages, and a default stylesheet you can use or replace.
 
+There is no prompt builder in the package. The system prompt that teaches a model
+this protocol lives in the app, and `example/lib/prompt.dart` is a working one
+you can copy. It generates the component schemas from the catalog rather than
+restating them, which is worth keeping if you adapt it.
+
 Right now it renders the five components from the A2UI minimal catalog: `Text`,
-`Row`, `Column`, `Button`, and `TextField`. If the model sends a component the
-catalog doesn't know about, you get a visible placeholder instead of an exception,
-so one unknown component won't take down the rest of the surface.
+`Row`, `Column`, `Button`, and `TextField`. Their schemas come from `a2ui_core`
+unchanged, and the catalog keeps that catalog's own id, so what a model is told
+it may send and what this renders cannot drift apart. If the model sends a
+component the catalog doesn't know about, you get a visible placeholder instead
+of an exception, so one unknown component won't take down the rest of the surface.
 
 ## Getting started
 
@@ -72,7 +80,7 @@ runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
 Components emit stable class names, all prefixed `a2ui-`. Two kinds of styling
 are kept apart on purpose:
 
-- Layout the model chose per component (like `justify` and `align`) is written
+- Layout the model chose per component, such as `justify` and `align`, is written
   inline, because it varies per instance and can't live in a stylesheet.
 - Appearance goes through class names, so you can replace `genuiJasprStyles`
   wholesale without touching the renderer.
@@ -113,12 +121,6 @@ It uses `gemini-3.5-flash-lite` by default. Set `MODEL` to try another:
 ```sh
 MODEL=gemini-3.5-flash jaspr serve
 ```
-
-One important note: there's no prompt builder in the package. The system prompt
-that teaches a model this protocol lives in the app, and
-`example/lib/prompt.dart` is a working one you can copy. It generates the
-component schemas from the catalog rather than restating them, which is worth
-keeping if you adapt it.
 
 ## Contributing
 
