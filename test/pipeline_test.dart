@@ -42,7 +42,7 @@ Future<({String html, String prose})> runPipeline(
   void Function(A2uiClientAction)? onAction,
 }) async {
   final conversation = GenUiConversation(
-    catalogs: [minimalJasprCatalog()],
+    catalogs: [MinimalJasprCatalog()],
     onAction: onAction,
   );
   final reply = conversation.receive(Stream.fromIterable(chunks));
@@ -124,7 +124,7 @@ void main() {
     ) async {
       final actions = <A2uiClientAction>[];
       final conversation = GenUiConversation(
-        catalogs: [minimalJasprCatalog()],
+        catalogs: [MinimalJasprCatalog()],
         onAction: actions.add,
       );
       final reply = conversation.receive(
@@ -141,7 +141,7 @@ void main() {
     });
 
     testComponents('the surface fills in as the reply streams', (tester) async {
-      final conversation = GenUiConversation(catalogs: [minimalJasprCatalog()]);
+      final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
       // Only enough of the reply to create the surface, not to fill it.
       const upToFirstMessage = 320;
       final chunks = StreamController<String>();

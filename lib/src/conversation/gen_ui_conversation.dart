@@ -18,7 +18,7 @@ import 'client_messages.dart';
 ///
 /// ```dart
 /// final conversation = GenUiConversation(
-///   catalogs: [minimalJasprCatalog()],
+///   catalogs: [MinimalJasprCatalog()],
 ///   onAction: (action) => send(jsonEncode(a2uiActionMessage(action))),
 /// );
 ///

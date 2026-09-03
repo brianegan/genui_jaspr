@@ -9,7 +9,7 @@ import 'package:test/test.dart';
 void main() {
   group('documented scope', () {
     test('renders exactly the five minimal-catalog components', () {
-      expect(minimalJasprCatalog().components.keys.toSet(), {
+      expect(MinimalJasprCatalog().components.keys.toSet(), {
         'Text',
         'Row',
         'Column',
@@ -19,11 +19,11 @@ void main() {
     });
 
     test('uses the A2UI minimal catalog\'s own id', () {
-      expect(minimalJasprCatalogId, MinimalCatalog().id);
+      expect(MinimalJasprCatalog.catalogId, MinimalCatalog().id);
     });
 
     test('reuses the upstream schemas rather than restating them', () {
-      final ours = minimalJasprCatalog().components;
+      final ours = MinimalJasprCatalog().components;
       final upstream = MinimalCatalog().components;
 
       for (final name in ours.keys) {
@@ -52,7 +52,7 @@ void main() {
       ];
 
       expect(
-        minimalJasprCatalog().components.keys,
+        MinimalJasprCatalog().components.keys,
         isNot(anyElement(isIn(deferred))),
       );
     });

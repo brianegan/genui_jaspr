@@ -8,7 +8,7 @@ import 'package:genui_jaspr/genui_jaspr.dart';
 /// editing prose.
 final String a2uiSystemPrompt = [
   _role,
-  a2uiInstructions(minimalJasprCatalog()),
+  a2uiInstructions(MinimalJasprCatalog()),
 ].join('\n\n');
 
 const _role = '''

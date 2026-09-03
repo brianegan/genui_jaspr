@@ -11,8 +11,14 @@ import '../jaspr_component.dart';
 /// generated ids. Typing writes straight to the path the model bound `value` to,
 /// so the next request carries what the user entered without the app copying it
 /// anywhere.
-JasprComponent textFieldComponent() {
-  return JasprComponent(MinimalTextFieldApi(), (scope) {
+class TextFieldComponent extends JasprComponent {
+  TextFieldComponent();
+
+  @override
+  final ComponentApi api = MinimalTextFieldApi();
+
+  @override
+  Component build(ComponentScope scope) {
     final String variant = scope.string('variant') ?? 'shortText';
     final String labelText = scope.string('label') ?? '';
     final String value = scope.string('value') ?? '';
@@ -51,7 +57,7 @@ JasprComponent textFieldComponent() {
       ],
       classes: errors.isEmpty ? 'a2ui-field' : 'a2ui-field a2ui-field--invalid',
     );
-  });
+  }
 }
 
 /// Maps the schema's `variant` onto the input type that gives the browser's own

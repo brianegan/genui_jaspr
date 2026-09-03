@@ -91,7 +91,7 @@ void main() {
 
     /// Runs one turn the way the browser's @client component does.
     Future<({String html, String prose})> turn(String prompt) async {
-      final conversation = GenUiConversation(catalogs: [minimalJasprCatalog()]);
+      final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
       final Reply received = conversation.receive(ask(openChat(), prompt));
       await received.done;
 
@@ -120,7 +120,7 @@ void main() {
       await turn('make me a form');
 
       final String system = textsOf(requests.single, Role.system).join();
-      expect(system, contains(minimalJasprCatalogId));
+      expect(system, contains(MinimalJasprCatalog.catalogId));
       expect(system, contains('"TextField"'));
     });
 
@@ -148,7 +148,7 @@ void main() {
         'with the history that gives it meaning', () async {
       final interactions = <A2uiClientAction>[];
       final conversation = GenUiConversation(
-        catalogs: [minimalJasprCatalog()],
+        catalogs: [MinimalJasprCatalog()],
         onAction: interactions.add,
       );
       final AgentChat<dynamic> chat = openChat();

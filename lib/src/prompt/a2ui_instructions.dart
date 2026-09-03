@@ -17,19 +17,28 @@ import 'package:a2ui_core/a2ui_core.dart';
 /// ```dart
 /// final systemPrompt = [
 ///   'You help people plan trips. Reply with a sentence, then the UI.',
-///   a2uiInstructions(minimalJasprCatalog()),
+///   a2uiInstructions(MinimalJasprCatalog()),
 /// ].join('\n\n');
 /// ```
+///
+/// By default the model is told to open a new surface for every reply and never
+/// touch an earlier one, which pairs with `GenUiConversation.receive` given a
+/// `surfaceId`: each reply lands in a surface the app names. Pass [allowUpdates]
+/// to let the model revise a surface from an earlier turn instead, which pairs
+/// with `receive` given no `surfaceId`, so the model's own ids are kept.
 ///
 /// The output is plain text with fenced JSON, which every model client accepts
 /// as a system prompt. It imports nothing from Jaspr, so it runs on the server
 /// that holds the prompt as well as in the browser.
-String a2uiInstructions(Catalog<ComponentApi> catalog) {
+String a2uiInstructions(
+  Catalog<ComponentApi> catalog, {
+  bool allowUpdates = false,
+}) {
   return [
     'The active catalog ID is "${catalog.id}". '
         'Use exactly this ID when creating a surface.',
     _messages,
-    _rules,
+    _rules(allowUpdates: allowUpdates),
     _components(catalog),
     if (catalog.functions.isNotEmpty) _functions(catalog),
     if (catalog.themeSchema != null) _theme(catalog),
@@ -48,13 +57,14 @@ Emit each message as its own ```json fenced block. Four kinds exist:
 
 Every message also needs "version": "v0.9".''';
 
-const _rules = '''
+String _rules({required bool allowUpdates}) =>
+    '''
 Rules that decide whether anything appears on screen:
 
 - Exactly one component in updateComponents must have "id": "root". Without it
   nothing renders.
 - Every id referenced by a parent must also be sent in the components list.
-- Use a new, unique surfaceId for each reply. Do not modify an earlier surface.
+${allowUpdates ? _revising : _createOnly}
 - Bind a value to the data model with {"path": "/some/path"} anywhere a plain
   value is allowed. An input whose value is bound writes back to that path as
   the user types, which is how you read their answer on the next turn.
@@ -65,6 +75,15 @@ Rules that decide whether anything appears on screen:
   surface as JSON, which is where the user's answers are.
 - Use checks to validate. Each check has a condition and a message, and a Button
   whose checks fail is disabled automatically.''';
+
+const _createOnly = '''
+- Use a new, unique surfaceId for each reply. Do not modify an earlier surface.''';
+
+const _revising = '''
+- To change something already on screen, send updateComponents or
+  updateDataModel with that surface's existing surfaceId. Only components you
+  include are replaced. The rest stay as they are. Open a new surface, with a
+  new unique surfaceId, only for something unrelated to what is on screen.''';
 
 const _encoder = JsonEncoder.withIndent('  ');
 

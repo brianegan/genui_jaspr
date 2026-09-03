@@ -11,7 +11,7 @@ Map<String, dynamic> createSurface(String id, {String? catalogId}) => {
   'version': 'v0.9',
   'createSurface': {
     'surfaceId': id,
-    'catalogId': catalogId ?? minimalJasprCatalogId,
+    'catalogId': catalogId ?? MinimalJasprCatalog.catalogId,
     'sendDataModel': true,
   },
 };
@@ -49,7 +49,7 @@ void main() {
   late GenUiConversation conversation;
 
   setUp(() {
-    conversation = GenUiConversation(catalogs: [minimalJasprCatalog()]);
+    conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
   });
 
   tearDown(() => conversation.dispose());
@@ -248,7 +248,7 @@ void main() {
     test('records a message the parser rejects and carries on', () async {
       final errors = <A2uiClientError>[];
       conversation = GenUiConversation(
-        catalogs: [minimalJasprCatalog()],
+        catalogs: [MinimalJasprCatalog()],
         onError: errors.add,
       );
 
@@ -351,7 +351,7 @@ void main() {
     test('forwards a generated button\'s action', () async {
       final actions = <A2uiClientAction>[];
       conversation = GenUiConversation(
-        catalogs: [minimalJasprCatalog()],
+        catalogs: [MinimalJasprCatalog()],
         onAction: actions.add,
       );
       final reply = conversation.receive(Stream.fromIterable(greetingReply()));
@@ -368,7 +368,7 @@ void main() {
     test('forwards an error a surface raises after its reply', () async {
       final errors = <A2uiClientError>[];
       conversation = GenUiConversation(
-        catalogs: [minimalJasprCatalog()],
+        catalogs: [MinimalJasprCatalog()],
         onError: errors.add,
       );
       final reply = conversation.receive(Stream.fromIterable(greetingReply()));
@@ -441,7 +441,7 @@ void main() {
     test('releases the surfaces and stops forwarding', () async {
       final actions = <A2uiClientAction>[];
       final local = GenUiConversation(
-        catalogs: [minimalJasprCatalog()],
+        catalogs: [MinimalJasprCatalog()],
         onAction: actions.add,
       );
       final reply = local.receive(Stream.fromIterable(greetingReply()));

@@ -1,4 +1,5 @@
 import 'package:a2ui_core/a2ui_core.dart';
+import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
 
 import '../jaspr_component.dart';
@@ -8,8 +9,14 @@ import '../jaspr_component.dart';
 /// A button whose `checks` are failing is disabled, so the surface stops an
 /// invalid submission at the point of interaction rather than sending it and
 /// waiting for the model to object.
-JasprComponent buttonComponent() {
-  return JasprComponent(MinimalButtonApi(), (scope) {
+class ButtonComponent extends JasprComponent {
+  ButtonComponent();
+
+  @override
+  final ComponentApi api = MinimalButtonApi();
+
+  @override
+  Component build(ComponentScope scope) {
     final String variant = scope.string('variant') ?? 'primary';
     final String? childId = scope.string('child');
     final Future<void> Function()? onPressed = scope.action('action');
@@ -22,5 +29,5 @@ JasprComponent buttonComponent() {
       disabled: !enabled,
       onClick: enabled ? () => onPressed() : null,
     );
-  });
+  }
 }

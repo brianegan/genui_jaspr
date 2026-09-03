@@ -12,7 +12,14 @@ protocol runtime itself.
 - **Added** `Surface.placeholder` and `Surface.fallback`, for what a surface
   shows before its root exists and in place of a component it cannot render.
 - **Added** `a2uiInstructions`, the protocol half of a system prompt generated
-  from a catalog, so the model is told exactly what the renderer can draw.
+  from a catalog, so the model is told exactly what the renderer can draw. Its
+  `allowUpdates` flag matches the two ways `receive` can treat surface ids.
+- **Changed** the catalog to classes. `MinimalJasprCatalog()` replaces
+  `minimalJasprCatalog()` and `MinimalJasprCatalog.catalogId` replaces
+  `minimalJasprCatalogId`. `JasprComponent` is now a base class to extend, with
+  `TextComponent`, `RowComponent`, `ColumnComponent`, `ButtonComponent`, and
+  `TextFieldComponent` as its five entries, and `JasprComponent.inline` for the
+  closure form.
 - **Added** `GenUiConversation.receiveMessages` for backends that deliver A2UI
   already parsed, and `GenUiConversation.actionText` for the text a chat app
   sends the model after an interaction.

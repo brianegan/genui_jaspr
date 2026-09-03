@@ -45,7 +45,7 @@ SurfaceModel<JasprComponent> buildSurfaceModel(
   Catalog<JasprComponent>? catalog,
 }) {
   final processor = MessageProcessor<JasprComponent>(
-    catalogs: [catalog ?? minimalJasprCatalog()],
+    catalogs: [catalog ?? MinimalJasprCatalog()],
     onAction: onAction,
   );
 
@@ -54,7 +54,7 @@ SurfaceModel<JasprComponent> buildSurfaceModel(
       'version': 'v0.9',
       'createSurface': {
         'surfaceId': 'main',
-        'catalogId': minimalJasprCatalogId,
+        'catalogId': MinimalJasprCatalog.catalogId,
         'theme': ?theme,
         'sendDataModel': true,
       },
@@ -102,9 +102,9 @@ captureScope(
   final processor = MessageProcessor<JasprComponent>(
     catalogs: [
       Catalog<JasprComponent>(
-        id: minimalJasprCatalogId,
+        id: MinimalJasprCatalog.catalogId,
         components: [
-          JasprComponent(api, (scope) {
+          JasprComponent.inline(api, (scope) {
             captured = scope;
             return const Component.empty();
           }),
@@ -118,7 +118,7 @@ captureScope(
       'version': 'v0.9',
       'createSurface': {
         'surfaceId': 'main',
-        'catalogId': minimalJasprCatalogId,
+        'catalogId': MinimalJasprCatalog.catalogId,
         'sendDataModel': true,
       },
     }),

@@ -26,7 +26,7 @@ class _DividerApi extends ComponentApi {
 
 void main() {
   group('a2uiInstructions', () {
-    final catalog = minimalJasprCatalog();
+    final catalog = MinimalJasprCatalog();
     final prompt = a2uiInstructions(catalog);
 
     test('names the catalog the model must target', () {
@@ -97,7 +97,7 @@ void main() {
     test('follows the catalog it is given', () {
       final custom = catalog.copyWith(
         id: 'com.example.custom',
-        add: [JasprComponent(_DividerApi(), (scope) => throw 0)],
+        add: [JasprComponent.inline(_DividerApi(), (scope) => throw 0)],
       );
 
       final text = a2uiInstructions(custom);
@@ -105,6 +105,21 @@ void main() {
       expect(text, contains('"com.example.custom"'));
       expect(text, contains('"Divider"'));
       expect(text, contains('A horizontal rule.'));
+    });
+
+    test('tells the model to open a new surface per reply by default', () {
+      expect(prompt, contains('Use a new, unique surfaceId for each reply'));
+      expect(prompt, isNot(contains('existing surfaceId')));
+    });
+
+    test('can let the model revise surfaces from earlier turns', () {
+      final revising = a2uiInstructions(catalog, allowUpdates: true);
+
+      expect(revising, contains("with that surface's existing surfaceId"));
+      expect(revising, isNot(contains('Do not modify an earlier surface')));
+      // Everything else is the same prompt.
+      expect(revising.length, greaterThan(prompt.length ~/ 2));
+      expect(revising, contains('"TextField"'));
     });
 
     test('says nothing about functions or a theme a catalog lacks', () {

@@ -107,7 +107,7 @@ class _ChatViewState extends State<ChatView> {
   void initState() {
     super.initState();
     _conversation = GenUiConversation(
-      catalogs: [minimalJasprCatalog()],
+      catalogs: [MinimalJasprCatalog()],
       onAction: _onSurfaceAction,
     );
   }

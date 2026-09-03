@@ -14,16 +14,16 @@ Catalog<JasprComponent> buildTestCatalog() {
   return Catalog<JasprComponent>(
     id: testCatalogId,
     components: [
-      JasprComponent(
+      JasprComponent.inline(
         MinimalTextApi(),
         (scope) => span([Component.text('${scope.props['text']}')]),
       ),
-      JasprComponent(
+      JasprComponent.inline(
         MinimalRowApi(),
         (scope) =>
             div(scope.buildChildren(scope.props['children']), classes: 'row'),
       ),
-      JasprComponent(
+      JasprComponent.inline(
         MinimalColumnApi(),
         (scope) =>
             div(scope.buildChildren(scope.props['children']), classes: 'col'),

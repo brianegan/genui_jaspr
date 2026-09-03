@@ -108,29 +108,57 @@ final class ComponentScope {
   }
 }
 
+/// Renders a component from its resolved properties.
+typedef ComponentBuilder = Component Function(ComponentScope scope);
+
 /// A catalog entry: a component's A2UI API paired with how to render it.
 ///
 /// The API side comes from `a2ui_core`, which owns the name and the schema that
-/// decides how each property binds. This class adds the Jaspr half, so the
-/// protocol definition and the renderer stay separable.
+/// decides how each property binds. Subclasses add the Jaspr half, so the
+/// protocol definition and the renderer stay separable:
 ///
 /// ```dart
-/// JasprComponent(MinimalTextApi(), (scope) {
-///   return p([Component.text(scope.string('text') ?? '')]);
-/// });
+/// class DividerComponent extends JasprComponent {
+///   @override
+///   final ComponentApi api = DividerApi();
+///
+///   @override
+///   Component build(ComponentScope scope) => hr(classes: 'a2ui-divider');
+/// }
 /// ```
-final class JasprComponent implements ComponentApi {
-  const JasprComponent(this.api, this.build);
+///
+/// For a one-off, or in a test, [JasprComponent.inline] takes the two halves
+/// directly without a class of their own.
+abstract class JasprComponent implements ComponentApi {
+  const JasprComponent();
+
+  /// A component from its [api] and a [build] closure.
+  const factory JasprComponent.inline(
+    ComponentApi api,
+    ComponentBuilder build,
+  ) = _InlineJasprComponent;
 
   /// The protocol definition for this component.
-  final ComponentApi api;
+  ComponentApi get api;
 
   /// Renders the component from its resolved properties.
-  final Component Function(ComponentScope scope) build;
+  Component build(ComponentScope scope);
 
   @override
   String get name => api.name;
 
   @override
   Schema get schema => api.schema;
+}
+
+final class _InlineJasprComponent extends JasprComponent {
+  const _InlineJasprComponent(this.api, this._build);
+
+  @override
+  final ComponentApi api;
+
+  final ComponentBuilder _build;
+
+  @override
+  Component build(ComponentScope scope) => _build(scope);
 }

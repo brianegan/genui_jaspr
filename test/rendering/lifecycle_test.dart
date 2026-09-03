@@ -105,11 +105,11 @@ Catalog<JasprComponent> _rawIdCatalog() {
   return Catalog<JasprComponent>(
     id: testCatalogId,
     components: [
-      JasprComponent(
+      JasprComponent.inline(
         MinimalTextApi(),
         (scope) => span([Component.text('${scope.props['text']}')]),
       ),
-      JasprComponent(
+      JasprComponent.inline(
         MinimalColumnApi(),
         (scope) => div(scope.buildChildren(const ['greeting']), classes: 'col'),
       ),

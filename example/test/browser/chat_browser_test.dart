@@ -43,7 +43,7 @@ void main() {
               'Here you go.\n',
               fenced(
                 '{"version":"v0.9","createSurface":{"surfaceId":"s",'
-                '"catalogId":"$minimalJasprCatalogId","sendDataModel":true}}',
+                '"catalogId":"${MinimalJasprCatalog.catalogId}","sendDataModel":true}}',
               ),
               fenced(
                 '{"version":"v0.9","updateComponents":{"surfaceId":"s",'

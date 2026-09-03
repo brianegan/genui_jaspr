@@ -37,22 +37,22 @@ class _UpperFunction extends FunctionImplementation {
 void main() {
   group('Catalog.copyWith', () {
     test('adds a component under a new id', () {
-      final catalog = minimalJasprCatalog().copyWith(
+      final catalog = MinimalJasprCatalog().copyWith(
         id: 'com.example.catalog',
-        add: [JasprComponent(_DividerApi(), (scope) => hr())],
+        add: [JasprComponent.inline(_DividerApi(), (scope) => hr())],
       );
 
       expect(catalog.id, 'com.example.catalog');
       expect(catalog.components.keys, contains('Divider'));
       expect(catalog.components.keys, containsAll(['Text', 'Button']));
       // The original is untouched.
-      expect(minimalJasprCatalog().components.keys, isNot(contains('Divider')));
+      expect(MinimalJasprCatalog().components.keys, isNot(contains('Divider')));
     });
 
     test('replaces a component of the same name', () async {
-      final catalog = minimalJasprCatalog().copyWith(
+      final catalog = MinimalJasprCatalog().copyWith(
         add: [
-          JasprComponent(
+          JasprComponent.inline(
             MinimalTextApi(),
             (scope) => span([
               Component.text(scope.string('text') ?? ''),
@@ -69,14 +69,14 @@ void main() {
     });
 
     test('removes a component by name', () {
-      final catalog = minimalJasprCatalog().copyWith(remove: ['TextField']);
+      final catalog = MinimalJasprCatalog().copyWith(remove: ['TextField']);
 
       expect(catalog.components.keys, isNot(contains('TextField')));
       expect(catalog.components, hasLength(4));
     });
 
     test('keeps the id, functions and theme schema unless told otherwise', () {
-      final original = minimalJasprCatalog();
+      final original = MinimalJasprCatalog();
       final copy = original.copyWith();
 
       expect(copy.id, original.id);
@@ -86,7 +86,7 @@ void main() {
 
     test('merges functions and swaps the theme schema', () {
       final theme = Schema.object(properties: {'accent': Schema.string()});
-      final catalog = minimalJasprCatalog().copyWith(
+      final catalog = MinimalJasprCatalog().copyWith(
         addFunctions: [_UpperFunction()],
         themeSchema: theme,
       );

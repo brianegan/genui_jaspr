@@ -94,7 +94,7 @@ class _ChatViewState extends State<ChatView> {
   void initState() {
     super.initState();
     _conversation = GenUiConversation(
-      catalogs: [minimalJasprCatalog()],
+      catalogs: [MinimalJasprCatalog()],
       // A button in a generated surface was pressed. Tell the model.
       onAction: (action) => _ask(_conversation.actionText(action)),
     );
@@ -154,7 +154,7 @@ assistant is for and how it should sound:
 ```dart
 final systemPrompt = [
   'You help people plan trips. Reply with a sentence, then the UI.',
-  a2uiInstructions(minimalJasprCatalog()),
+  a2uiInstructions(MinimalJasprCatalog()),
 ].join('\n\n');
 ```
 
@@ -171,8 +171,11 @@ the reply, already in the shape `a2uiErrorMessage` sends back to the model.
 
 Pass `surfaceId` to `receive` to render each reply into a surface your app
 names. A model that reuses an id across turns then cannot overwrite an earlier
-answer, which is what a chat transcript wants. Leave it out to let the model
-manage surface ids itself, which is what lets one reply revise an earlier one.
+answer, which is what a chat transcript wants, and it pairs with the default
+`a2uiInstructions`, which tells the model to open a new surface every reply.
+Leave `surfaceId` out to let the model manage surface ids itself, and pass
+`allowUpdates: true` to `a2uiInstructions` so it knows it may revise a surface
+from an earlier turn.
 
 A backend that delivers A2UI already parsed, such as an A2A agent, goes through
 `receiveMessages` instead. The protocol runtime is a public field,
@@ -180,21 +183,46 @@ A backend that delivers A2UI already parsed, such as an A2A agent, goes through
 
 ### Adding a component
 
-Pair a component's `a2ui_core` API with a builder and derive a catalog. Give
-the copy its own id, since that id is what the model is told to target:
+A component is a `JasprComponent`: an `a2ui_core` API, which owns the name and
+the schema, plus a `build` method that turns resolved properties into HTML. The
+API classes for the minimal catalog come from `a2ui_core`. For a component of
+your own, define the API and the renderer together:
 
 ```dart
-final catalog = minimalJasprCatalog().copyWith(
+class DividerApi extends ComponentApi {
+  @override
+  String get name => 'Divider';
+
+  @override
+  Schema get schema => Schema.object(properties: {});
+}
+
+class DividerComponent extends JasprComponent {
+  @override
+  final ComponentApi api = DividerApi();
+
+  @override
+  Component build(ComponentScope scope) => hr(classes: 'a2ui-divider');
+}
+```
+
+Then derive a catalog. Give the copy its own id, since that id is what the model
+is told to target, and `a2uiInstructions` will describe the new component from
+its schema:
+
+```dart
+final catalog = MinimalJasprCatalog().copyWith(
   id: 'com.example.catalog',
-  add: [JasprComponent(DividerApi(), (scope) => hr(classes: 'a2ui-divider'))],
+  add: [DividerComponent()],
 );
 ```
 
-The builder gets a `ComponentScope` with the properties already resolved: data
+`build` gets a `ComponentScope` with the properties already resolved: data
 bindings read, function calls evaluated, actions turned into callbacks. Read a
 value with `scope.string`, children with `scope.children()`, and the callback
 behind an action property with `scope.action`, which reports a failure to the
-surface instead of throwing out of a click handler.
+surface instead of throwing out of a click handler. For a one-off, or in a test,
+`JasprComponent.inline(api, build)` takes the two halves as arguments.
 
 A component the catalog does not implement renders a visible notice rather than
 throwing, so one unknown component does not take down the surface around it.

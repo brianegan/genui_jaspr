@@ -18,14 +18,14 @@ SurfaceModel<JasprComponent> surfaceWith(
   Map<String, Object?> data = const {},
 }) {
   final processor = MessageProcessor<JasprComponent>(
-    catalogs: [minimalJasprCatalog()],
+    catalogs: [MinimalJasprCatalog()],
   );
   processor.processMessages([
     A2uiMessage.fromJson({
       'version': 'v0.9',
       'createSurface': {
         'surfaceId': 'main',
-        'catalogId': minimalJasprCatalogId,
+        'catalogId': MinimalJasprCatalog.catalogId,
         'sendDataModel': true,
       },
     }),
@@ -197,7 +197,7 @@ void main() {
     ) async {
       final actions = <A2uiClientAction>[];
       final processor = MessageProcessor<JasprComponent>(
-        catalogs: [minimalJasprCatalog()],
+        catalogs: [MinimalJasprCatalog()],
         onAction: actions.add,
       );
       processor.processMessages([
@@ -205,7 +205,7 @@ void main() {
           'version': 'v0.9',
           'createSurface': {
             'surfaceId': 'main',
-            'catalogId': minimalJasprCatalogId,
+            'catalogId': MinimalJasprCatalog.catalogId,
             'sendDataModel': true,
           },
         }),
