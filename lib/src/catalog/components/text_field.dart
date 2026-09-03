@@ -1,6 +1,7 @@
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
+import 'package:universal_web/web.dart' as web;
 
 import '../jaspr_component.dart';
 
@@ -18,18 +19,26 @@ JasprComponent textFieldComponent() {
     final void Function(Object?)? write = scope.setter('value');
     final List<String> errors = scope.validationErrors;
 
+    // A number input reports what it holds as a number, and NaN while its text
+    // is not one: empty, or a lone minus sign. NaN has no JSON encoding, and the
+    // data model is sent to the model as JSON, so it is written as nothing.
+    //
+    // Only a real input event reaches this closure, so the browser suite is
+    // what covers it.
+    // coverage:ignore-start
+    final void Function(Object?)? onInput = write == null
+        ? null
+        : (Object? typed) =>
+              write(typed is double && typed.isNaN ? null : typed);
+    // coverage:ignore-end
+
     final Component field = variant == 'longText'
-        // A textarea carries its value as content rather than an attribute.
-        ? textarea(
-            [Component.text(value)],
-            classes: 'a2ui-field__input',
-            onInput: write,
-          )
-        : input(
+        ? _LongText(value: value, onInput: onInput)
+        : input<Object?>(
             classes: 'a2ui-field__input',
             type: _inputType(variant),
             value: value.isEmpty ? null : value,
-            onInput: write,
+            onInput: onInput,
             attributes: {'pattern': ?scope.string('validationRegexp')},
           );
 
@@ -52,3 +61,49 @@ InputType _inputType(String variant) => switch (variant) {
   'obscured' => InputType.password,
   _ => InputType.text,
 };
+
+/// A textarea that follows its bound value in both directions.
+///
+/// A textarea carries its initial value as content rather than an attribute,
+/// and once the user has typed, what the browser shows is the element's `value`
+/// property rather than that content. Rendering the content alone therefore
+/// works until the first keystroke and then silently stops following the data
+/// model, so the property is set as well whenever the two differ.
+class _LongText extends StatefulComponent {
+  const _LongText({required this.value, required this.onInput});
+
+  final String value;
+  final void Function(Object?)? onInput;
+
+  @override
+  State<_LongText> createState() => _LongTextState();
+}
+
+class _LongTextState extends State<_LongText> {
+  final _node = GlobalNodeKey<web.HTMLTextAreaElement>();
+
+  @override
+  Component build(BuildContext context) {
+    // After the frame, once the element exists. The key yields no node during
+    // server rendering, where the content is all a browser will ever see.
+    context.binding.addPostFrameCallback(_followValue);
+    return textarea(
+      [Component.text(component.value)],
+      key: _node,
+      classes: 'a2ui-field__input',
+      onInput: component.onInput,
+    );
+  }
+
+  /// Runs only in a browser: post-frame callbacks need a frame, and the key
+  /// yields a node only once the element is in a document. The browser suite
+  /// covers it.
+  // coverage:ignore-start
+  void _followValue() {
+    final web.HTMLTextAreaElement? node = _node.currentNode;
+    if (node == null || node.value == component.value) return;
+    node.value = component.value;
+  }
+
+  // coverage:ignore-end
+}

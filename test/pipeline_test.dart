@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:jaspr_test/jaspr_test.dart';
@@ -35,32 +37,20 @@ List<String> chunked(String text, int size) => [
 ];
 
 /// Runs a model reply all the way through to a rendered surface.
-Future<({String html, List<String> prose})> runPipeline(
+Future<({String html, String prose})> runPipeline(
   List<String> chunks, {
   void Function(A2uiClientAction)? onAction,
 }) async {
-  final processor = MessageProcessor<JasprComponent>(
+  final conversation = GenUiConversation(
     catalogs: [minimalJasprCatalog()],
     onAction: onAction,
   );
-  final adapter = A2uiTransportAdapter();
-  final prose = <String>[];
+  final reply = conversation.receive(Stream.fromIterable(chunks));
+  await reply.done;
 
-  adapter.incomingText.listen(prose.add);
-  adapter.incomingMessages.listen(
-    (message) => processor.processMessages([message]),
-  );
-
-  for (final chunk in chunks) {
-    adapter.addChunk(chunk);
-  }
-  await adapter.flush();
-
-  final html = await renderHtml(
-    Surface(surface: processor.groupModel.getSurface('main')!),
-  );
-  adapter.dispose();
-  return (html: html, prose: prose);
+  final html = await renderHtml(Surface(surface: reply.surfaces.single));
+  conversation.dispose();
+  return (html: html, prose: reply.text);
 }
 
 void main() {
@@ -92,7 +82,7 @@ void main() {
       // The blank lines that surrounded the two fenced blocks survive; the
       // blocks themselves, and the separator between them, do not.
       expect(
-        result.prose.join(),
+        result.prose,
         "Sure, here's a quick sign-up form.\n\n"
         '\n\nFill that in and press the button.',
       );
@@ -106,7 +96,7 @@ void main() {
 
     test('produces the same result however the stream is chopped up', () async {
       final sizes = [1, 2, 3, 17, 64, 512, modelReply.length];
-      final results = <({String html, List<String> prose})>[];
+      final results = <({String html, String prose})>[];
       for (final size in sizes) {
         results.add(await runPipeline(chunked(modelReply, size)));
       }
@@ -122,8 +112,8 @@ void main() {
           reason: 'chunk size ${sizes[i]} rendered different markup',
         );
         expect(
-          results[i].prose.join(),
-          results.first.prose.join(),
+          results[i].prose,
+          results.first.prose,
           reason: 'chunk size ${sizes[i]} produced different prose',
         );
       }
@@ -133,54 +123,43 @@ void main() {
       tester,
     ) async {
       final actions = <A2uiClientAction>[];
-      final processor = MessageProcessor<JasprComponent>(
+      final conversation = GenUiConversation(
         catalogs: [minimalJasprCatalog()],
         onAction: actions.add,
       );
-      final adapter = A2uiTransportAdapter();
-      adapter.incomingMessages.listen(
-        (message) => processor.processMessages([message]),
+      final reply = conversation.receive(
+        Stream.fromIterable(chunked(modelReply, 17)),
       );
+      await reply.done;
 
-      for (final chunk in chunked(modelReply, 17)) {
-        adapter.addChunk(chunk);
-      }
-      await adapter.flush();
-
-      tester.pumpComponent(
-        Surface(surface: processor.groupModel.getSurface('main')!),
-      );
+      tester.pumpComponent(Surface(surface: reply.surfaces.single));
       await tester.click(find.tag('button'));
 
       expect(actions, hasLength(1));
       expect(actions.single.name, 'signUp');
-      adapter.dispose();
+      conversation.dispose();
     });
 
     testComponents('the surface fills in as the reply streams', (tester) async {
-      final processor = MessageProcessor<JasprComponent>(
-        catalogs: [minimalJasprCatalog()],
-      );
-      final adapter = A2uiTransportAdapter();
-      adapter.incomingMessages.listen(
-        (message) => processor.processMessages([message]),
-      );
-
+      final conversation = GenUiConversation(catalogs: [minimalJasprCatalog()]);
       // Only enough of the reply to create the surface, not to fill it.
       const upToFirstMessage = 320;
-      adapter.addChunk(modelReply.substring(0, upToFirstMessage));
+      final chunks = StreamController<String>();
+      final reply = conversation.receive(chunks.stream);
+
+      chunks.add(modelReply.substring(0, upToFirstMessage));
       await Future<void>.delayed(Duration.zero);
 
-      final surface = processor.groupModel.getSurface('main')!;
-      tester.pumpComponent(Surface(surface: surface));
+      tester.pumpComponent(Surface(surface: reply.surfaces.single));
       expect(find.text('Sign up'), findsNothing);
 
-      adapter.addChunk(modelReply.substring(upToFirstMessage));
-      await adapter.flush();
+      chunks.add(modelReply.substring(upToFirstMessage));
+      await chunks.close();
+      await reply.done;
       await tester.pump();
 
       expect(find.text('Sign up'), findsOneComponent);
-      adapter.dispose();
+      conversation.dispose();
     });
   });
 }

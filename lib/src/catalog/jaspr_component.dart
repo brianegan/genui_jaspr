@@ -15,6 +15,7 @@ final class ComponentScope {
     required this.theme,
     required this.buildChild,
     required this.buildChildren,
+    required this.reportError,
   });
 
   /// This component's id within its surface.
@@ -34,12 +35,28 @@ final class ComponentScope {
   /// Used by components whose schema names one child, such as `Button`.
   final Component Function(String componentId) buildChild;
 
-  /// Renders a `children` property.
+  /// Renders a resolved `children` property.
   ///
   /// The binder resolves such a property into a list of child references, which
   /// may come either from a literal list of ids or from a template repeated over
-  /// a path in the data model. Both arrive here in the same shape.
+  /// a path in the data model. Both arrive here in the same shape. Most builders
+  /// want [children] instead, which reads the property for them.
   final List<Component> Function(Object? childrenProp) buildChildren;
+
+  /// Reports something that went wrong inside this component.
+  ///
+  /// The error reaches the surface and, through it, whoever is listening for
+  /// errors to send back to the model. Actions obtained through [action] report
+  /// their own failures, so a builder only needs this for problems it detects
+  /// itself.
+  final void Function(Object error) reportError;
+
+  /// Renders the children named by the property [key].
+  ///
+  /// Used by containers such as `Row` and `Column`, whose schema has a
+  /// `children` list.
+  List<Component> children([String key = 'children']) =>
+      buildChildren(props[key]);
 
   /// Reads [key] from [props] as a string, or null when absent.
   String? string(String key) {
@@ -49,10 +66,21 @@ final class ComponentScope {
 
   /// Reads [key] from [props] as a callback, or null when absent.
   ///
-  /// A property whose schema describes an action resolves to a function.
+  /// A property whose schema describes an action resolves to a function. The
+  /// returned callback never throws: a failure inside the action, such as a
+  /// call to a function the catalog does not have, is passed to [reportError]
+  /// instead, so a broken action cannot take down the page from inside a click
+  /// handler.
   Future<void> Function()? action(String key) {
     final Object? value = props[key];
-    return value is Future<void> Function() ? value : null;
+    if (value is! Future<void> Function()) return null;
+    return () async {
+      try {
+        await value();
+      } catch (error) {
+        reportError(error);
+      }
+    };
   }
 
   /// Writes back to whatever the property named [key] is bound to.
@@ -85,6 +113,12 @@ final class ComponentScope {
 /// The API side comes from `a2ui_core`, which owns the name and the schema that
 /// decides how each property binds. This class adds the Jaspr half, so the
 /// protocol definition and the renderer stay separable.
+///
+/// ```dart
+/// JasprComponent(MinimalTextApi(), (scope) {
+///   return p([Component.text(scope.string('text') ?? '')]);
+/// });
+/// ```
 final class JasprComponent implements ComponentApi {
   const JasprComponent(this.api, this.build);
 

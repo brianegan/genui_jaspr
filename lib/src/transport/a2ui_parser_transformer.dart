@@ -55,10 +55,13 @@ class _ParserStream {
   }
 
   void _onDone() {
-    if (_buffer.isNotEmpty) {
+    // Whatever is left is prose, unless it is only the whitespace a model puts
+    // after its last message, which the separator rule drops everywhere else.
+    if (_buffer.isNotEmpty &&
+        !(_lastEventWasMessage && _buffer.trim().isEmpty)) {
       _emitText(_buffer);
-      _buffer = '';
     }
+    _buffer = '';
     _controller.close();
   }
 

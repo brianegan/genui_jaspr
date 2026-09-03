@@ -2,7 +2,7 @@ name: genui_jaspr
 description: >-
   Render A2UI generative user interfaces in Jaspr, so a web app can offer a
   generative UI without shipping Flutter web.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/brianegan/genui_jaspr
 
 environment:
@@ -15,12 +15,15 @@ dependencies:
   # The A2UI protocol runtime: messages, data model, expressions, binder.
   # Also re-exports the preact_signals primitives the binder resolves through,
   # which is why preact_signals is not a direct dependency here.
-  a2ui_core: ^0.1.0
-  jaspr: ^0.23.2
+  a2ui_core: ^0.1.1
+  jaspr: ^0.23.4
   # Schema appears in the public API and a2ui_core does not re-export it.
   json_schema_builder: ^0.1.6
+  # The DOM types Jaspr itself uses, with stubs on the server. Needed to keep a
+  # textarea's value in step with the data model.
+  universal_web: ^1.1.1
 
 dev_dependencies:
-  jaspr_test: ^0.23.2
+  jaspr_test: ^0.23.4
   lints: ^6.0.0
   test: ^1.26.2

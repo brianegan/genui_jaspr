@@ -66,10 +66,32 @@ void main() {
         find.ancestor(of: find.text('Do it'), matching: find.tag('button')),
       );
 
-      // The interaction is described to the model, not echoed verbatim.
-      expect(prompts, ['make a button', 'The user triggered "submit".']);
+      // The interaction reaches the model as the protocol's action message.
+      expect(prompts, hasLength(2));
+      expect(prompts.first, 'make a button');
+      expect(prompts.last, contains('"action"'));
+      expect(prompts.last, contains('"name":"submit"'));
       expect(find.text('Submitted "submit"'), findsOneComponent);
       expect(find.text('Done.'), findsOneComponent);
+    });
+
+    testClient('a message the model got wrong is shown in its turn', (
+      tester,
+    ) async {
+      tester.pumpComponent(
+        ChatView(
+          send: (prompt) => Stream.fromIterable([
+            'Trying.\n',
+            fenced('{"version":"v0.8","createSurface":{"surfaceId":"s"}}'),
+          ]),
+        ),
+      );
+
+      await tester.input(find.tag('input'), value: 'anything');
+      await tester.click(find.tag('button'));
+
+      expect(find.textContaining('Trying.'), findsOneComponent);
+      expect(find.textContaining('v0.9'), findsOneComponent);
     });
 
     testClient('a failing request is reported, not rendered as a turn', (

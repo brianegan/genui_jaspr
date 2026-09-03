@@ -14,8 +14,14 @@ Future<String> renderSurface(
   List<Map<String, dynamic>> components, {
   Map<String, Object?> data = const {},
   Map<String, dynamic>? theme,
+  Catalog<JasprComponent>? catalog,
 }) async {
-  final surface = buildSurfaceModel(components, data: data, theme: theme);
+  final surface = buildSurfaceModel(
+    components,
+    data: data,
+    theme: theme,
+    catalog: catalog,
+  );
   return stripSurface(await renderHtml(Surface(surface: surface)));
 }
 
@@ -36,9 +42,10 @@ SurfaceModel<JasprComponent> buildSurfaceModel(
   Map<String, Object?> data = const {},
   Map<String, dynamic>? theme,
   void Function(A2uiClientAction)? onAction,
+  Catalog<JasprComponent>? catalog,
 }) {
   final processor = MessageProcessor<JasprComponent>(
-    catalogs: [minimalJasprCatalog()],
+    catalogs: [catalog ?? minimalJasprCatalog()],
     onAction: onAction,
   );
 
