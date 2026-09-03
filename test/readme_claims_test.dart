@@ -35,7 +35,7 @@ void main() {
       }
     });
 
-    test('the components the README defers are genuinely absent', () {
+    test('nothing beyond the minimal catalog has crept in unannounced', () {
       const deferred = [
         'Card',
         'Divider',
