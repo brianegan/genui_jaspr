@@ -88,10 +88,16 @@ final class ComponentScope {
   /// Present only when the model bound the property to a data-model path, which
   /// is what makes an input two-way. A field bound to a literal has no setter,
   /// and is therefore read-only by the model's own choosing.
+  ///
+  /// `NaN` is written as null. A number input reports `NaN` while its text is
+  /// not a number, such as when it is empty or holds a lone minus sign, and the
+  /// data model is sent to the model as JSON, which has no encoding for it.
   void Function(Object?)? setter(String key) {
     final String name = 'set${key[0].toUpperCase()}${key.substring(1)}';
-    final Object? value = props[name];
-    return value is void Function(Object?) ? value : null;
+    final Object? write = props[name];
+    if (write is! void Function(Object?)) return null;
+    return (Object? value) =>
+        write(value is double && value.isNaN ? null : value);
   }
 
   /// Whether this component's `checks` currently pass.

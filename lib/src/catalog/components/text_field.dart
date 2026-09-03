@@ -25,26 +25,15 @@ class TextFieldComponent extends JasprComponent {
     final void Function(Object?)? write = scope.setter('value');
     final List<String> errors = scope.validationErrors;
 
-    // A number input reports what it holds as a number, and NaN while its text
-    // is not one: empty, or a lone minus sign. NaN has no JSON encoding, and the
-    // data model is sent to the model as JSON, so it is written as nothing.
-    //
-    // Only a real input event reaches this closure, so the browser suite is
-    // what covers it.
-    // coverage:ignore-start
-    final void Function(Object?)? onInput = write == null
-        ? null
-        : (Object? typed) =>
-              write(typed is double && typed.isNaN ? null : typed);
-    // coverage:ignore-end
-
+    // A number input hands over a num, and NaN while its text is not a number.
+    // The setter turns that NaN into nothing rather than letting it reach JSON.
     final Component field = variant == 'longText'
-        ? _LongText(value: value, onInput: onInput)
+        ? _LongText(value: value, onInput: write)
         : input<Object?>(
             classes: 'a2ui-field__input',
             type: _inputType(variant),
             value: value.isEmpty ? null : value,
-            onInput: onInput,
+            onInput: write,
             attributes: {'pattern': ?scope.string('validationRegexp')},
           );
 
@@ -89,10 +78,20 @@ class _LongTextState extends State<_LongText> {
   final _node = GlobalNodeKey<web.HTMLTextAreaElement>();
 
   @override
+  void didUpdateComponent(_LongText oldComponent) {
+    super.didUpdateComponent(oldComponent);
+    // The element already exists here, so its value can be brought in line
+    // before the new content is rendered. The user's own typing arrives as a
+    // value equal to what the element holds, and is left alone: setting a
+    // textarea's value, even to what it already holds, moves the caret. The
+    // key yields no node outside a browser, where the content is all anyone
+    // will see, and the null-aware writes make that a quiet no-op.
+    final web.HTMLTextAreaElement? node = _node.currentNode;
+    if (node?.value != component.value) node?.value = component.value;
+  }
+
+  @override
   Component build(BuildContext context) {
-    // After the frame, once the element exists. The key yields no node during
-    // server rendering, where the content is all a browser will ever see.
-    context.binding.addPostFrameCallback(_followValue);
     return textarea(
       [Component.text(component.value)],
       key: _node,
@@ -100,16 +99,4 @@ class _LongTextState extends State<_LongText> {
       onInput: component.onInput,
     );
   }
-
-  /// Runs only in a browser: post-frame callbacks need a frame, and the key
-  /// yields a node only once the element is in a document. The browser suite
-  /// covers it.
-  // coverage:ignore-start
-  void _followValue() {
-    final web.HTMLTextAreaElement? node = _node.currentNode;
-    if (node == null || node.value == component.value) return;
-    node.value = component.value;
-  }
-
-  // coverage:ignore-end
 }

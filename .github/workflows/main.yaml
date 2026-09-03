@@ -21,13 +21,6 @@ jobs:
       # There is no bloc in this package, so the default lint pass would only
       # activate bloc_tools for nothing.
       run_bloc_lint: false
-      # A few lines in lib/ only execute in a browser: a real input event
-      # reaching a field's handler, and a textarea's value being set after the
-      # data model changed. Each is marked `coverage:ignore` with a comment
-      # saying so and has a test in the browser suite below. This is what makes
-      # the VM coverage run respect those marks, as the local gate's
-      # `--check-ignore` does.
-      check_ignore: true
       # `test_optimization` is deliberately left on. The generated entrypoint
       # only chokes on `test/browser` when the run has no `--platform vm`, and
       # `platform` defaults to vm here, so all 84 tests compile and pass under
