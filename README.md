@@ -68,9 +68,28 @@ runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
 
 Then create one conversation and render its replies. This runs in the browser,
 under a `@client` component, because a generated surface only exists once the
-model has answered. How your app reaches the model is up to you: the component
-below takes a `send` function that returns the reply as a stream of text, and
-the example supplies one that streams from a Genkit agent behind a server route.
+model has answered.
+
+One thing this package does not do is call a model. The component below takes
+a `send` function that returns the model's reply as a stream of text chunks, and
+what that function does is yours to decide. In the sample app it is Genkit's
+browser client talking to a Genkit agent behind a server route, so the API key
+stays on the server and the agent keeps the conversation's history:
+
+```dart
+final AgentChat<dynamic> chat = remoteAgent(url: '/api/chat').chat();
+
+Stream<String> send(String prompt) => chat
+    .sendStream(text: prompt)
+    .stream
+    .map((chunk) => chunk.text)
+    .where((text) => text.isNotEmpty);
+```
+
+That is [`example/lib/chat.dart`](example/lib/chat.dart) on the browser side and
+[`example/lib/server/chat_agent.dart`](example/lib/server/chat_agent.dart) on the
+server side. Anything that yields the text as it arrives will do in its place: a
+`fetch` to your own endpoint, a different SDK, or a canned stream in a test.
 
 ```dart
 import 'package:a2ui_core/a2ui_core.dart';
@@ -82,6 +101,7 @@ class ChatView extends StatefulComponent {
   const ChatView({required this.send, super.key});
 
   /// Sends a prompt to the model and streams its reply back as text chunks.
+  /// See above for where this comes from.
   final Stream<String> Function(String prompt) send;
 
   @override
