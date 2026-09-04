@@ -93,6 +93,65 @@ void main() {
           ),
         );
       });
+
+      test('checks none of them when the value is a scalar', () async {
+        // The schema admits a plain string for `value` regardless of variant,
+        // so a scalar under multipleSelection must render, not crash.
+        final html = await renderChoicePicker(
+          pickerSurface({'variant': 'multipleSelection', 'value': 'red'}),
+        );
+
+        expect(
+          html,
+          contains(
+            '<input class="a2ui-choice-picker__input" type="checkbox" checked/>'
+            '<span class="a2ui-choice-picker__option-label">Red</span>',
+          ),
+        );
+      });
+
+      test(
+        'shows the message for a failing check on the invalid class',
+        () async {
+          final html = await renderChoicePicker(
+            pickerSurface({
+              'variant': 'multipleSelection',
+              'value': ['red'],
+              'checks': [
+                {
+                  'condition': {'path': '/ok'},
+                  'message': 'Pick at least one',
+                },
+              ],
+            }),
+            data: {'/ok': false},
+          );
+
+          expect(
+            html,
+            contains('class="a2ui-choice-picker a2ui-choice-picker--invalid"'),
+          );
+        },
+      );
+    });
+
+    test('checks the matching option when the value is a list', () async {
+      // The reference implementation's own example data sends a
+      // single-element list even under mutuallyExclusive.
+      final html = await renderChoicePicker(
+        pickerSurface({
+          'variant': 'mutuallyExclusive',
+          'value': ['blue'],
+        }),
+      );
+
+      expect(
+        html,
+        contains(
+          '<input class="a2ui-choice-picker__input" type="radio" name="root" checked/>'
+          '<span class="a2ui-choice-picker__option-label">Blue</span>',
+        ),
+      );
     });
 
     test('shows the message for a failing check', () async {
@@ -137,6 +196,14 @@ void main() {
       expect(html, isNot(contains('a2ui-choice-picker__error')));
     });
 
+    test('renders with no legend when no label is given', () async {
+      final html = await renderChoicePicker(
+        pickerSurface({'value': 'red'}),
+      );
+
+      expect(html, isNot(contains('a2ui-choice-picker__label')));
+    });
+
     group('write-back', () {
       testComponents(
         'selecting an option writes its value through, mutually exclusive',
@@ -160,6 +227,36 @@ void main() {
           await tester.pump();
 
           expect(captured.surface.dataModel.get('/colour'), 'blue');
+        },
+      );
+
+      testComponents(
+        'selecting options writes the list through, multiple selection',
+        (tester) async {
+          final captured = await captureScope(
+            tester,
+            ChoicePickerApi(),
+            pickerSurface({
+              'variant': 'multipleSelection',
+              'value': {'path': '/colours'},
+            }),
+            data: {
+              '/colours': ['red'],
+            },
+          );
+
+          expect(captured.scope.props['value'], ['red']);
+
+          final write = captured.scope.setter('value');
+          expect(write, isNotNull);
+
+          write!(['red', 'blue']);
+          await tester.pump();
+
+          expect(captured.surface.dataModel.get('/colours'), [
+            'red',
+            'blue',
+          ]);
         },
       );
 

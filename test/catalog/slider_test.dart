@@ -36,7 +36,7 @@ void main() {
         html,
         '<label class="a2ui-slider">'
         '<span class="a2ui-slider__label">Amount</span>'
-        '<input class="a2ui-slider__input" type="range" value="0.5"/>'
+        '<input class="a2ui-slider__input" min="0" max="1" type="range" value="0.5"/>'
         '</label>',
       );
     });
@@ -47,6 +47,15 @@ void main() {
       ]);
 
       expect(html, isNot(contains('a2ui-slider__label')));
+    });
+
+    test('defaults its range to 0 through 1, per the spec', () async {
+      final html = await renderSlider([
+        {'id': 'root', 'component': 'Slider', 'value': 0.5},
+      ]);
+
+      expect(html, contains('min="0"'));
+      expect(html, contains('max="1"'));
     });
 
     test('carries min and max to the browser', () async {

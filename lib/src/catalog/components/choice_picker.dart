@@ -69,11 +69,7 @@ class ChoicePickerComponent extends JasprComponent {
     final write = scope.setter('value');
     final errors = scope.validationErrors;
 
-    final selected = isMulti
-        ? (scope.props['value'] as List? ?? const [])
-              .map((value) => '$value')
-              .toSet()
-        : {if (scope.props['value'] != null) '${scope.props['value']}'};
+    final selected = _selectedValues(scope.props['value']);
 
     return fieldset(
       [
@@ -111,6 +107,10 @@ class ChoicePickerComponent extends JasprComponent {
     final optionLabel = '${option['label']}';
     final checked = selected.contains(value);
 
+    // Only a real browser ever calls into these: a VM test can drive `build`
+    // but never fires a real `change` event, which is what the browser suite
+    // covers instead.
+    // coverage:ignore-start
     ValueChanged<bool>? onChange;
     if (write != null) {
       onChange = isMulti
@@ -127,6 +127,7 @@ class ChoicePickerComponent extends JasprComponent {
               if (isChecked) write(value);
             };
     }
+    // coverage:ignore-end
 
     return label(
       [
@@ -144,4 +145,17 @@ class ChoicePickerComponent extends JasprComponent {
       classes: 'a2ui-choice-picker__option',
     );
   }
+}
+
+/// Normalizes `value` into the set of currently-selected option values.
+///
+/// The schema admits either a plain string or a list of strings for either
+/// variant, so a model that sends one shape under the "wrong" variant (a
+/// scalar under `multipleSelection`, or a list under `mutuallyExclusive`,
+/// which the A2UI reference implementation's own example data does) still
+/// renders correctly rather than crashing or matching nothing.
+Set<String> _selectedValues(Object? value) {
+  if (value is List) return value.map((v) => '$v').toSet();
+  if (value == null) return const {};
+  return {'$value'};
 }

@@ -13,6 +13,7 @@
     "**/*.options.dart"
   ],
   "words": [
+    "fieldset",
     "flexbox",
     "genai",
     "Genkit",

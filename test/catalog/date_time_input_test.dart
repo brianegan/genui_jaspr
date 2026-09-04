@@ -22,12 +22,13 @@ Future<String> renderDateTimeInput(
 
 void main() {
   group('DateTimeInput', () {
-    test('wraps a date input in its label by default', () async {
+    test('wraps a date input in its label', () async {
       final html = await renderDateTimeInput([
         {
           'id': 'root',
           'component': 'DateTimeInput',
           'label': 'Birthday',
+          'variant': 'date',
           'value': '2024-01-01',
         },
       ]);
@@ -39,6 +40,27 @@ void main() {
         '<input class="a2ui-date-time-input__input" type="date" value="2024-01-01"/>'
         '</label>',
       );
+    });
+
+    test('renders with no label when none is given', () async {
+      final html = await renderDateTimeInput([
+        {'id': 'root', 'component': 'DateTimeInput', 'value': ''},
+      ]);
+
+      expect(html, isNot(contains('a2ui-date-time-input__label')));
+    });
+
+    test('defaults to a combined date and time picker', () async {
+      final html = await renderDateTimeInput([
+        {
+          'id': 'root',
+          'component': 'DateTimeInput',
+          'label': 'When',
+          'value': '',
+        },
+      ]);
+
+      expect(html, contains('type="datetime-local"'));
     });
 
     test(
@@ -64,20 +86,23 @@ void main() {
       },
     );
 
-    test('carries min and max to the browser', () async {
-      final html = await renderDateTimeInput([
-        {
-          'id': 'root',
-          'component': 'DateTimeInput',
-          'label': 'When',
-          'value': '',
-          'min': '2020-01-01',
-          'max': '2030-01-01',
-        },
-      ]);
+    test('carries min and max to the browser for every variant', () async {
+      for (final variant in const ['date', 'time', 'datetime']) {
+        final html = await renderDateTimeInput([
+          {
+            'id': 'root',
+            'component': 'DateTimeInput',
+            'label': 'When',
+            'variant': variant,
+            'value': '',
+            'min': '2020-01-01',
+            'max': '2030-01-01',
+          },
+        ]);
 
-      expect(html, contains('min="2020-01-01"'));
-      expect(html, contains('max="2030-01-01"'));
+        expect(html, contains('min="2020-01-01"'), reason: 'variant $variant');
+        expect(html, contains('max="2030-01-01"'), reason: 'variant $variant');
+      }
     });
 
     test('shows the message for a failing check', () async {
@@ -132,6 +157,23 @@ void main() {
 
       expect(html, isNot(contains('a2ui-date-time-input--invalid')));
       expect(html, isNot(contains('a2ui-date-time-input__error')));
+    });
+
+    test('shows the value bound from the data model', () async {
+      final html = await renderDateTimeInput(
+        [
+          {
+            'id': 'root',
+            'component': 'DateTimeInput',
+            'label': 'Birthday',
+            'variant': 'date',
+            'value': {'path': '/birthday'},
+          },
+        ],
+        data: {'/birthday': '2024-01-01'},
+      );
+
+      expect(html, contains('value="2024-01-01"'));
     });
 
     group('write-back', () {

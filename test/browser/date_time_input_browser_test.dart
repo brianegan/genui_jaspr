@@ -6,9 +6,8 @@ import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:genui_jaspr/src/catalog/components/date_time_input.dart';
 import 'package:jaspr_test/client_test.dart';
 
-/// The hop a VM test cannot reach: a real value entered into a real date or
-/// time input, which the browser reports back as a `DateTime`, reaching the
-/// data model as the ISO string the schema binds.
+/// The hop a VM test cannot reach: a real value entered into, or cleared
+/// from, a real date or time input reaching the data model.
 SurfaceModel<JasprComponent> surfaceWith(
   List<Map<String, dynamic>> components, {
   Map<String, Object?> data = const {},
@@ -47,6 +46,7 @@ void main() {
             'id': 'root',
             'component': 'DateTimeInput',
             'label': 'Birthday',
+            'variant': 'date',
             'value': {'path': '/birthday'},
           },
         ],
@@ -103,11 +103,51 @@ void main() {
 
         await tester.input(find.tag('input'), value: '2024-06-15T14:30');
 
-        expect(
-          surface.dataModel.get('/appointment'),
-          '2024-06-15T14:30',
-        );
+        expect(surface.dataModel.get('/appointment'), '2024-06-15T14:30');
       },
     );
+
+    testClient('defaults to a combined date and time picker', (tester) async {
+      final surface = surfaceWith(
+        [
+          {
+            'id': 'root',
+            'component': 'DateTimeInput',
+            'label': 'Appointment',
+            'value': {'path': '/appointment'},
+          },
+        ],
+        data: {'/appointment': '2024-01-01T08:00'},
+      );
+
+      tester.pumpComponent(Surface(surface: surface));
+
+      await tester.input(find.tag('input'), value: '2024-06-15T14:30');
+
+      expect(surface.dataModel.get('/appointment'), '2024-06-15T14:30');
+    });
+
+    testClient('clearing the field writes null rather than throwing', (
+      tester,
+    ) async {
+      final surface = surfaceWith(
+        [
+          {
+            'id': 'root',
+            'component': 'DateTimeInput',
+            'label': 'Birthday',
+            'variant': 'date',
+            'value': {'path': '/birthday'},
+          },
+        ],
+        data: {'/birthday': '2024-01-01'},
+      );
+
+      tester.pumpComponent(Surface(surface: surface));
+
+      await tester.input(find.tag('input'), value: '');
+
+      expect(surface.dataModel.get('/birthday'), isNull);
+    });
   });
 }

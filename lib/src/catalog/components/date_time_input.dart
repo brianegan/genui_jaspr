@@ -3,6 +3,7 @@ import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:universal_web/web.dart' as web;
 
 /// `DateTimeInput`'s API, one of the basic catalog's components that
 /// `a2ui_core` does not ship. Its schema is copied from the A2UI spec's basic
@@ -30,13 +31,16 @@ class DateTimeInputApi extends ComponentApi {
 }
 
 /// A date, time, or date-and-time input, bound to the data model in both
-/// directions.
+/// directions. Omitting `variant` renders both a date and a time picker, the
+/// same default the A2UI spec's other renderers use.
 ///
-/// The browser reports what the user picked as a `DateTime`, not the ISO
-/// string the schema binds. It is converted back before it reaches
-/// `ComponentScope.setter`, so what lands in the data model is the same
-/// shape the model sent: a plain date or time string, not a `DateTime` object
-/// the data model's JSON has no encoding for.
+/// Jaspr's own `onInput` converts a date, time, or datetime-local input's
+/// value to a `DateTime`, which throws once the field is cleared (its
+/// `valueAsNumber` is `NaN`, and `NaN.toInt()` has no web implementation).
+/// This registers a raw `input` listener instead and reads the element's
+/// `value` directly, which is already the exact string the schema binds, so
+/// nothing needs converting or reformatting, and clearing the field writes
+/// null like any other input does.
 class DateTimeInputComponent extends JasprComponent {
   /// Creates a [DateTimeInputComponent].
   DateTimeInputComponent();
@@ -46,7 +50,7 @@ class DateTimeInputComponent extends JasprComponent {
 
   @override
   Component build(ComponentScope scope) {
-    final variant = scope.string('variant') ?? 'date';
+    final variant = scope.string('variant') ?? 'datetime';
     final labelText = scope.string('label');
     final value = scope.string('value');
     final write = scope.setter('value');
@@ -58,13 +62,11 @@ class DateTimeInputComponent extends JasprComponent {
           span([
             Component.text(labelText),
           ], classes: 'a2ui-date-time-input__label'),
-        input<DateTime>(
+        input<Object?>(
           classes: 'a2ui-date-time-input__input',
           type: _inputType(variant),
-          value: value?.isEmpty ?? true ? null : value,
-          onInput: write == null
-              ? null
-              : (picked) => write(_format(picked, variant)),
+          value: value == null || value.isEmpty ? null : value,
+          events: write == null ? null : {'input': _writeRawValue(write)},
           attributes: {
             'min': ?scope.string('min'),
             'max': ?scope.string('max'),
@@ -85,23 +87,23 @@ class DateTimeInputComponent extends JasprComponent {
 /// Maps the schema's `variant` onto the input type that gives the browser's
 /// own date or time picker for that kind of value.
 InputType _inputType(String variant) => switch (variant) {
+  'date' => InputType.date,
   'time' => InputType.time,
-  'datetime' => InputType.dateTimeLocal,
-  _ => InputType.date,
+  _ => InputType.dateTimeLocal,
 };
 
-/// Formats what the browser reports back into the ISO shape the variant's
-/// string binds, the reverse of what the browser's own date and time pickers
-/// show the user.
-String _format(DateTime picked, String variant) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  final date =
-      '${picked.year.toString().padLeft(4, '0')}-'
-      '${two(picked.month)}-${two(picked.day)}';
-  final time = '${two(picked.hour)}:${two(picked.minute)}';
-  return switch (variant) {
-    'time' => time,
-    'datetime' => '${date}T$time',
-    _ => date,
+/// Writes the input's raw string value straight to the data model, or null
+/// once it is emptied.
+///
+/// Only a real browser ever calls this: a VM test can drive `build` but has
+/// no DOM to dispatch an `input` event from, which is what the browser suite
+/// covers instead. The event always comes from the `<input>` this listener is
+/// attached to, so its target is always an `HTMLInputElement`.
+void Function(web.Event) _writeRawValue(void Function(Object?) write) {
+  // coverage:ignore-start
+  return (event) {
+    final input = event.target! as web.HTMLInputElement;
+    write(input.value.isEmpty ? null : input.value);
   };
+  // coverage:ignore-end
 }

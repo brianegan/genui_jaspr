@@ -62,8 +62,8 @@ class SliderComponent extends JasprComponent {
           value: value,
           onInput: write,
           attributes: {
-            'min': ?scope.string('min'),
-            'max': ?scope.string('max'),
+            'min': scope.string('min') ?? '0',
+            'max': scope.string('max') ?? '1',
           },
         ),
         for (final error in errors)

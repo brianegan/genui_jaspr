@@ -8,7 +8,7 @@ import 'package:jaspr_test/jaspr_test.dart';
 import 'support/harness.dart';
 
 /// Every class name the catalog can emit, gathered by rendering a surface that
-/// uses all five components across their variants.
+/// uses every component across their variants.
 Future<Set<String>> emittedClassNames() async {
   final html = <String>[];
 
