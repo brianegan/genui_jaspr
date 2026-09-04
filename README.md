@@ -90,7 +90,8 @@ class ChatView extends StatefulComponent {
 
 class _ChatViewState extends State<ChatView> {
   late final GenUiConversation _conversation;
-  final List<Stream<GenUiEvent>> _replies = [];
+  /// One event stream per model turn. ReplyBuilder folds each into a Reply.
+  final List<Stream<GenUiEvent>> _events = [];
 
   @override
   void initState() {
@@ -103,18 +104,18 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void _ask(String prompt) {
-    final Stream<GenUiEvent> reply = _conversation.receive(component.send(prompt));
-    setState(() => _replies.add(reply));
+    final Stream<GenUiEvent> events = _conversation.receive(component.send(prompt));
+    setState(() => _events.add(events));
   }
 
   @override
   Component build(BuildContext context) {
     return div([
-      for (final reply in _replies)
-        // Folds the reply's events as they arrive, so this re-renders as the
-        // model writes.
+      for (final events in _events)
+        // Folds the events into a Reply as they arrive, so this re-renders as
+        // the model writes.
         ReplyBuilder(
-          events: reply,
+          events: events,
           builder: (context, reply) => div([
             // The model's own words, outside any surface.
             p([Component.text(reply.text)]),

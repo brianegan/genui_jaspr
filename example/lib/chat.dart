@@ -10,13 +10,14 @@ import 'server/chat_agent.dart' show chatPath;
 
 /// One entry in the transcript: something the user said, or a model's reply.
 class Turn {
-  Turn.user(this.text) : reply = null;
-  Turn.model(this.reply) : text = ''; // coverage:ignore-line
+  Turn.user(this.text) : events = null;
+  Turn.model(this.events) : text = ''; // coverage:ignore-line
 
   final String text;
 
-  /// The model's reply as a stream of events. Null for the user's turns.
-  final Stream<GenUiEvent>? reply;
+  /// The model's reply as a stream of events, which the transcript's
+  /// [ReplyBuilder] folds into a [Reply]. Null for the user's turns.
+  final Stream<GenUiEvent>? events;
 }
 
 /// Streams the model's reply to [prompt] as text chunks.
@@ -146,7 +147,7 @@ class _ChatViewState extends State<ChatView> {
     // The ReplyBuilder in the transcript is the stream's one listener; it
     // reports back through [_onReplyComplete] when the reply has ended.
     // coverage:ignore-start
-    final Stream<GenUiEvent> reply = _conversation.receive(
+    final Stream<GenUiEvent> events = _conversation.receive(
       component.send(prompt),
       surfaceId: 'reply${_replies++}',
     );
@@ -156,7 +157,7 @@ class _ChatViewState extends State<ChatView> {
       _busy = true;
       _error = null;
       _turns.add(Turn.user(show));
-      _turns.add(Turn.model(reply));
+      _turns.add(Turn.model(events));
     });
   }
 
@@ -207,8 +208,8 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Component _turnView(Turn turn) {
-    final Stream<GenUiEvent>? reply = turn.reply;
-    if (reply == null) {
+    final Stream<GenUiEvent>? events = turn.events;
+    if (events == null) {
       return div([
         p([Component.text(turn.text)]),
       ], classes: 'turn turn--user');
@@ -216,7 +217,7 @@ class _ChatViewState extends State<ChatView> {
     // The builder folds the events as they arrive, so the bubble fills in
     // while the model is still writing.
     return ReplyBuilder(
-      events: reply,
+      events: events,
       onComplete: (reply) => _onReplyComplete(turn, reply),
       builder: (context, reply) {
         if (reply.isEmpty) return const Component.empty();
