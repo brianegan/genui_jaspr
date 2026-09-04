@@ -138,9 +138,7 @@ final List<StyleRule> genuiJasprStyles = [
   ),
   const StyleRule(
     selector: Selector('.a2ui-field--invalid .a2ui-field__input'),
-    styles: Styles(
-      raw: {'border-color': 'var(--a2ui-error-color, #b3261e)'},
-    ),
+    styles: Styles(raw: {'border-color': 'var(--a2ui-error-color, #b3261e)'}),
   ),
 
   // The renderer's own fallback for a component the catalog cannot build.

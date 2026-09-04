@@ -238,9 +238,7 @@ class _A2uiComponentState extends State<A2uiComponent> {
   }
 
   void _bind() {
-    final model = component.surface.componentsModel.get(
-      component.componentId,
-    );
+    final model = component.surface.componentsModel.get(component.componentId);
     if (model == null) return;
     _model = model;
 
@@ -341,9 +339,7 @@ class _A2uiComponentState extends State<A2uiComponent> {
   }
 
   Component _missing(BuildContext context, String message) {
-    final fallback = _SurfaceOptions.fallbackOf(
-      context,
-    );
+    final fallback = _SurfaceOptions.fallbackOf(context);
     if (fallback != null) return fallback(context, message);
     return div(
       [Component.text(message)],
