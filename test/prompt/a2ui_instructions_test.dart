@@ -82,8 +82,9 @@ void main() {
         prompt.indexOf('A complete reply looks like this:'),
       );
 
-      final reply = conversation.receive(Stream.value(example));
-      await reply.done;
+      final Reply reply = await conversation
+          .receive(Stream.value(example))
+          .reply;
 
       expect(reply.errors, isEmpty);
       expect(reply.surfaces, hasLength(1));

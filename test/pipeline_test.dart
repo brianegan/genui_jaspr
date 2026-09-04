@@ -37,20 +37,20 @@ List<String> chunked(String text, int size) => [
 ];
 
 /// Runs a model reply all the way through to a rendered surface.
-Future<({String html, String prose})> runPipeline(
-  List<String> chunks, {
-  void Function(A2uiClientAction)? onAction,
-}) async {
-  final conversation = GenUiConversation(
-    catalogs: [MinimalJasprCatalog()],
-    onAction: onAction,
-  );
-  final reply = conversation.receive(Stream.fromIterable(chunks));
-  await reply.done;
+Future<({String html, String prose})> runPipeline(List<String> chunks) async {
+  final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
+  final events = await conversation
+      .receive(Stream.fromIterable(chunks))
+      .toList();
 
-  final html = await renderHtml(Surface(surface: reply.surfaces.single));
+  final html = await renderHtml(
+    Surface(surface: events.whereType<GenUiSurface>().single.surface),
+  );
   conversation.dispose();
-  return (html: html, prose: reply.text);
+  return (
+    html: html,
+    prose: events.whereType<GenUiText>().map((e) => e.text).join(),
+  );
 }
 
 void main() {
@@ -127,10 +127,9 @@ void main() {
         catalogs: [MinimalJasprCatalog()],
         onAction: actions.add,
       );
-      final reply = conversation.receive(
-        Stream.fromIterable(chunked(modelReply, 17)),
-      );
-      await reply.done;
+      final Reply reply = await conversation
+          .receive(Stream.fromIterable(chunked(modelReply, 17)))
+          .reply;
 
       tester.pumpComponent(Surface(surface: reply.surfaces.single));
       await tester.click(find.tag('button'));
@@ -145,17 +144,20 @@ void main() {
       // Only enough of the reply to create the surface, not to fill it.
       const upToFirstMessage = 320;
       final chunks = StreamController<String>();
-      final reply = conversation.receive(chunks.stream);
+      final surfaces = <SurfaceModel<JasprComponent>>[];
+      final done = conversation.receive(chunks.stream).forEach((event) {
+        if (event is GenUiSurface) surfaces.add(event.surface);
+      });
 
       chunks.add(modelReply.substring(0, upToFirstMessage));
       await Future<void>.delayed(Duration.zero);
 
-      tester.pumpComponent(Surface(surface: reply.surfaces.single));
+      tester.pumpComponent(Surface(surface: surfaces.single));
       expect(find.text('Sign up'), findsNothing);
 
       chunks.add(modelReply.substring(upToFirstMessage));
       await chunks.close();
-      await reply.done;
+      await done;
       await tester.pump();
 
       expect(find.text('Sign up'), findsOneComponent);

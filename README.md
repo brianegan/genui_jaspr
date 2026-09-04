@@ -34,9 +34,11 @@ runtime, so they speak exactly the same messages.
 
 - `GenUiConversation` owns the surfaces a model builds and everything the user
   types into them. Hand it each reply as a stream of text and it gives you back
-  a `Reply` that fills in as the stream arrives.
-- `Surface` renders one of those surfaces and keeps rendering as messages land,
-  so a form appears while the model is still writing it.
+  a stream of events: the prose, each surface the model opens, and each
+  mistake it makes.
+- `ReplyBuilder` folds that stream into a `Reply` and rebuilds as it arrives,
+  and `Surface` renders each surface and keeps rendering as messages land, so a
+  form appears while the model is still writing it.
 - A catalog with the five components of the A2UI minimal catalog, `Text`, `Row`,
   `Column`, `Button`, and `TextField`, each rendered as the HTML element it
   should be. Add your own or swap one out with `copyWith`.
@@ -66,9 +68,28 @@ runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
 
 Then create one conversation and render its replies. This runs in the browser,
 under a `@client` component, because a generated surface only exists once the
-model has answered. How your app reaches the model is up to you: the component
-below takes a `send` function that returns the reply as a stream of text, and
-the example supplies one that streams from a Genkit agent behind a server route.
+model has answered.
+
+One thing this package does not do is call a model. The component below takes
+a `send` function that returns the model's reply as a stream of text chunks, and
+what that function does is yours to decide. In the sample app it is Genkit's
+browser client talking to a Genkit agent behind a server route, so the API key
+stays on the server and the agent keeps the conversation's history:
+
+```dart
+final AgentChat<dynamic> chat = remoteAgent(url: '/api/chat').chat();
+
+Stream<String> send(String prompt) => chat
+    .sendStream(text: prompt)
+    .stream
+    .map((chunk) => chunk.text)
+    .where((text) => text.isNotEmpty);
+```
+
+That is [`example/lib/chat.dart`](example/lib/chat.dart) on the browser side and
+[`example/lib/server/chat_agent.dart`](example/lib/server/chat_agent.dart) on the
+server side. Anything that yields the text as it arrives will do in its place: a
+`fetch` to your own endpoint, a different SDK, or a canned stream in a test.
 
 ```dart
 import 'package:a2ui_core/a2ui_core.dart';
@@ -80,6 +101,7 @@ class ChatView extends StatefulComponent {
   const ChatView({required this.send, super.key});
 
   /// Sends a prompt to the model and streams its reply back as text chunks.
+  /// See above for where this comes from.
   final Stream<String> Function(String prompt) send;
 
   @override
@@ -88,7 +110,8 @@ class ChatView extends StatefulComponent {
 
 class _ChatViewState extends State<ChatView> {
   late final GenUiConversation _conversation;
-  final List<Reply> _replies = [];
+  /// One event stream per model turn. ReplyBuilder folds each into a Reply.
+  final List<Stream<GenUiEvent>> _events = [];
 
   @override
   void initState() {
@@ -101,18 +124,19 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void _ask(String prompt) {
-    final Reply reply = _conversation.receive(component.send(prompt));
-    setState(() => _replies.add(reply));
+    final Stream<GenUiEvent> events = _conversation.receive(component.send(prompt));
+    setState(() => _events.add(events));
   }
 
   @override
   Component build(BuildContext context) {
     return div([
-      for (final reply in _replies)
-        // A Reply is a Listenable, so this re-renders as the reply streams.
-        ListenableBuilder(
-          listenable: reply,
-          builder: (context) => div([
+      for (final events in _events)
+        // Folds the events into a Reply as they arrive, so this re-renders as
+        // the model writes.
+        ReplyBuilder(
+          events: events,
+          builder: (context, reply) => div([
             // The model's own words, outside any surface.
             p([Component.text(reply.text)]),
             // The UI it built.
@@ -163,11 +187,33 @@ just as well as in the browser.
 
 ### Following a reply
 
-`receive` returns at once, and the `Reply` fills in as chunks arrive. Listen to
-it, or await `reply.done`, which never throws. A model call that failed lands in
-`reply.failure`. Messages the model got wrong, such as a component the catalog
-lacks or a surface created twice, land in `reply.errors` rather than stopping
-the reply, already in the shape `a2uiErrorMessage` sends back to the model.
+`receive` returns a `Stream<GenUiEvent>`, single-subscription and lazy, so
+nothing is parsed until something listens. Three kinds of event arrive:
+`GenUiText` carries a piece of prose, `GenUiSurface` carries a surface the model
+has just opened, once, and `GenUiError` carries a message the model got wrong,
+such as a component the catalog lacks or a surface created twice, already in the
+shape `a2uiErrorMessage` sends back to the model. The stream carries on after a
+`GenUiError`. A failure of the model call itself is an error on the stream,
+which then ends.
+
+`ReplyBuilder` is the fold most apps want: it turns the events into a `Reply`
+with `text`, `surfaces`, `errors`, `failure`, and `isComplete`, and rebuilds its
+subtree on each event. Keep the stream in state and hand the same instance to
+the builder on every build, since a new instance makes it resubscribe and a
+reply can only be listened to once. The builder is that one listener, so when
+something else needs to know how the reply ended, such as a transcript
+re-enabling its composer, give the builder an `onComplete` callback rather than
+subscribing a second time. Like every stream builder in Jaspr it runs only in
+the browser, which is where a reply exists anyway.
+
+Outside a component, the same fold is an extension on the stream:
+`events.replies` is a `Stream<Reply>` with one snapshot per event, and
+`events.reply` is a `Future<Reply>` of the finished one. Neither throws; a
+failed model call arrives as `Reply.failure`.
+
+Actions, errors raised after a reply has ended, and surfaces the model deletes
+are single events rather than sequences, so they reach the app through the
+conversation's `onAction`, `onError`, and `onSurfaceDeleted` callbacks.
 
 Pass `surfaceId` to `receive` to render each reply into a surface your app
 names. A model that reuses an id across turns then cannot overwrite an earlier

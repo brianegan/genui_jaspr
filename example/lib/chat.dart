@@ -10,13 +10,14 @@ import 'server/chat_agent.dart' show chatPath;
 
 /// One entry in the transcript: something the user said, or a model's reply.
 class Turn {
-  Turn.user(this.text) : reply = null;
-  Turn.model(this.reply) : text = ''; // coverage:ignore-line
+  Turn.user(this.text) : events = null;
+  Turn.model(this.events) : text = ''; // coverage:ignore-line
 
   final String text;
 
-  /// The model's reply, which fills in as it streams. Null for the user's turns.
-  final Reply? reply;
+  /// The model's reply as a stream of events, which the transcript's
+  /// [ReplyBuilder] folds into a [Reply]. Null for the user's turns.
+  final Stream<GenUiEvent>? events;
 }
 
 /// Streams the model's reply to [prompt] as text chunks.
@@ -131,35 +132,37 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Future<void> _sendDraft() async {
+  void _sendDraft() {
     final String text = _draft.trim();
     if (text.isEmpty || _busy) return;
     setState(() => _draft = '');
-    await _send(text, show: text);
+    _send(text, show: text);
   }
 
-  Future<void> _send(String prompt, {required String show}) async {
+  void _send(String prompt, {required String show}) {
     if (_busy) return;
 
     // Each reply renders into a surface named here rather than one the model
     // invents, so a model that reuses an id cannot overwrite an earlier answer.
+    // The ReplyBuilder in the transcript is the stream's one listener; it
+    // reports back through [_onReplyComplete] when the reply has ended.
     // coverage:ignore-start
-    final Reply reply = _conversation.receive(
+    final Stream<GenUiEvent> events = _conversation.receive(
       component.send(prompt),
       surfaceId: 'reply${_replies++}',
     );
-    final turn = Turn.model(reply);
     // coverage:ignore-end
 
     setState(() {
       _busy = true;
       _error = null;
       _turns.add(Turn.user(show));
-      _turns.add(turn);
+      _turns.add(Turn.model(events));
     });
+  }
 
-    await reply.done;
-
+  /// The model has finished [turn], cleanly or not.
+  void _onReplyComplete(Turn turn, Reply reply) {
     setState(() {
       _busy = false;
       final Object? failure = reply.failure;
@@ -205,17 +208,18 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Component _turnView(Turn turn) {
-    final Reply? reply = turn.reply;
-    if (reply == null) {
+    final Stream<GenUiEvent>? events = turn.events;
+    if (events == null) {
       return div([
         p([Component.text(turn.text)]),
       ], classes: 'turn turn--user');
     }
-    // The reply notifies as prose and surfaces arrive, so the bubble fills in
+    // The builder folds the events as they arrive, so the bubble fills in
     // while the model is still writing.
-    return ListenableBuilder(
-      listenable: reply,
-      builder: (context) {
+    return ReplyBuilder(
+      events: events,
+      onComplete: (reply) => _onReplyComplete(turn, reply),
+      builder: (context, reply) {
         if (reply.isEmpty) return const Component.empty();
         return div([
           if (reply.text.trim().isNotEmpty) p([Component.text(reply.text)]),

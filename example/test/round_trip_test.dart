@@ -92,17 +92,18 @@ void main() {
     /// Runs one turn the way the browser's @client component does.
     Future<({String html, String prose})> turn(String prompt) async {
       final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
-      final Reply received = conversation.receive(ask(openChat(), prompt));
-      await received.done;
+      final List<GenUiEvent> events = await conversation
+          .receive(ask(openChat(), prompt))
+          .toList();
 
       final response = await renderComponent(
-        Surface(surface: received.surfaces.single),
+        Surface(surface: events.whereType<GenUiSurface>().single.surface),
         standalone: true,
       );
       conversation.dispose();
       return (
         html: String.fromCharCodes(response.body),
-        prose: received.text.trim(),
+        prose: events.whereType<GenUiText>().map((e) => e.text).join().trim(),
       );
     }
 
@@ -154,9 +155,10 @@ void main() {
       final AgentChat<dynamic> chat = openChat();
 
       // Turn one: the model builds a form.
-      final Reply received = conversation.receive(ask(chat, 'make me a form'));
-      await received.done;
-      final surface = received.surfaces.single;
+      final List<GenUiEvent> events = await conversation
+          .receive(ask(chat, 'make me a form'))
+          .toList();
+      final surface = events.whereType<GenUiSurface>().single.surface;
 
       // The user fills the field in. A bound input writes straight to the
       // model, so this is what typing leaves behind.
