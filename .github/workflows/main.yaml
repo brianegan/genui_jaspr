@@ -16,21 +16,28 @@ jobs:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/dart_package.yml@v1
     with:
       dart_sdk: stable
-      # No min_coverage here: very_good_cli's own coverage check does not
-      # honor this package's `coverage:ignore` comments (see verify-coverage
-      # below), so it would fail this job over lines the bar deliberately
-      # excludes. Coverage is enforced by verify-coverage instead.
+      # min_coverage defaults to 100 and dart_package.yml passes
+      # `--min-coverage` unconditionally, so it must be set here, not just
+      # omitted, to actually disable it. very_good_cli's own coverage check
+      # does not honor this package's `coverage:ignore` comments even with
+      # its own `check_ignore: true` (its `HitMap.parseFiles` resolves
+      # `packagePath` in a way that never finds this package's sources), so
+      # letting it enforce a bar here would fail this job over lines the bar
+      # deliberately excludes. Coverage is enforced by verify-coverage
+      # instead, which reads those comments correctly.
+      min_coverage: 0
       # There is no bloc in this package, so the default lint pass would only
       # activate bloc_tools for nothing.
       run_bloc_lint: false
       # `test_optimization` is deliberately left on. The generated entrypoint
       # only chokes on `test/browser` when the run has no `--platform vm`, and
-      # `platform` defaults to vm here, so all 84 tests compile and pass under
-      # the optimizer. Drop the optimization only if that default ever changes.
+      # `platform` defaults to vm here, so every test in test/ (excluding
+      # test/browser) compiles and passes under the optimizer. Drop the
+      # optimization only if that default ever changes.
 
   # Coverage is held at 100%: everything `lib/` exposes is reachable from a VM
-  # test, or, for the few lines only a browser can execute, from the browser
-  # suite above with a `coverage:ignore` comment saying so.
+  # test, or, for the few lines only a browser can execute, from the
+  # browser-test job below with a `coverage:ignore` comment saying so.
   #
   # Hand-written rather than `verify-dart`'s own `min_coverage`, because
   # `very_good_cli`'s coverage check does not honor those comments in this

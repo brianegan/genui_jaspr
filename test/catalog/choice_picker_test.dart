@@ -119,6 +119,17 @@ void main() {
         );
       });
 
+      test('is the default when no variant is given', () async {
+        // Matches the A2UI reference implementation: an omitted variant
+        // means multipleSelection, not mutuallyExclusive.
+        final html = await renderChoicePicker(
+          pickerSurface({'value': <String>[]}),
+        );
+
+        expect(html, contains('type="checkbox"'));
+        expect(html, isNot(contains('type="radio"')));
+      });
+
       test('checks the matching option when the value is a scalar', () async {
         // The schema admits a plain string for `value` regardless of variant,
         // so a scalar under multipleSelection must render, not crash.
@@ -161,6 +172,45 @@ void main() {
           ),
         );
       });
+    });
+
+    test(
+      'renders no options rather than crashing when options is bound',
+      () async {
+        // `options` isn't in the schema's dynamic shapes, so a model that binds
+        // it anyway resolves to the unresolved `{path: ...}` map rather than a
+        // list. Degrading to an empty fieldset keeps the surface up rather than
+        // showing the renderer's error fallback.
+        final html = await renderChoicePicker([
+          {
+            'id': 'root',
+            'component': 'ChoicePicker',
+            'options': {'path': '/opts'},
+            'value': 'red',
+          },
+        ]);
+
+        expect(html, '<fieldset class="a2ui-choice-picker"></fieldset>');
+      },
+    );
+
+    test('renders an empty label rather than the text "null"', () async {
+      final html = await renderChoicePicker([
+        {
+          'id': 'root',
+          'component': 'ChoicePicker',
+          'options': [
+            {'value': 'red'},
+          ],
+          'value': 'red',
+        },
+      ]);
+
+      expect(
+        html,
+        contains('<span class="a2ui-choice-picker__option-label"></span>'),
+      );
+      expect(html, isNot(contains('>null<')));
     });
 
     test('checks the matching option when the value is a list', () async {

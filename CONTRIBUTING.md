@@ -25,11 +25,12 @@ CI holds this suite at 100% line coverage of `lib/`.
 
 The browser tests are marked `@TestOn('browser')`, so a plain `dart test` skips
 them. They exist because a few hops cannot be reached from the VM: a real
-keystroke in a real input element reaching the data model, a real click on a
-generated button, and a textarea whose displayed value follows the data model
-after the user has typed in it. Deleting a field's `onInput` handler passes
-every VM test and fails here, which is why this suite is worth the Chrome
-dependency.
+keystroke or click on a real input element reaching the data model (a text
+field, checkbox, radio, checkbox group, range, or date/time input), a real
+click on a generated button, and a textarea whose displayed value follows the
+data model after the user has typed in it. Deleting a field's `onInput`
+handler passes every VM test and fails here, which is why this suite is worth
+the Chrome dependency.
 
 The few lines in `lib/` that only a browser can execute are marked with
 `coverage:ignore` comments that say so, and each has a browser test.
