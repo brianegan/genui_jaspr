@@ -50,8 +50,11 @@ gate:
     - name: review
       skill: code-review
       model: fable
+    # Runs the VM suite and holds it at 100% line coverage of `lib/`, the same
+    # command CI's verify-coverage job runs (see tool/coverage.sh's own doc
+    # comment for why this isn't `very_good_cli`'s own coverage check).
     - name: test
-      run: dart test
+      run: ./tool/coverage.sh
     # The example is a separate workspace member, so a root `dart test` does not
     # reach it. Its script runs the VM suite, the browser suite for `chat.dart`,
     # and merges the two coverage reports to hold 100% — the same command CI's

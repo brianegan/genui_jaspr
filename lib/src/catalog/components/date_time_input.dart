@@ -6,8 +6,9 @@ import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:universal_web/web.dart' as web;
 
 /// `DateTimeInput`'s API, one of the basic catalog's components that
-/// `a2ui_core` does not ship. Its schema is copied from the A2UI spec's basic
-/// catalog.
+/// `a2ui_core` does not ship. Its schema matches the A2UI spec's basic
+/// catalog, taken from Flutter's `genui` reference implementation since
+/// `a2ui_core` has none to copy it from.
 class DateTimeInputApi extends ComponentApi {
   @override
   String get name => 'DateTimeInput';
@@ -40,7 +41,8 @@ class DateTimeInputApi extends ComponentApi {
 /// This registers a raw `input` listener instead and reads the element's
 /// `value` directly, which is already the exact string the schema binds, so
 /// nothing needs converting or reformatting, and clearing the field writes
-/// null like any other input does.
+/// null the same way Slider and `TextField`'s number variant treat their own
+/// missing-value case, rather than throwing.
 class DateTimeInputComponent extends JasprComponent {
   /// Creates a [DateTimeInputComponent].
   DateTimeInputComponent();

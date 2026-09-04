@@ -58,6 +58,7 @@ locally first saves a round trip:
 dart format --set-exit-if-changed lib test example/lib example/test
 dart analyze --fatal-infos
 npx cspell --config .github/cspell.json "**/*.{dart,md,yaml}"
+./tool/coverage.sh
 ```
 
 Pull request titles become the squash-merge commit titles, so they follow the

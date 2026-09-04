@@ -49,10 +49,11 @@ class ChoicePickerApi extends ComponentApi {
 /// A group of options the user picks one or more of, bound to the data model
 /// in both directions.
 ///
-/// `mutuallyExclusive` (the default) renders radio buttons sharing this
-/// component's id as their group name, so only one can ever be checked.
-/// `multipleSelection` renders a checkbox per option, and writes back the
-/// list of every option currently checked.
+/// `multipleSelection` (the default, matching the A2UI reference
+/// implementation) renders a checkbox per option and writes back the list of
+/// every option currently checked. `mutuallyExclusive` renders radio buttons
+/// sharing this component's id as their group name, so only one can ever be
+/// checked.
 class ChoicePickerComponent extends JasprComponent {
   /// Creates a [ChoicePickerComponent].
   ChoicePickerComponent();
@@ -63,8 +64,9 @@ class ChoicePickerComponent extends JasprComponent {
   @override
   Component build(ComponentScope scope) {
     final labelText = scope.string('label');
-    final isMulti = scope.string('variant') == 'multipleSelection';
-    final options = (scope.props['options'] as List? ?? const [])
+    final isMulti = scope.string('variant') != 'mutuallyExclusive';
+    final rawOptions = scope.props['options'];
+    final options = (rawOptions is List ? rawOptions : const <Object?>[])
         .cast<Map<Object?, Object?>>();
     final write = scope.setter('value');
     final errors = scope.validationErrors;
@@ -104,15 +106,15 @@ class ChoicePickerComponent extends JasprComponent {
     required void Function(Object?)? write,
   }) {
     final value = '${option['value']}';
-    final optionLabel = '${option['label']}';
+    final optionLabel = option['label']?.toString() ?? '';
     final checked = selected.contains(value);
 
-    // Only a real browser ever calls into these: a VM test can drive `build`
-    // but never fires a real `change` event, which is what the browser suite
-    // covers instead.
-    // coverage:ignore-start
     ValueChanged<bool>? onChange;
     if (write != null) {
+      // Only a real browser ever calls into these closures: a VM test can
+      // drive `build` but never fires a real `change` event, which is what
+      // the browser suite covers instead.
+      // coverage:ignore-start
       onChange = isMulti
           ? (isChecked) {
               final next = Set<String>.of(selected);
@@ -126,8 +128,8 @@ class ChoicePickerComponent extends JasprComponent {
           : (isChecked) {
               if (isChecked) write(value);
             };
+      // coverage:ignore-end
     }
-    // coverage:ignore-end
 
     return label(
       [

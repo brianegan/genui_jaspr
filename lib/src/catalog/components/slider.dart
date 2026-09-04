@@ -5,7 +5,9 @@ import 'package:jaspr/jaspr.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
 /// `Slider`'s API, one of the basic catalog's components that `a2ui_core`
-/// does not ship. Its schema is copied from the A2UI spec's basic catalog.
+/// does not ship. Its schema matches the A2UI spec's basic catalog, taken
+/// from Flutter's `genui` reference implementation since `a2ui_core` has none
+/// to copy it from.
 class SliderApi extends ComponentApi {
   @override
   String get name => 'Slider';

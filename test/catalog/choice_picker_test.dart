@@ -67,6 +67,31 @@ void main() {
 
         expect(html, isNot(contains('checked')));
       });
+
+      test('shows the message for a failing check', () async {
+        final html = await renderChoicePicker(
+          pickerSurface({
+            'variant': 'mutuallyExclusive',
+            'value': 'red',
+            'checks': [
+              {
+                'condition': {'path': '/ok'},
+                'message': 'Pick one',
+              },
+            ],
+          }),
+          data: {'/ok': false},
+        );
+
+        expect(
+          html,
+          contains('class="a2ui-choice-picker a2ui-choice-picker--invalid"'),
+        );
+        expect(
+          html,
+          contains('<small class="a2ui-choice-picker__error">Pick one</small>'),
+        );
+      });
     });
 
     group('multipleSelection', () {
@@ -94,7 +119,7 @@ void main() {
         );
       });
 
-      test('checks none of them when the value is a scalar', () async {
+      test('checks the matching option when the value is a scalar', () async {
         // The schema admits a plain string for `value` regardless of variant,
         // so a scalar under multipleSelection must render, not crash.
         final html = await renderChoicePicker(
@@ -110,29 +135,32 @@ void main() {
         );
       });
 
-      test(
-        'shows the message for a failing check on the invalid class',
-        () async {
-          final html = await renderChoicePicker(
-            pickerSurface({
-              'variant': 'multipleSelection',
-              'value': ['red'],
-              'checks': [
-                {
-                  'condition': {'path': '/ok'},
-                  'message': 'Pick at least one',
-                },
-              ],
-            }),
-            data: {'/ok': false},
-          );
+      test('shows the message for a failing check', () async {
+        final html = await renderChoicePicker(
+          pickerSurface({
+            'variant': 'multipleSelection',
+            'value': ['red'],
+            'checks': [
+              {
+                'condition': {'path': '/ok'},
+                'message': 'Pick at least one',
+              },
+            ],
+          }),
+          data: {'/ok': false},
+        );
 
-          expect(
-            html,
-            contains('class="a2ui-choice-picker a2ui-choice-picker--invalid"'),
-          );
-        },
-      );
+        expect(
+          html,
+          contains('class="a2ui-choice-picker a2ui-choice-picker--invalid"'),
+        );
+        expect(
+          html,
+          contains(
+            '<small class="a2ui-choice-picker__error">Pick at least one</small>',
+          ),
+        );
+      });
     });
 
     test('checks the matching option when the value is a list', () async {
@@ -151,30 +179,6 @@ void main() {
           '<input class="a2ui-choice-picker__input" type="radio" name="root" checked/>'
           '<span class="a2ui-choice-picker__option-label">Blue</span>',
         ),
-      );
-    });
-
-    test('shows the message for a failing check', () async {
-      final html = await renderChoicePicker(
-        pickerSurface({
-          'value': 'red',
-          'checks': [
-            {
-              'condition': {'path': '/ok'},
-              'message': 'Pick one',
-            },
-          ],
-        }),
-        data: {'/ok': false},
-      );
-
-      expect(
-        html,
-        contains('class="a2ui-choice-picker a2ui-choice-picker--invalid"'),
-      );
-      expect(
-        html,
-        contains('<small class="a2ui-choice-picker__error">Pick one</small>'),
       );
     });
 

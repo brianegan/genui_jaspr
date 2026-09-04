@@ -284,6 +284,12 @@ final List<StyleRule> genuiJasprStyles = [
     ),
   ),
   const StyleRule(
+    selector: Selector('.a2ui-date-time-input__input:focus-visible'),
+    styles: Styles(
+      raw: {'outline': '2px solid var(--a2ui-primary-color, #1a73e8)'},
+    ),
+  ),
+  const StyleRule(
     selector: Selector('.a2ui-date-time-input__error'),
     styles: Styles(
       raw: {
