@@ -1,7 +1,6 @@
-import 'package:jaspr/jaspr.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:jaspr/dom.dart';
-
-import '../jaspr_component.dart';
+import 'package:jaspr/jaspr.dart';
 
 /// Renders a flex container for `Row` and `Column`.
 ///

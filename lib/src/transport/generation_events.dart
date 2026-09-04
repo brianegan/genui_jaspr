@@ -7,6 +7,7 @@ sealed class GenerationEvent {
 
 /// Prose the model wrote for the user to read.
 final class TextEvent extends GenerationEvent {
+  /// Creates a [TextEvent] carrying [text].
   const TextEvent(this.text);
 
   /// The text, with protocol markers removed.
@@ -15,8 +16,10 @@ final class TextEvent extends GenerationEvent {
 
 /// An A2UI message the model produced to change the UI.
 final class A2uiMessageEvent extends GenerationEvent {
+  /// Creates an [A2uiMessageEvent] carrying [message].
   const A2uiMessageEvent(this.message);
 
+  /// The parsed A2UI message.
   final A2uiMessage message;
 }
 
@@ -27,6 +30,7 @@ final class A2uiMessageEvent extends GenerationEvent {
 /// message should be corrected, whereas a model that happens to write a JSON
 /// snippet in conversation should just be shown.
 class A2uiValidationException implements Exception {
+  /// Creates an [A2uiValidationException] for [message].
   A2uiValidationException(this.message, {this.json, this.cause});
 
   /// What was wrong.

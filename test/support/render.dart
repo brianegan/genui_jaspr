@@ -10,7 +10,7 @@ bool _initialized = false;
 /// type use `testComponents` and the finders instead.
 Future<String> renderHtml(Component component) async {
   if (!_initialized) {
-    Jaspr.initializeApp(useIsolates: false);
+    Jaspr.initializeApp();
     _initialized = true;
   }
   final response = await renderComponent(component, standalone: true);

@@ -1,8 +1,7 @@
 import 'package:a2ui_core/a2ui_core.dart';
-import 'package:jaspr/jaspr.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:jaspr/dom.dart';
-
-import '../jaspr_component.dart';
+import 'package:jaspr/jaspr.dart';
 
 /// Text, rendered with the element that matches its variant.
 ///
@@ -10,6 +9,7 @@ import '../jaspr_component.dart';
 /// so a generated page keeps a document outline that screen readers and search
 /// engines can follow.
 class TextComponent extends JasprComponent {
+  /// Creates a [TextComponent].
   TextComponent();
 
   @override
@@ -17,9 +17,9 @@ class TextComponent extends JasprComponent {
 
   @override
   Component build(ComponentScope scope) {
-    final String variant = scope.string('variant') ?? 'body';
-    final String content = scope.string('text') ?? '';
-    final String classes = 'a2ui-text a2ui-text--$variant';
+    final variant = scope.string('variant') ?? 'body';
+    final content = scope.string('text') ?? '';
+    final classes = 'a2ui-text a2ui-text--$variant';
     final children = [Component.text(content)];
 
     return switch (variant) {

@@ -1,7 +1,7 @@
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
 import '../support/render.dart';
@@ -29,7 +29,7 @@ class _HostState extends State<_Host> {
 
   @override
   Component build(BuildContext context) {
-    if (!_visible) return div([], classes: 'empty');
+    if (!_visible) return const div([], classes: 'empty');
     return SignalBuilder<int>(
       signal: _useB ? component.b : component.a,
       builder: (context, value) => span([Component.text('v$value')]),
@@ -39,10 +39,10 @@ class _HostState extends State<_Host> {
 
 void main() {
   group('SignalBuilder', () {
-    // The client binding tolerates a setState from initState, but the server's
-    // asynchronous build owner asserts on it, and `subscribe` delivers its first
-    // callback from exactly there. Server rendering is the only seam that
-    // catches it, so it gets its own test.
+    // The client binding tolerates a setState from initState, but the
+    // server's asynchronous build owner asserts on it, and `subscribe`
+    // delivers its first callback from exactly there. Server rendering is
+    // the only seam that catches it, so it gets its own test.
     test(
       'renders on the server, where setState from initState would assert',
       () async {
@@ -57,7 +57,7 @@ void main() {
       },
     );
 
-    testComponents('renders the signal\'s current value', (tester) async {
+    testComponents("renders the signal's current value", (tester) async {
       tester.pumpComponent(
         SignalBuilder<int>(
           signal: signal(7),

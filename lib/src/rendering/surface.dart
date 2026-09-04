@@ -1,11 +1,12 @@
-import 'package:a2ui_core/a2ui_core.dart';
-import 'package:jaspr/jaspr.dart';
-import 'package:jaspr/dom.dart';
+import 'dart:async';
 
-import '../catalog/jaspr_component.dart';
-import '../conversation/client_messages.dart';
-import '../styles.dart';
-import 'signal_builder.dart';
+import 'package:a2ui_core/a2ui_core.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
+import 'package:genui_jaspr/src/conversation/client_messages.dart';
+import 'package:genui_jaspr/src/rendering/signal_builder.dart';
+import 'package:genui_jaspr/src/styles.dart';
+import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
 
 /// Builds what a surface shows while it has no root component yet.
 typedef SurfacePlaceholderBuilder = Component Function(BuildContext context);
@@ -29,6 +30,7 @@ const String rootComponentId = 'root';
 /// renders [placeholder], or nothing, until its root component exists and then
 /// appears on its own.
 class Surface extends StatefulComponent {
+  /// Creates a [Surface] rendering [surface].
   const Surface({
     required this.surface,
     this.placeholder,
@@ -96,7 +98,7 @@ class _SurfaceState extends State<Surface> {
 
   @override
   Component build(BuildContext context) {
-    final bool hasRoot =
+    final hasRoot =
         component.surface.componentsModel.get(rootComponentId) != null;
 
     // The surface root carries the theme as custom properties, so the static
@@ -151,6 +153,7 @@ class _SurfaceOptions extends InheritedComponent {
 /// whenever the data they depend on changes, which is what makes a surface
 /// reactive without the renderer tracking dependencies itself.
 class A2uiComponent extends StatefulComponent {
+  /// Creates an [A2uiComponent] rendering [componentId] within [surface].
   const A2uiComponent({
     required this.surface,
     required this.componentId,
@@ -214,10 +217,10 @@ class _A2uiComponentState extends State<A2uiComponent> {
 
   /// Re-binds when this component's model is replaced rather than edited.
   ///
-  /// Changing a component's type is applied by removing it and adding a fresh
-  /// model under the same id. The id did not change, so nothing else here would
-  /// notice, and this would keep rendering the previous type against a model that
-  /// is no longer in the surface.
+  /// Changing a component's type is applied by removing it and adding a
+  /// fresh model under the same id. The id did not change, so nothing else
+  /// here would notice, and this would keep rendering the previous type
+  /// against a model that is no longer in the surface.
   void _onComponentCreated(ComponentModel model) {
     if (model.id != component.componentId || model == _model) return;
     if (!mounted) return;
@@ -235,14 +238,11 @@ class _A2uiComponentState extends State<A2uiComponent> {
   }
 
   void _bind() {
-    final ComponentModel? model = component.surface.componentsModel.get(
-      component.componentId,
-    );
+    final model = component.surface.componentsModel.get(component.componentId);
     if (model == null) return;
     _model = model;
 
-    final JasprComponent? entry =
-        component.surface.catalog.components[model.type];
+    final entry = component.surface.catalog.components[model.type];
     if (entry == null) return;
     _entry = entry;
 
@@ -268,7 +268,7 @@ class _A2uiComponentState extends State<A2uiComponent> {
 
   @override
   Component build(BuildContext context) {
-    final ComponentModel? model = _model;
+    final model = _model;
     if (model == null) {
       return _missing(
         context,
@@ -276,8 +276,8 @@ class _A2uiComponentState extends State<A2uiComponent> {
       );
     }
 
-    final JasprComponent? entry = _entry;
-    final GenericBinder? binder = _binder;
+    final entry = _entry;
+    final binder = _binder;
     if (entry == null || binder == null) {
       // The model asked for a component this catalog does not implement. Say so
       // in the page rather than throwing, so one unknown component does not
@@ -331,15 +331,15 @@ class _A2uiComponentState extends State<A2uiComponent> {
   /// Hands an error to the surface, which is where a `GenUiConversation`
   /// listens for them.
   void _reportError(Object error) {
-    component.surface.dispatchError(
-      clientErrorFrom(error, surfaceId: component.surface.id),
+    unawaited(
+      component.surface.dispatchError(
+        clientErrorFrom(error, surfaceId: component.surface.id),
+      ),
     );
   }
 
   Component _missing(BuildContext context, String message) {
-    final SurfaceFallbackBuilder? fallback = _SurfaceOptions.fallbackOf(
-      context,
-    );
+    final fallback = _SurfaceOptions.fallbackOf(context);
     if (fallback != null) return fallback(context, message);
     return div(
       [Component.text(message)],

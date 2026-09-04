@@ -1,12 +1,12 @@
 import 'package:a2ui_core/a2ui_core.dart';
-import 'package:jaspr/jaspr.dart';
+import 'package:genui_jaspr/src/catalog/components/flex.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:jaspr/dom.dart';
-
-import '../jaspr_component.dart';
-import 'flex.dart';
+import 'package:jaspr/jaspr.dart';
 
 /// Lays its children out vertically.
 class ColumnComponent extends JasprComponent {
+  /// Creates a [ColumnComponent].
   ColumnComponent();
 
   @override

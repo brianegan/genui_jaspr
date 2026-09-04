@@ -1,6 +1,6 @@
 import 'package:a2ui_core/a2ui_core.dart';
 
-import '../transport/generation_events.dart';
+import 'package:genui_jaspr/src/transport/generation_events.dart';
 
 /// The client-to-server envelope for an [action], ready to send to a model.
 ///

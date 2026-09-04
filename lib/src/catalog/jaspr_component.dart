@@ -8,6 +8,7 @@ import 'package:json_schema_builder/json_schema_builder.dart';
 /// calls evaluated, and actions turned into callbacks. A builder reads values
 /// out of the map and never resolves a binding itself.
 final class ComponentScope {
+  /// Creates a [ComponentScope].
   const ComponentScope({
     required this.id,
     required this.type,
@@ -37,10 +38,11 @@ final class ComponentScope {
 
   /// Renders a resolved `children` property.
   ///
-  /// The binder resolves such a property into a list of child references, which
-  /// may come either from a literal list of ids or from a template repeated over
-  /// a path in the data model. Both arrive here in the same shape. Most builders
-  /// want [children] instead, which reads the property for them.
+  /// The binder resolves such a property into a list of child references,
+  /// which may come either from a literal list of ids or from a template
+  /// repeated over a path in the data model. Both arrive here in the same
+  /// shape. Most builders want [children] instead, which reads the property
+  /// for them.
   final List<Component> Function(Object? childrenProp) buildChildren;
 
   /// Reports something that went wrong inside this component.
@@ -77,7 +79,7 @@ final class ComponentScope {
     return () async {
       try {
         await value();
-      } catch (error) {
+      } on Object catch (error) {
         reportError(error);
       }
     };
@@ -93,7 +95,7 @@ final class ComponentScope {
   /// not a number, such as when it is empty or holds a lone minus sign, and the
   /// data model is sent to the model as JSON, which has no encoding for it.
   void Function(Object?)? setter(String key) {
-    final String name = 'set${key[0].toUpperCase()}${key.substring(1)}';
+    final name = 'set${key[0].toUpperCase()}${key.substring(1)}';
     final Object? write = props[name];
     if (write is! void Function(Object?)) return null;
     return (Object? value) =>
@@ -136,6 +138,7 @@ typedef ComponentBuilder = Component Function(ComponentScope scope);
 /// For a one-off, or in a test, [JasprComponent.inline] takes the two halves
 /// directly without a class of their own.
 abstract class JasprComponent implements ComponentApi {
+  /// A constructor for subclasses to call.
   const JasprComponent();
 
   /// A component from its [api] and a [build] closure.

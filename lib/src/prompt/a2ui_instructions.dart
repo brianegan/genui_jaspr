@@ -21,11 +21,12 @@ import 'package:a2ui_core/a2ui_core.dart';
 /// ].join('\n\n');
 /// ```
 ///
-/// By default the model is told to open a new surface for every reply and never
-/// touch an earlier one, which pairs with `GenUiConversation.receive` given a
-/// `surfaceId`: each reply lands in a surface the app names. Pass [allowUpdates]
-/// to let the model revise a surface from an earlier turn instead, which pairs
-/// with `receive` given no `surfaceId`, so the model's own ids are kept.
+/// By default the model is told to open a new surface for every reply and
+/// never touch an earlier one, which pairs with `GenUiConversation.receive`
+/// given a `surfaceId`: each reply lands in a surface the app names. Pass
+/// [allowUpdates] to let the model revise a surface from an earlier turn
+/// instead, which pairs with `receive` given no `surfaceId`, so the model's
+/// own ids are kept.
 ///
 /// The output is plain text with fenced JSON, which every model client accepts
 /// as a system prompt. It imports nothing from Jaspr, so it runs on the server
@@ -34,9 +35,11 @@ String a2uiInstructions(
   Catalog<ComponentApi> catalog, {
   bool allowUpdates = false,
 }) {
+  final catalogIdNotice =
+      'The active catalog ID is "${catalog.id}". '
+      'Use exactly this ID when creating a surface.';
   return [
-    'The active catalog ID is "${catalog.id}". '
-        'Use exactly this ID when creating a surface.',
+    catalogIdNotice,
     _messages,
     _rules(allowUpdates: allowUpdates),
     _components(catalog),

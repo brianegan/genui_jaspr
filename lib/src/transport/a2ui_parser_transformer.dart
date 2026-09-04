@@ -3,16 +3,17 @@ import 'dart:convert';
 
 import 'package:a2ui_core/a2ui_core.dart';
 
-import 'generation_events.dart';
+import 'package:genui_jaspr/src/transport/generation_events.dart';
 
 /// Turns a model's text stream into a stream of prose and A2UI messages.
 ///
-/// A model writes both in one channel, and its chunks split wherever the network
-/// happens to break them, often in the middle of a JSON object. This buffers
-/// until a message is complete, so a surface can be updated as soon as one
-/// arrives rather than after the whole response.
+/// A model writes both in one channel, and its chunks split wherever the
+/// network happens to break them, often in the middle of a JSON object. This
+/// buffers until a message is complete, so a surface can be updated as soon
+/// as one arrives rather than after the whole response.
 class A2uiParserTransformer
     extends StreamTransformerBase<String, GenerationEvent> {
+  /// Creates an [A2uiParserTransformer].
   const A2uiParserTransformer();
 
   @override
@@ -62,7 +63,7 @@ class _ParserStream {
       _emitText(_buffer);
     }
     _buffer = '';
-    _controller.close();
+    unawaited(_controller.close());
   }
 
   void _processBuffer() {
@@ -75,7 +76,7 @@ class _ParserStream {
 
   /// Consumes a ```` ```json ```` block, if the buffer holds a complete one.
   bool _consumeFenced() {
-    final _Found? found = _findFenced(_buffer);
+    final found = _findFenced(_buffer);
     if (found == null) return false;
 
     try {
@@ -84,8 +85,9 @@ class _ParserStream {
       _emitTextBefore(found.start);
       _emitDecoded(decoded);
     } on FormatException {
-      // The fence closed around something that is not JSON. Show it as prose and
-      // move past it, rather than waiting for input that will never fix it.
+      // The fence closed around something that is not JSON. Show it as
+      // prose and move past it, rather than waiting for input that will
+      // never fix it.
       _emitTextBefore(found.start);
       _emitText(found.original);
     }
@@ -96,7 +98,7 @@ class _ParserStream {
   /// Consumes a bare JSON object at the start of the buffer, for models that
   /// emit messages without fencing them.
   bool _consumeBareObject() {
-    final _Found? found = _findBalancedObject(_buffer);
+    final found = _findBalancedObject(_buffer);
     if (found == null) return false;
 
     try {
@@ -116,20 +118,21 @@ class _ParserStream {
   ///
   /// Returns true when the parser should stop and wait for more input.
   bool _awaitMoreInput() {
-    final int start = _firstPossibleMessageStart();
+    final start = _firstPossibleMessageStart();
 
     if (start == -1) {
       // A chunk can end part-way through a fence marker, leaving one or two
       // backticks that a search for the full marker will not find. Hold that
       // fragment back, or it surfaces as prose and the message that follows it
       // is never recognised.
-      final int partial = _trailingBacktickCount();
+      final partial = _trailingBacktickCount();
       if (partial > 0) {
-        final String prefix = _buffer.substring(0, _buffer.length - partial);
+        final prefix = _buffer.substring(0, _buffer.length - partial);
         _buffer = _buffer.substring(_buffer.length - partial);
-        // The separator rule applies here too. Without it, the blank line before
-        // a fence is shown as prose whenever a chunk happens to end inside the
-        // marker, so the same reply reads differently depending on chunk size.
+        // The separator rule applies here too. Without it, the blank line
+        // before a fence is shown as prose whenever a chunk happens to end
+        // inside the marker, so the same reply reads differently depending
+        // on chunk size.
         if (!(_lastEventWasMessage && prefix.trim().isEmpty)) {
           _emitText(prefix);
         }
@@ -138,8 +141,8 @@ class _ParserStream {
 
       // Nothing here could become a message.
       if (_lastEventWasMessage && _buffer.trim().isEmpty) {
-        // Hold the separator, in case the stream ends and it turns out to be all
-        // that is left.
+        // Hold the separator, in case the stream ends and it turns out to
+        // be all that is left.
         return true;
       }
       _emitText(_buffer);
@@ -148,7 +151,7 @@ class _ParserStream {
     }
 
     if (start > 0) {
-      final String prefix = _buffer.substring(0, start);
+      final prefix = _buffer.substring(0, start);
       _buffer = _buffer.substring(start);
       if (!(_lastEventWasMessage && prefix.trim().isEmpty)) {
         _emitText(prefix);
@@ -170,8 +173,8 @@ class _ParserStream {
   }
 
   int _firstPossibleMessageStart() {
-    final int fence = _buffer.indexOf('```');
-    final int brace = _buffer.indexOf('{');
+    final fence = _buffer.indexOf('```');
+    final brace = _buffer.indexOf('{');
     if (fence == -1) return brace;
     if (brace == -1) return fence;
     return fence < brace ? fence : brace;
@@ -180,23 +183,24 @@ class _ParserStream {
   /// Emits the buffer up to [index] as prose, unless it is only the whitespace
   /// separating two messages.
   ///
-  /// Every path that consumes a message routes its preceding text through here,
-  /// so the separator rule holds no matter whether the message was already
-  /// complete when it arrived or had to be buffered first. Without that, the same
-  /// reply reads differently depending on how the network split it.
+  /// Every path that consumes a message routes its preceding text through
+  /// here, so the separator rule holds no matter whether the message was
+  /// already complete when it arrived or had to be buffered first. Without
+  /// that, the same reply reads differently depending on how the network
+  /// split it.
   void _emitTextBefore(int index) {
     if (index <= 0) return;
-    final String prefix = _buffer.substring(0, index);
+    final prefix = _buffer.substring(0, index);
     if (_lastEventWasMessage && prefix.trim().isEmpty) return;
     _emitText(prefix);
   }
 
   void _emitText(String text) {
-    final String cleaned = text
+    final cleaned = text
         .replaceAll('<a2ui_message>', '')
         .replaceAll('</a2ui_message>', '');
-    // Nothing was emitted, so the separator rule still applies to whatever comes
-    // next. Clearing the flag here would let a blank line through.
+    // Nothing was emitted, so the separator rule still applies to whatever
+    // comes next. Clearing the flag here would let a blank line through.
     if (cleaned.isEmpty) return;
     _lastEventWasMessage = false;
     _controller.add(TextEvent(cleaned));
@@ -229,7 +233,7 @@ class _ParserStream {
       _controller.add(A2uiMessageEvent(_parse(json)));
       _lastEventWasMessage = true;
       return;
-    } catch (error) {
+    } on Object catch (error) {
       if (json.keys.any(_messageKeys.contains)) {
         _controller.addError(
           error is A2uiValidationException
@@ -252,7 +256,7 @@ class _ParserStream {
     try {
       return A2uiMessage.fromJson(json);
     } on A2uiValidationError catch (error) {
-      final String message = error.message.contains("'version'")
+      final message = error.message.contains("'version'")
           ? 'A2UI message must have version "v0.9"'
           : error.message;
       throw A2uiValidationException(message, json: json, cause: error);
@@ -262,7 +266,7 @@ class _ParserStream {
   static final _fencePattern = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```');
 
   _Found? _findFenced(String text) {
-    final RegExpMatch? match = _fencePattern.firstMatch(text);
+    final match = _fencePattern.firstMatch(text);
     if (match == null) return null;
     return _Found(
       match.start,
@@ -283,7 +287,7 @@ class _ParserStream {
     var escaped = false;
 
     for (var i = 0; i < input.length; i++) {
-      final String character = input[i];
+      final character = input[i];
 
       if (escaped) {
         escaped = false;
@@ -304,7 +308,7 @@ class _ParserStream {
       } else if (character == '}') {
         depth--;
         if (depth == 0) {
-          final String object = input.substring(0, i + 1);
+          final object = input.substring(0, i + 1);
           return _Found(0, i + 1, object, object);
         }
       }

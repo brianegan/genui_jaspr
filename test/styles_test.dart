@@ -90,7 +90,7 @@ Future<Set<String>> emittedClassNames() async {
   );
 
   final names = <String>{};
-  final pattern = RegExp(r'class="([^"]+)"');
+  final pattern = RegExp('class="([^"]+)"');
   for (final markup in html) {
     for (final match in pattern.allMatches(markup)) {
       names.addAll(match.group(1)!.split(' ').where((n) => n.isNotEmpty));
@@ -105,8 +105,8 @@ void main() {
       final css = genuiJasprStyles.map((rule) => rule.toCss()).join('\n');
       final names = await emittedClassNames();
 
-      // Guard the guard: if rendering stopped producing classes, this test would
-      // pass while checking nothing.
+      // Guard the guard: if rendering stopped producing classes, this test
+      // would pass while checking nothing.
       expect(names, hasLength(greaterThan(10)));
 
       final uncovered = names.where((n) => !css.contains('.$n')).toList()

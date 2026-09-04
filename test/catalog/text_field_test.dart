@@ -1,3 +1,7 @@
+// The expected markup below is built from adjacent string literals joined
+// with no space, so it matches the rendered HTML exactly.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
@@ -140,10 +144,11 @@ void main() {
       expect(html, isNot(contains('a2ui-field__error')));
     });
 
-    // The browser turns a keystroke into a call to this setter. That final hop
-    // lives in Jaspr's own event handling and needs a real input element, so what
-    // is verified here is the contract the renderer offers the builder: a bound
-    // value comes with a setter, and it writes where the model asked.
+    // The browser turns a keystroke into a call to this setter. That final
+    // hop lives in Jaspr's own event handling and needs a real input
+    // element, so what is verified here is the contract the renderer offers
+    // the builder: a bound value comes with a setter, and it writes where
+    // the model asked.
     group('write-back', () {
       testComponents('a bound value writes through to the model', (
         tester,

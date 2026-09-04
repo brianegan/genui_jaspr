@@ -1,9 +1,13 @@
+// Several fixtures below are JSON payloads built from adjacent string
+// literals joined with no space, so they match the wire format exactly.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'dart:async';
 
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
 /// Renders a reply the way a transcript would.
@@ -14,7 +18,7 @@ Component transcriptEntry(BuildContext context, Reply reply) => div([
     p([Component.text(error.message)], classes: 'mistake'),
   if (reply.failure != null)
     p([Component.text('failed: ${reply.failure}')], classes: 'failure'),
-  if (reply.isComplete) p([Component.text('done')], classes: 'done'),
+  if (reply.isComplete) const p([Component.text('done')], classes: 'done'),
 ]);
 
 SurfaceModel<JasprComponent> emptySurface(GenUiConversation conversation) {
@@ -128,8 +132,9 @@ void main() {
         ReplyBuilder(events: events.stream, builder: transcriptEntry),
       );
 
-      events.add(const GenUiText('Partial'));
-      events.addError(StateError('cut off'));
+      events
+        ..add(const GenUiText('Partial'))
+        ..addError(StateError('cut off'));
       await events.close();
       await tester.pump();
 
@@ -186,13 +191,19 @@ void main() {
     });
 
     testComponents('folds a real reply from the conversation', (tester) async {
+      final createSurface =
+          '```json\n{"version":"v0.9","createSurface":{"surfaceId":"s1",'
+          '"catalogId":"${MinimalJasprCatalog.catalogId}",'
+          '"sendDataModel":true}}\n```\n';
+      const updateComponents =
+          '```json\n{"version":"v0.9","updateComponents":{"surfaceId":"s1",'
+          '"components":[{"id":"root","component":"Text","text":"Hi"}]}}\n'
+          '```\n';
       final events = conversation.receive(
         Stream.fromIterable([
           'Here you go.\n\n',
-          '```json\n{"version":"v0.9","createSurface":{"surfaceId":"s1",'
-              '"catalogId":"${MinimalJasprCatalog.catalogId}","sendDataModel":true}}\n```\n',
-          '```json\n{"version":"v0.9","updateComponents":{"surfaceId":"s1",'
-              '"components":[{"id":"root","component":"Text","text":"Hi"}]}}\n```\n',
+          createSurface,
+          updateComponents,
         ]),
       );
       tester.pumpComponent(
@@ -226,13 +237,14 @@ void main() {
     });
 
     test(
-      'turns a failure of the stream into the snapshot\'s failure',
+      "turns a failure of the stream into the snapshot's failure",
       () async {
         final events = StreamController<GenUiEvent>();
         final snapshots = events.stream.replies.toList();
 
-        events.add(const GenUiText('Partial'));
-        events.addError(StateError('cut off'));
+        events
+          ..add(const GenUiText('Partial'))
+          ..addError(StateError('cut off'));
         await events.close();
 
         final replies = await snapshots;
@@ -245,14 +257,12 @@ void main() {
 
   group('Stream<GenUiEvent>.reply', () {
     test('is the finished reply', () async {
+      final createSurface =
+          '```json\n{"version":"v0.9","createSurface":{"surfaceId":"s1",'
+          '"catalogId":"${MinimalJasprCatalog.catalogId}",'
+          '"sendDataModel":true}}\n```\n';
       final reply = await conversation
-          .receive(
-            Stream.fromIterable([
-              'Done.\n',
-              '```json\n{"version":"v0.9","createSurface":{"surfaceId":"s1",'
-                  '"catalogId":"${MinimalJasprCatalog.catalogId}","sendDataModel":true}}\n```\n',
-            ]),
-          )
+          .receive(Stream.fromIterable(['Done.\n', createSurface]))
           .reply;
 
       expect(reply.text, 'Done.\n');

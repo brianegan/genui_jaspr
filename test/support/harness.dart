@@ -44,26 +44,25 @@ SurfaceModel<JasprComponent> buildSurfaceModel(
   void Function(A2uiClientAction)? onAction,
   Catalog<JasprComponent>? catalog,
 }) {
-  final processor = MessageProcessor<JasprComponent>(
-    catalogs: [catalog ?? MinimalJasprCatalog()],
-    onAction: onAction,
-  );
-
-  processor.processMessages([
-    A2uiMessage.fromJson({
-      'version': 'v0.9',
-      'createSurface': {
-        'surfaceId': 'main',
-        'catalogId': MinimalJasprCatalog.catalogId,
-        'theme': ?theme,
-        'sendDataModel': true,
-      },
-    }),
-    A2uiMessage.fromJson({
-      'version': 'v0.9',
-      'updateComponents': {'surfaceId': 'main', 'components': components},
-    }),
-  ]);
+  final processor =
+      MessageProcessor<JasprComponent>(
+        catalogs: [catalog ?? MinimalJasprCatalog()],
+        onAction: onAction,
+      )..processMessages([
+        A2uiMessage.fromJson({
+          'version': 'v0.9',
+          'createSurface': {
+            'surfaceId': 'main',
+            'catalogId': MinimalJasprCatalog.catalogId,
+            'theme': ?theme,
+            'sendDataModel': true,
+          },
+        }),
+        A2uiMessage.fromJson({
+          'version': 'v0.9',
+          'updateComponents': {'surfaceId': 'main', 'components': components},
+        }),
+      ]);
 
   final surface = processor.groupModel.getSurface('main')!;
   data.forEach(surface.dataModel.set);
@@ -83,14 +82,16 @@ Component surfaceComponent(SurfaceModel<JasprComponent> surface) {
 /// Mounts a live tree whose only catalog entry records the scope it is handed,
 /// so a test can exercise the contract between the renderer and a builder.
 ///
-/// Used for the parts of that contract a VM test cannot reach through the DOM,
-/// such as the setter behind a two-way bound property: the browser calls it from
-/// a real input event, which needs a real input element. The component API is the
-/// real one, so the schema driving the binder is production's.
+/// Used for the parts of that contract a VM test cannot reach through the
+/// DOM, such as the setter behind a two-way bound property: the browser
+/// calls it from a real input event, which needs a real input element. The
+/// component API is the real one, so the schema driving the binder is
+/// production's.
 ///
-/// The tree stays mounted, because a setter writes to the data model and that in
-/// turn rebuilds whatever is watching. Calling it against a torn-down tree would
-/// fail for reasons that have nothing to do with the setter.
+/// The tree stays mounted, because a setter writes to the data model and
+/// that in turn rebuilds whatever is watching. Calling it against a
+/// torn-down tree would fail for reasons that have nothing to do with the
+/// setter.
 Future<({ComponentScope scope, SurfaceModel<JasprComponent> surface})>
 captureScope(
   ComponentTester tester,
@@ -99,34 +100,33 @@ captureScope(
   Map<String, Object?> data = const {},
 }) async {
   ComponentScope? captured;
-  final processor = MessageProcessor<JasprComponent>(
-    catalogs: [
-      Catalog<JasprComponent>(
-        id: MinimalJasprCatalog.catalogId,
-        components: [
-          JasprComponent.inline(api, (scope) {
-            captured = scope;
-            return const Component.empty();
-          }),
+  final processor =
+      MessageProcessor<JasprComponent>(
+        catalogs: [
+          Catalog<JasprComponent>(
+            id: MinimalJasprCatalog.catalogId,
+            components: [
+              JasprComponent.inline(api, (scope) {
+                captured = scope;
+                return const Component.empty();
+              }),
+            ],
+          ),
         ],
-      ),
-    ],
-  );
-
-  processor.processMessages([
-    A2uiMessage.fromJson({
-      'version': 'v0.9',
-      'createSurface': {
-        'surfaceId': 'main',
-        'catalogId': MinimalJasprCatalog.catalogId,
-        'sendDataModel': true,
-      },
-    }),
-    A2uiMessage.fromJson({
-      'version': 'v0.9',
-      'updateComponents': {'surfaceId': 'main', 'components': components},
-    }),
-  ]);
+      )..processMessages([
+        A2uiMessage.fromJson({
+          'version': 'v0.9',
+          'createSurface': {
+            'surfaceId': 'main',
+            'catalogId': MinimalJasprCatalog.catalogId,
+            'sendDataModel': true,
+          },
+        }),
+        A2uiMessage.fromJson({
+          'version': 'v0.9',
+          'updateComponents': {'surfaceId': 'main', 'components': components},
+        }),
+      ]);
 
   final surface = processor.groupModel.getSurface('main')!;
   data.forEach(surface.dataModel.set);

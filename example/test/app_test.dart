@@ -8,7 +8,7 @@ void main() {
     // No API key and no model call: the shell is server-rendered, and the
     // conversation only starts once someone types something.
     setUpAll(() {
-      Jaspr.initializeApp(options: defaultServerOptions, useIsolates: false);
+      Jaspr.initializeApp(options: defaultServerOptions);
     });
 
     testServer('renders the shell on the server', (tester) async {
@@ -38,11 +38,12 @@ void main() {
       );
 
       final response = await tester.request('/');
-      final String body = response.body;
+      final body = response.body;
 
-      // Jaspr brackets the @client component in comments so the client knows
-      // what to hydrate. Without them the page renders once and never responds to
-      // anything, which looks fine in a screenshot and is broken in a browser.
+      // Jaspr brackets the @client component in comments so the client
+      // knows what to hydrate. Without them the page renders once and never
+      // responds to anything, which looks fine in a screenshot and is
+      // broken in a browser.
       expect(body, contains('<!--@chat-->'));
       expect(body, contains('<!--/@chat-->'));
       expect(body, contains('main.client.dart.js'));
@@ -124,8 +125,8 @@ void main() {
 
       final response = await tester.request('/');
 
-      // The app composes the package's defaults rather than restating them, so a
-      // generated surface is styled without extra work.
+      // The app composes the package's defaults rather than restating them,
+      // so a generated surface is styled without extra work.
       expect(response.body, contains('.a2ui-button'));
       expect(response.body, contains('var(--a2ui-primary-color'));
     });

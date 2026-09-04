@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('a2uiActionMessage', () {
-    test('wraps the action in the protocol\'s envelope', () {
+    test("wraps the action in the protocol's envelope", () {
       final action = A2uiClientAction(
         name: 'submit',
         surfaceId: 's1',
@@ -27,7 +27,7 @@ void main() {
   });
 
   group('a2uiErrorMessage', () {
-    test('wraps the error in the protocol\'s envelope', () {
+    test("wraps the error in the protocol's envelope", () {
       final error = A2uiClientError(
         code: 'VALIDATION_ERROR',
         surfaceId: 's1',
@@ -77,7 +77,10 @@ void main() {
 
     test('treats a message the parser rejected as a validation error', () {
       final error = clientErrorFrom(
-        A2uiValidationException('no version', json: {'createSurface': {}}),
+        A2uiValidationException(
+          'no version',
+          json: <String, Object?>{'createSurface': {}},
+        ),
       );
 
       expect(error.code, 'VALIDATION_ERROR');

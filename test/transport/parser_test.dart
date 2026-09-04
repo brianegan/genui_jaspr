@@ -1,3 +1,7 @@
+// Several fixtures below are JSON payloads built from adjacent string
+// literals joined with no space, so they match the wire format exactly.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'dart:async';
 
 import 'package:a2ui_core/a2ui_core.dart';
@@ -198,10 +202,10 @@ void main() {
     );
 
     test('parses every message in a JSON array', () async {
-      final events = await parse([
-        '```json\n[$createSurfaceJson,'
-            '{"version":"v0.9","deleteSurface":{"surfaceId":"main"}}]\n```',
-      ]);
+      const arrayOfMessages =
+          '```json\n[$createSurfaceJson,'
+          '{"version":"v0.9","deleteSurface":{"surfaceId":"main"}}]\n```';
+      final events = await parse([arrayOfMessages]);
 
       final messages = messagesOf(events);
       expect(messages, hasLength(2));
@@ -217,25 +221,31 @@ void main() {
       expect(messagesOf(events), hasLength(1));
     });
 
-    test('reports the version it was given when the version is wrong', () async {
-      final stream = Stream.fromIterable([
-        '```json\n{"version":"v0.8",'
-            '"deleteSurface":{"surfaceId":"main"}}\n```',
-      ]).transform(const A2uiParserTransformer());
+    test(
+      'reports the version it was given when the version is wrong',
+      () async {
+        const wrongVersionMessage =
+            '```json\n{"version":"v0.8",'
+            '"deleteSurface":{"surfaceId":"main"}}\n```';
+        final stream = Stream.fromIterable([
+          wrongVersionMessage,
+        ]).transform(const A2uiParserTransformer());
 
-      // The underlying message names the version it actually saw. Replacing it
-      // with the generic "must have a version field" text would hide that.
-      await expectLater(
-        stream,
-        emitsError(
-          isA<A2uiValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains("got 'v0.8'"),
+        // The underlying message names the version it actually saw.
+        // Replacing it with the generic "must have a version field" text
+        // would hide that.
+        await expectLater(
+          stream,
+          emitsError(
+            isA<A2uiValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains("got 'v0.8'"),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('pauses and resumes the source while the output is paused', () async {
       final input = StreamController<String>();
