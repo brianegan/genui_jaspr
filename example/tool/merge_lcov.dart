@@ -52,9 +52,10 @@ void main(List<String> args) {
         missed.add('${entry.key}:$number');
       }
     }
-    buffer.writeln('LF:${entry.value.length}');
-    buffer.writeln('LH:${entry.value.values.where((hits) => hits > 0).length}');
-    buffer.writeln('end_of_record');
+    buffer
+      ..writeln('LF:${entry.value.length}')
+      ..writeln('LH:${entry.value.values.where((hits) => hits > 0).length}')
+      ..writeln('end_of_record');
   }
   out.writeAsStringSync(buffer.toString());
 

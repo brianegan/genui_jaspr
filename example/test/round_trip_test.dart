@@ -34,40 +34,43 @@ void main() {
     final requests = <ModelRequest>[];
 
     setUpAll(() async {
-      Jaspr.initializeApp(useIsolates: false);
+      Jaspr.initializeApp();
 
       // A real server on a real port, serving the real agent behind the real
       // handler. Only the model is replaced, so everything between the browser
       // and the model is exercised: Genkit's wire format, its sessions, the
       // parser, and the renderer.
-      final ai = Genkit(promptDir: null);
-      ai.defineModel(
-        name: 'canned',
-        fn: (request, context) async {
-          requests.add(request);
-          if (context.streamingRequested) {
-            // Chunked awkwardly on purpose, including a split inside a fence.
-            for (var i = 0; i < reply.length; i += 7) {
-              context.sendChunk(
-                ModelResponseChunk(
-                  content: [
-                    TextPart(
-                      text: reply.substring(i, (i + 7).clamp(0, reply.length)),
-                    ),
-                  ],
-                ),
-              );
+      final ai = Genkit(promptDir: null)
+        ..defineModel(
+          name: 'canned',
+          fn: (request, context) async {
+            requests.add(request);
+            if (context.streamingRequested) {
+              // Chunked awkwardly on purpose, including a split inside a fence.
+              for (var i = 0; i < reply.length; i += 7) {
+                context.sendChunk(
+                  ModelResponseChunk(
+                    content: [
+                      TextPart(
+                        text: reply.substring(
+                          i,
+                          (i + 7).clamp(0, reply.length),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
             }
-          }
-          return ModelResponse(
-            message: Message(
-              role: Role.model,
-              content: [TextPart(text: reply)],
-            ),
-            finishReason: FinishReason.stop,
-          );
-        },
-      );
+            return ModelResponse(
+              message: Message(
+                role: Role.model,
+                content: [TextPart(text: reply)],
+              ),
+              finishReason: FinishReason.stop,
+            );
+          },
+        );
 
       server = await shelf_io.serve(
         chatHandler(chatAgent(ai, model: modelRef('canned'))),
@@ -83,7 +86,7 @@ void main() {
 
     /// The browser's view of the agent: one chat, its session kept by the
     /// server.
-    AgentChat<dynamic> openChat() => remoteAgent(url: url).chat();
+    AgentChat<dynamic> openChat() => remoteAgent<dynamic>(url: url).chat();
 
     /// The reply to [prompt] as the text chunks the browser feeds the package.
     Stream<String> ask(AgentChat<dynamic> chat, String prompt) =>
@@ -92,7 +95,7 @@ void main() {
     /// Runs one turn the way the browser's @client component does.
     Future<({String html, String prose})> turn(String prompt) async {
       final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
-      final List<GenUiEvent> events = await conversation
+      final events = await conversation
           .receive(ask(openChat(), prompt))
           .toList();
 
@@ -120,7 +123,7 @@ void main() {
     test('the model is taught the protocol and this catalog', () async {
       await turn('make me a form');
 
-      final String system = textsOf(requests.single, Role.system).join();
+      final system = textsOf(requests.single, Role.system).join();
       expect(system, contains(MinimalJasprCatalog.catalogId));
       expect(system, contains('"TextField"'));
     });
@@ -138,7 +141,7 @@ void main() {
       );
     });
 
-    test('the model\'s prose is kept out of the surface', () async {
+    test("the model's prose is kept out of the surface", () async {
       final result = await turn('make me a form');
 
       expect(result.prose, "Here's a short form.");
@@ -152,10 +155,10 @@ void main() {
         catalogs: [MinimalJasprCatalog()],
         onAction: interactions.add,
       );
-      final AgentChat<dynamic> chat = openChat();
+      final chat = openChat();
 
       // Turn one: the model builds a form.
-      final List<GenUiEvent> events = await conversation
+      final events = await conversation
           .receive(ask(chat, 'make me a form'))
           .toList();
       final surface = events.whereType<GenUiSurface>().single.surface;
@@ -177,8 +180,8 @@ void main() {
       ).drain<void>();
       conversation.dispose();
 
-      final ModelRequest second = requests.last;
-      final String latest = textsOf(second, Role.user).last;
+      final second = requests.last;
+      final latest = textsOf(second, Role.user).last;
       expect(latest, contains('"name":"submit"'));
       expect(
         latest,
@@ -199,8 +202,8 @@ void main() {
     });
 
     test('the session can be read back and a turn aborted', () async {
-      final AgentApi<dynamic> agent = remoteAgent(url: url);
-      final AgentChat<dynamic> chat = agent.chat();
+      final agent = remoteAgent<dynamic>(url: url);
+      final chat = agent.chat();
       await ask(chat, 'make me a form').drain<void>();
 
       final snapshot = await agent.getSnapshot(sessionId: chat.sessionId);

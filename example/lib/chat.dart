@@ -1,18 +1,21 @@
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genkit/client.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:jaspr/jaspr.dart';
+import 'package:genui_jaspr_example/interaction.dart';
+import 'package:genui_jaspr_example/server/chat_agent.dart' show chatPath;
 import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
 import 'package:universal_web/web.dart' as web;
-
-import 'interaction.dart';
-import 'server/chat_agent.dart' show chatPath;
 
 /// One entry in the transcript: something the user said, or a model's reply.
 class Turn {
+  /// A turn holding what the user typed.
   Turn.user(this.text) : events = null;
+
+  /// A turn holding a model reply's events.
   Turn.model(this.events) : text = ''; // coverage:ignore-line
 
+  /// The user's text, or the empty string for a model's turn.
   final String text;
 
   /// The model's reply as a stream of events, which the transcript's
@@ -28,16 +31,17 @@ typedef SendPrompt = Stream<String> Function(String prompt);
 
 /// The conversation, running entirely in the browser.
 ///
-/// A generated surface only exists once the model has answered something the user
-/// did, so there is nothing for the server to pre-render. The server's job is to
-/// hold the API key and stream text back, which it does through the route this
-/// talks to.
+/// A generated surface only exists once the model has answered something the
+/// user did, so there is nothing for the server to pre-render. The server's
+/// job is to hold the API key and stream text back, which it does through
+/// the route this talks to.
 ///
 /// A `@client` component's parameters must serialize for hydration, so the
 /// injectable send function cannot live here. This stays the param-free client
 /// boundary and [ChatView] carries the seam.
 @client
 class Chat extends StatefulComponent {
+  /// Creates the [Chat] client boundary.
   const Chat({super.key});
 
   @override
@@ -50,7 +54,9 @@ class _ChatState extends State<Chat> {
   /// The agent keeps this session's history on the server, so every turn the
   /// model sees the UI it built earlier and can make sense of an interaction
   /// with it. The browser holds nothing but the session's id, inside [_chat].
-  final AgentChat<dynamic> _chat = remoteAgent(url: '/$chatPath').chat();
+  final AgentChat<dynamic> _chat = remoteAgent<dynamic>(
+    url: '/$chatPath',
+  ).chat();
 
   @override
   Component build(BuildContext context) {
@@ -71,8 +77,10 @@ class _ChatState extends State<Chat> {
 
 /// The conversation UI, talking to the model only through [send].
 class ChatView extends StatefulComponent {
+  /// Creates a [ChatView] that sends prompts through [send].
   const ChatView({required this.send, super.key});
 
+  /// Sends a prompt to the model and streams back its reply.
   final SendPrompt send;
 
   @override
@@ -123,8 +131,9 @@ class _ChatViewState extends State<ChatView> {
 
   /// A button in a generated surface was pressed.
   ///
-  /// The interaction becomes the next thing the model hears, along with whatever
-  /// the user typed into that surface, which the data model already holds.
+  /// The interaction becomes the next thing the model hears, along with
+  /// whatever the user typed into that surface, which the data model already
+  /// holds.
   void _onSurfaceAction(A2uiClientAction action) {
     _send(
       _conversation.actionText(action), // coverage:ignore-line
@@ -133,7 +142,7 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void _sendDraft() {
-    final String text = _draft.trim();
+    final text = _draft.trim();
     if (text.isEmpty || _busy) return;
     setState(() => _draft = '');
     _send(text, show: text);
@@ -147,7 +156,7 @@ class _ChatViewState extends State<ChatView> {
     // The ReplyBuilder in the transcript is the stream's one listener; it
     // reports back through [_onReplyComplete] when the reply has ended.
     // coverage:ignore-start
-    final Stream<GenUiEvent> events = _conversation.receive(
+    final events = _conversation.receive(
       component.send(prompt),
       surfaceId: 'reply${_replies++}',
     );
@@ -156,8 +165,9 @@ class _ChatViewState extends State<ChatView> {
     setState(() {
       _busy = true;
       _error = null;
-      _turns.add(Turn.user(show));
-      _turns.add(Turn.model(events));
+      _turns
+        ..add(Turn.user(show))
+        ..add(Turn.model(events));
     });
   }
 
@@ -165,7 +175,7 @@ class _ChatViewState extends State<ChatView> {
   void _onReplyComplete(Turn turn, Reply reply) {
     setState(() {
       _busy = false;
-      final Object? failure = reply.failure;
+      final failure = reply.failure;
       if (failure != null) _error = '$failure';
       // A turn with neither words nor a surface would render as an empty
       // bubble, which is what a failed request used to leave behind.
@@ -194,21 +204,21 @@ class _ChatViewState extends State<ChatView> {
     return div([
       div([
         for (final turn in _turns) _turnView(turn),
-        if (_busy) p([Component.text('Thinking...')], classes: 'status'),
+        if (_busy) const p([Component.text('Thinking...')], classes: 'status'),
         if (_error != null)
           p(
             [Component.text(_error!)],
             classes: 'error',
             attributes: const {'role': 'alert'},
           ),
-        div([], key: _end, classes: 'transcript__end'),
+        div(const [], key: _end, classes: 'transcript__end'),
       ], classes: 'transcript'),
       _composer(),
     ], classes: 'chat');
   }
 
   Component _turnView(Turn turn) {
-    final Stream<GenUiEvent>? events = turn.events;
+    final events = turn.events;
     if (events == null) {
       return div([
         p([Component.text(turn.text)]),
@@ -233,9 +243,10 @@ class _ChatViewState extends State<ChatView> {
 
   /// The prompt bar, pinned to the bottom of the viewport.
   ///
-  /// It is a real form with a submit button, which is what makes Enter send the
-  /// prompt. The browser's implicit submission handles the keystroke, so there is
-  /// no key handling here, and clicking the button takes the same path.
+  /// It is a real form with a submit button, which is what makes Enter send
+  /// the prompt. The browser's implicit submission handles the keystroke, so
+  /// there is no key handling here, and clicking the button takes the same
+  /// path.
   Component _composer() {
     return div([
       form(
@@ -252,7 +263,7 @@ class _ChatViewState extends State<ChatView> {
             onChange: (value) => _draft = value,
           ),
           button(
-            [Component.text('Send')],
+            const [Component.text('Send')],
             type: ButtonType.submit,
             disabled: _busy,
           ),

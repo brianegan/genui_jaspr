@@ -2,12 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:a2ui_core/a2ui_core.dart';
-
-import '../catalog/jaspr_component.dart';
-import '../transport/a2ui_parser_transformer.dart';
-import '../transport/generation_events.dart';
-import 'client_messages.dart';
-import 'gen_ui_event.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
+import 'package:genui_jaspr/src/conversation/client_messages.dart';
+import 'package:genui_jaspr/src/conversation/gen_ui_event.dart';
+import 'package:genui_jaspr/src/transport/a2ui_parser_transformer.dart';
+import 'package:genui_jaspr/src/transport/generation_events.dart';
 
 /// One conversation's worth of generative UI.
 ///
@@ -30,6 +29,7 @@ import 'gen_ui_event.dart';
 /// client, so the app decides how a prompt becomes a `Stream<String>` and what
 /// to do with an action once the user presses a generated button.
 class GenUiConversation {
+  /// Creates a [GenUiConversation] over [catalogs].
   GenUiConversation({
     required List<Catalog<JasprComponent>> catalogs,
     this.onAction,
@@ -79,9 +79,9 @@ class GenUiConversation {
 
   /// What the user has entered so far, in the shape the protocol sends it.
   ///
-  /// Covers every surface created with `sendDataModel: true`, keyed by surface
-  /// id, and is null when no surface asked for it. Send this alongside an action
-  /// so the model can act on what was typed.
+  /// Covers every surface created with `sendDataModel: true`, keyed by
+  /// surface id, and is null when no surface asked for it. Send this
+  /// alongside an action so the model can act on what was typed.
   Map<String, dynamic>? clientDataModel() => processor.getClientDataModel();
 
   /// What to send the model when the user triggers [action].
@@ -91,7 +91,7 @@ class GenUiConversation {
   /// next turn. Apps that need another shape compose their own from
   /// [a2uiActionMessage] and [clientDataModel].
   String actionText(A2uiClientAction action) {
-    final Map<String, dynamic>? dataModel = clientDataModel();
+    final dataModel = clientDataModel();
     return [
       jsonEncode(a2uiActionMessage(action)),
       if (dataModel != null) jsonEncode(dataModel),
@@ -102,8 +102,9 @@ class GenUiConversation {
   ///
   /// Prose arrives as [GenUiText], each surface the model opens as
   /// [GenUiSurface], and each message it got wrong as [GenUiError]. A failure
-  /// of [chunks] itself is an error on the returned stream, which then ends. The
-  /// stream is single-subscription and does nothing until it is listened to.
+  /// of [chunks] itself is an error on the returned stream, which then ends.
+  /// The stream is single-subscription and does nothing until it is listened
+  /// to.
   /// `ReplyBuilder` folds it into something a component can render.
   ///
   /// Pass a [surfaceId] to render this reply into a surface named by the app
@@ -173,7 +174,7 @@ class GenUiConversation {
     _receiving = out;
     try {
       processor.processMessages([message]);
-    } catch (error) {
+    } on Object catch (error) {
       _report(out, clientErrorFrom(error, surfaceId: _surfaceIdOf(message)));
     } finally {
       _receiving = null;
@@ -213,7 +214,7 @@ class GenUiConversation {
 /// Every message body carries its own `surfaceId`, so the rewrite is the same
 /// regardless of which of the four kinds it is.
 A2uiMessage _retarget(A2uiMessage message, String surfaceId) {
-  final Map<String, dynamic> json = message.toJson();
+  final json = message.toJson();
   for (final Object? body in json.values) {
     if (body is Map<String, dynamic> && body.containsKey('surfaceId')) {
       body['surfaceId'] = surfaceId;

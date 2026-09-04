@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:a2ui_core/a2ui_core.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
+import 'package:genui_jaspr/src/conversation/gen_ui_event.dart';
 import 'package:jaspr/jaspr.dart';
-
-import '../catalog/jaspr_component.dart';
-import 'gen_ui_event.dart';
 
 /// What a model reply has produced so far.
 ///
@@ -106,8 +105,9 @@ class _ReplyFolder extends StreamTransformerBase<GenUiEvent, Reply> {
         handleError: (error, stackTrace, sink) =>
             sink.add(current = current._with(failure: error)),
         handleDone: (sink) {
-          sink.add(current._with(isComplete: true));
-          sink.close();
+          sink
+            ..add(current._with(isComplete: true))
+            ..close();
         },
       ),
     );
@@ -116,7 +116,7 @@ class _ReplyFolder extends StreamTransformerBase<GenUiEvent, Reply> {
 
 /// Renders a model reply as it streams in.
 ///
-/// Folds the [events] from `GenUiConversation.receive` into a [Reply] and
+/// Folds the `events` from `GenUiConversation.receive` into a [Reply] and
 /// rebuilds with each one, so a transcript entry fills in while the model is
 /// still writing:
 ///
@@ -138,6 +138,7 @@ class _ReplyFolder extends StreamTransformerBase<GenUiEvent, Reply> {
 /// every stream builder in Jaspr, this cannot run on the server, where a reply
 /// cannot exist anyway.
 class ReplyBuilder extends StreamBuilderBase<GenUiEvent, Reply> {
+  /// Creates a [ReplyBuilder] over `events`.
   const ReplyBuilder({
     required Stream<GenUiEvent> events,
     required this.builder,
@@ -166,7 +167,7 @@ class ReplyBuilder extends StreamBuilderBase<GenUiEvent, Reply> {
 
   @override
   Reply afterDone(Reply current) {
-    final Reply complete = current._with(isComplete: true);
+    final complete = current._with(isComplete: true);
     onComplete?.call(complete);
     return complete;
   }

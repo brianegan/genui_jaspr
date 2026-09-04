@@ -39,7 +39,7 @@ void main() {
     test('adds a component under a new id', () {
       final catalog = MinimalJasprCatalog().copyWith(
         id: 'com.example.catalog',
-        add: [JasprComponent.inline(_DividerApi(), (scope) => hr())],
+        add: [JasprComponent.inline(_DividerApi(), (scope) => const hr())],
       );
 
       expect(catalog.id, 'com.example.catalog');

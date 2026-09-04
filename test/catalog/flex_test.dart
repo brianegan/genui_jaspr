@@ -1,3 +1,7 @@
+// The expected markup below is built from adjacent string literals joined
+// with no space, so it matches the rendered HTML exactly.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'package:jaspr_test/jaspr_test.dart';
 
 import '../support/harness.dart';

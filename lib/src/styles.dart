@@ -7,14 +7,14 @@ import 'package:jaspr/dom.dart';
 /// the renderer depends on these rules, so replacing them wholesale is a
 /// supported way to use the package.
 ///
-/// Colours read from custom properties, which a surface publishes from the theme
-/// the model sent with `createSurface`. That is what lets a model choose an
-/// accent at runtime while the rules themselves stay static. Each `var()` carries
-/// a fallback, so an untouched theme still renders sensibly.
+/// Colours read from custom properties, which a surface publishes from the
+/// theme the model sent with `createSurface`. That is what lets a model
+/// choose an accent at runtime while the rules themselves stay static. Each
+/// `var()` carries a fallback, so an untouched theme still renders sensibly.
 final List<StyleRule> genuiJasprStyles = [
-  StyleRule(
-    selector: const Selector('.a2ui-surface'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-surface'),
+    styles: Styles(
       raw: {
         'display': 'flex',
         'flex-direction': 'column',
@@ -26,17 +26,17 @@ final List<StyleRule> genuiJasprStyles = [
   ),
 
   // Text
-  StyleRule(
-    selector: const Selector('.a2ui-text'),
-    styles: const Styles(raw: {'margin': '0'}),
+  const StyleRule(
+    selector: Selector('.a2ui-text'),
+    styles: Styles(raw: {'margin': '0'}),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-text--body'),
-    styles: const Styles(raw: {'font-size': '1rem', 'line-height': '1.5'}),
+  const StyleRule(
+    selector: Selector('.a2ui-text--body'),
+    styles: Styles(raw: {'font-size': '1rem', 'line-height': '1.5'}),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-text--caption'),
-    styles: const Styles(raw: {'font-size': '0.8125rem', 'opacity': '0.7'}),
+  const StyleRule(
+    selector: Selector('.a2ui-text--caption'),
+    styles: Styles(raw: {'font-size': '0.8125rem', 'opacity': '0.7'}),
   ),
   for (final (className, size) in const [
     ('a2ui-text--h1', '2rem'),
@@ -54,19 +54,19 @@ final List<StyleRule> genuiJasprStyles = [
 
   // Layout. Direction and alignment are set inline per component, because the
   // model chooses them per instance; only the shared spacing lives here.
-  StyleRule(
-    selector: const Selector('.a2ui-row'),
-    styles: const Styles(raw: {'gap': '0.5rem'}),
+  const StyleRule(
+    selector: Selector('.a2ui-row'),
+    styles: Styles(raw: {'gap': '0.5rem'}),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-column'),
-    styles: const Styles(raw: {'gap': '0.5rem'}),
+  const StyleRule(
+    selector: Selector('.a2ui-column'),
+    styles: Styles(raw: {'gap': '0.5rem'}),
   ),
 
   // Button
-  StyleRule(
-    selector: const Selector('.a2ui-button'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-button'),
+    styles: Styles(
       raw: {
         'font': 'inherit',
         'padding': '0.5rem 1rem',
@@ -76,22 +76,22 @@ final List<StyleRule> genuiJasprStyles = [
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-button:disabled'),
-    styles: const Styles(raw: {'opacity': '0.5', 'cursor': 'not-allowed'}),
+  const StyleRule(
+    selector: Selector('.a2ui-button:disabled'),
+    styles: Styles(raw: {'opacity': '0.5', 'cursor': 'not-allowed'}),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-button--primary'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-button--primary'),
+    styles: Styles(
       raw: {
         'background': 'var(--a2ui-primary-color, #1a73e8)',
         'color': 'var(--a2ui-primary-text-color, #ffffff)',
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-button--borderless'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-button--borderless'),
+    styles: Styles(
       raw: {
         'background': 'transparent',
         'color': 'var(--a2ui-primary-color, #1a73e8)',
@@ -100,19 +100,19 @@ final List<StyleRule> genuiJasprStyles = [
   ),
 
   // Text field
-  StyleRule(
-    selector: const Selector('.a2ui-field'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-field'),
+    styles: Styles(
       raw: {'display': 'flex', 'flex-direction': 'column', 'gap': '0.25rem'},
     ),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-field__label'),
-    styles: const Styles(raw: {'font-size': '0.875rem', 'font-weight': '500'}),
+  const StyleRule(
+    selector: Selector('.a2ui-field__label'),
+    styles: Styles(raw: {'font-size': '0.875rem', 'font-weight': '500'}),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-field__input'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-field__input'),
+    styles: Styles(
       raw: {
         'font': 'inherit',
         'padding': '0.5rem',
@@ -121,32 +121,32 @@ final List<StyleRule> genuiJasprStyles = [
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-field__input:focus-visible'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-field__input:focus-visible'),
+    styles: Styles(
       raw: {'outline': '2px solid var(--a2ui-primary-color, #1a73e8)'},
     ),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-field__error'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-field__error'),
+    styles: Styles(
       raw: {
         'color': 'var(--a2ui-error-color, #b3261e)',
         'font-size': '0.8125rem',
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.a2ui-field--invalid .a2ui-field__input'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-field--invalid .a2ui-field__input'),
+    styles: Styles(
       raw: {'border-color': 'var(--a2ui-error-color, #b3261e)'},
     ),
   ),
 
   // The renderer's own fallback for a component the catalog cannot build.
-  StyleRule(
-    selector: const Selector('.a2ui-missing'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.a2ui-missing'),
+    styles: Styles(
       raw: {
         'padding': '0.5rem 0.75rem',
         'border': '1px dashed var(--a2ui-error-color, #b3261e)',

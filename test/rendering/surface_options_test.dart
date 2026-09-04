@@ -1,3 +1,7 @@
+// The expected markup below is built from adjacent string literals joined
+// with no space, so it matches the rendered HTML exactly.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:jaspr/dom.dart';
@@ -36,7 +40,7 @@ void main() {
           Surface(
             surface: _surface(const []),
             placeholder: (context) =>
-                p([Component.text('Thinking')], classes: 'wait'),
+                const p([Component.text('Thinking')], classes: 'wait'),
           ),
         ),
       );
@@ -51,7 +55,7 @@ void main() {
             surface: _surface([
               {'id': 'root', 'component': 'Text', 'text': 'Ready'},
             ]),
-            placeholder: (context) => p([Component.text('Thinking')]),
+            placeholder: (context) => const p([Component.text('Thinking')]),
           ),
         ),
       );
@@ -66,7 +70,7 @@ void main() {
       tester.pumpComponent(
         Surface(
           surface: surface,
-          placeholder: (context) => p([Component.text('Thinking')]),
+          placeholder: (context) => const p([Component.text('Thinking')]),
         ),
       );
       expect(find.text('Thinking'), findsOneComponent);

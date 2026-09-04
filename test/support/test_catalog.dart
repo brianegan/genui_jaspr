@@ -1,7 +1,7 @@
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
 
 /// A catalog with deliberately plain builders, so a renderer test asserts on
 /// the renderer's structure rather than on the real catalog's styling.
@@ -34,10 +34,10 @@ Catalog<JasprComponent> buildTestCatalog() {
 
 /// Builds the canned messages for a surface, ready for [MessageProcessor].
 List<A2uiMessage> surfaceMessages({
+  required List<Map<String, dynamic>> components,
   String surfaceId = 'main',
   String catalogId = testCatalogId,
   Map<String, dynamic>? theme,
-  required List<Map<String, dynamic>> components,
 }) {
   return [
     A2uiMessage.fromJson({

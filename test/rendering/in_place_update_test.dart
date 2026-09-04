@@ -6,9 +6,9 @@ import '../support/harness.dart';
 
 /// Revising a surface that is already on screen.
 ///
-/// A2UI has no `updateSurface` message. A model changes a live surface by sending
-/// `updateComponents` again with the same `surfaceId`, or by writing to the data
-/// model. These cover both.
+/// A2UI has no `updateSurface` message. A model changes a live surface by
+/// sending `updateComponents` again with the same `surfaceId`, or by writing
+/// to the data model. These cover both.
 A2uiMessage updateComponents(List<Map<String, dynamic>> components) {
   return A2uiMessage.fromJson({
     'version': 'v0.9',
@@ -25,20 +25,20 @@ start(
   List<Map<String, dynamic>> components, {
   Map<String, Object?> data = const {},
 }) {
-  final processor = MessageProcessor<JasprComponent>(
-    catalogs: [MinimalJasprCatalog()],
-  );
-  processor.processMessages([
-    A2uiMessage.fromJson({
-      'version': 'v0.9',
-      'createSurface': {
-        'surfaceId': 'main',
-        'catalogId': MinimalJasprCatalog.catalogId,
-        'sendDataModel': true,
-      },
-    }),
-    updateComponents(components),
-  ]);
+  final processor =
+      MessageProcessor<JasprComponent>(
+        catalogs: [MinimalJasprCatalog()],
+      )..processMessages([
+        A2uiMessage.fromJson({
+          'version': 'v0.9',
+          'createSurface': {
+            'surfaceId': 'main',
+            'catalogId': MinimalJasprCatalog.catalogId,
+            'sendDataModel': true,
+          },
+        }),
+        updateComponents(components),
+      ]);
   final surface = processor.groupModel.getSurface('main')!;
   data.forEach(surface.dataModel.set);
   return (surface: surface, processor: processor);
@@ -46,7 +46,7 @@ start(
 
 void main() {
   group('revising a live surface', () {
-    testComponents('changes a component\'s properties in place', (
+    testComponents("changes a component's properties in place", (
       tester,
     ) async {
       final app = start([

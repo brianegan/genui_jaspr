@@ -2,11 +2,10 @@ import 'dart:io';
 
 import 'package:genkit/genkit.dart';
 import 'package:genkit_google_genai/genkit_google_genai.dart';
+import 'package:genui_jaspr_example/app.dart';
+import 'package:genui_jaspr_example/main.server.options.dart';
+import 'package:genui_jaspr_example/server/chat_agent.dart';
 import 'package:jaspr/server.dart';
-
-import 'app.dart';
-import 'main.server.options.dart';
-import 'server/chat_agent.dart';
 
 /// The model this example talks to.
 ///
@@ -25,13 +24,13 @@ void main() {
   Jaspr.initializeApp(options: defaultServerOptions);
 
   final ai = Genkit(plugins: [googleAI()], promptDir: null);
-  final Handler chat = chatHandler(
+  final chat = chatHandler(
     chatAgent(ai, model: googleAI.gemini(modelName)),
   );
 
   // Everything except the agent's routes falls through to the rendered page.
   ServerApp.addMiddleware(
-    (Handler inner) => (Request request) async {
+    (inner) => (request) async {
       if (request.url.path.startsWith(chatPath)) return chat(request);
       return inner(request);
     },

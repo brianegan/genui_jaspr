@@ -1,20 +1,20 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:jaspr/jaspr.dart';
+import 'package:genui_jaspr_example/chat.dart';
 import 'package:jaspr/dom.dart';
-
-import 'chat.dart';
+import 'package:jaspr/jaspr.dart';
 
 /// The server-rendered page.
 ///
-/// The heading and layout arrive as HTML on first paint. The conversation itself
-/// is a `@client` component, because a generated surface only exists after the
-/// model has answered.
+/// The heading and layout arrive as HTML on first paint. The conversation
+/// itself is a `@client` component, because a generated surface only exists
+/// after the model has answered.
 class App extends StatelessComponent {
+  /// Creates the [App].
   const App({super.key});
 
   @override
   Component build(BuildContext context) {
-    return div([
+    return const div([
       header([
         h1([Component.text('GenUI for Jaspr')]),
         p([
@@ -24,7 +24,7 @@ class App extends StatelessComponent {
           ),
         ], classes: 'lede'),
       ]),
-      const Chat(),
+      Chat(),
     ], classes: 'page');
   }
 }
@@ -36,9 +36,9 @@ class App extends StatelessComponent {
 /// surrounding app needs.
 List<StyleRule> get appStyles => [
   ...genuiJasprStyles,
-  StyleRule(
-    selector: const Selector('body'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('body'),
+    styles: Styles(
       raw: {
         'margin': '0',
         'font-family': 'system-ui, sans-serif',
@@ -47,9 +47,9 @@ List<StyleRule> get appStyles => [
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.page'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.page'),
+    styles: Styles(
       raw: {
         'max-width': '46rem',
         'margin': '0 auto',
@@ -59,26 +59,27 @@ List<StyleRule> get appStyles => [
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.lede'),
-    styles: const Styles(raw: {'color': '#5f6368', 'margin-bottom': '2rem'}),
+  const StyleRule(
+    selector: Selector('.lede'),
+    styles: Styles(raw: {'color': '#5f6368', 'margin-bottom': '2rem'}),
   ),
-  StyleRule(
-    selector: const Selector('.transcript'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.transcript'),
+    styles: Styles(
       raw: {'display': 'flex', 'flex-direction': 'column', 'gap': '1rem'},
     ),
   ),
-  // The anchor the conversation scrolls to. `scrollIntoView` would align it with
-  // the bottom of the viewport, which the composer covers, so this reserves the
-  // composer's height and the newest turn ends up above it rather than behind it.
-  StyleRule(
-    selector: const Selector('.transcript__end'),
-    styles: const Styles(raw: {'scroll-margin-bottom': '6rem'}),
+  // The anchor the conversation scrolls to. `scrollIntoView` would align it
+  // with the bottom of the viewport, which the composer covers, so this
+  // reserves the composer's height and the newest turn ends up above it
+  // rather than behind it.
+  const StyleRule(
+    selector: Selector('.transcript__end'),
+    styles: Styles(raw: {'scroll-margin-bottom': '6rem'}),
   ),
-  StyleRule(
-    selector: const Selector('.turn'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.turn'),
+    styles: Styles(
       raw: {
         'padding': '0.75rem 1rem',
         'border-radius': '0.75rem',
@@ -87,17 +88,17 @@ List<StyleRule> get appStyles => [
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.turn--user'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.turn--user'),
+    styles: Styles(
       raw: {'background': '#eef3fd', 'border-color': '#d3e2fd'},
     ),
   ),
   // Pinned to the bottom of the viewport, so the prompt stays reachable however
   // long the conversation gets.
-  StyleRule(
-    selector: const Selector('.composer'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.composer'),
+    styles: Styles(
       raw: {
         'position': 'fixed',
         'left': '0',
@@ -113,9 +114,9 @@ List<StyleRule> get appStyles => [
   ),
   // Kept to the same column as the page content, since the bar itself spans the
   // full width.
-  StyleRule(
-    selector: const Selector('.composer__inner'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.composer__inner'),
+    styles: Styles(
       raw: {
         'display': 'flex',
         'gap': '0.5rem',
@@ -124,9 +125,9 @@ List<StyleRule> get appStyles => [
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.composer input'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.composer input'),
+    styles: Styles(
       raw: {
         'flex': '1',
         'font': 'inherit',
@@ -136,9 +137,9 @@ List<StyleRule> get appStyles => [
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.composer button'),
-    styles: const Styles(
+  const StyleRule(
+    selector: Selector('.composer button'),
+    styles: Styles(
       raw: {
         'font': 'inherit',
         'padding': '0.625rem 1.25rem',
@@ -150,12 +151,12 @@ List<StyleRule> get appStyles => [
       },
     ),
   ),
-  StyleRule(
-    selector: const Selector('.status'),
-    styles: const Styles(raw: {'color': '#5f6368'}),
+  const StyleRule(
+    selector: Selector('.status'),
+    styles: Styles(raw: {'color': '#5f6368'}),
   ),
-  StyleRule(
-    selector: const Selector('.error'),
-    styles: const Styles(raw: {'color': '#b3261e'}),
+  const StyleRule(
+    selector: Selector('.error'),
+    styles: Styles(raw: {'color': '#b3261e'}),
   ),
 ];

@@ -10,30 +10,30 @@ import 'package:universal_web/web.dart' as web;
 /// reaching the data model.
 ///
 /// A VM test can only call the setter the renderer hands the builder, which
-/// leaves the wiring between the DOM event and that setter untested. Removing
-/// `onInput` from the field passes every VM test, so this is the only place that
-/// notices.
+/// leaves the wiring between the DOM event and that setter untested.
+/// Removing `onInput` from the field passes every VM test, so this is the
+/// only place that notices.
 SurfaceModel<JasprComponent> surfaceWith(
   List<Map<String, dynamic>> components, {
   Map<String, Object?> data = const {},
 }) {
-  final processor = MessageProcessor<JasprComponent>(
-    catalogs: [MinimalJasprCatalog()],
-  );
-  processor.processMessages([
-    A2uiMessage.fromJson({
-      'version': 'v0.9',
-      'createSurface': {
-        'surfaceId': 'main',
-        'catalogId': MinimalJasprCatalog.catalogId,
-        'sendDataModel': true,
-      },
-    }),
-    A2uiMessage.fromJson({
-      'version': 'v0.9',
-      'updateComponents': {'surfaceId': 'main', 'components': components},
-    }),
-  ]);
+  final processor =
+      MessageProcessor<JasprComponent>(
+        catalogs: [MinimalJasprCatalog()],
+      )..processMessages([
+        A2uiMessage.fromJson({
+          'version': 'v0.9',
+          'createSurface': {
+            'surfaceId': 'main',
+            'catalogId': MinimalJasprCatalog.catalogId,
+            'sendDataModel': true,
+          },
+        }),
+        A2uiMessage.fromJson({
+          'version': 'v0.9',
+          'updateComponents': {'surfaceId': 'main', 'components': components},
+        }),
+      ]);
   final surface = processor.groupModel.getSurface('main')!;
   data.forEach(surface.dataModel.set);
   return surface;
@@ -196,37 +196,37 @@ void main() {
       tester,
     ) async {
       final actions = <A2uiClientAction>[];
-      final processor = MessageProcessor<JasprComponent>(
-        catalogs: [MinimalJasprCatalog()],
-        onAction: actions.add,
-      );
-      processor.processMessages([
-        A2uiMessage.fromJson({
-          'version': 'v0.9',
-          'createSurface': {
-            'surfaceId': 'main',
-            'catalogId': MinimalJasprCatalog.catalogId,
-            'sendDataModel': true,
-          },
-        }),
-        A2uiMessage.fromJson({
-          'version': 'v0.9',
-          'updateComponents': {
-            'surfaceId': 'main',
-            'components': [
-              {
-                'id': 'root',
-                'component': 'Button',
-                'child': 'label',
-                'action': {
-                  'event': {'name': 'submit'},
-                },
+      final processor =
+          MessageProcessor<JasprComponent>(
+            catalogs: [MinimalJasprCatalog()],
+            onAction: actions.add,
+          )..processMessages([
+            A2uiMessage.fromJson({
+              'version': 'v0.9',
+              'createSurface': {
+                'surfaceId': 'main',
+                'catalogId': MinimalJasprCatalog.catalogId,
+                'sendDataModel': true,
               },
-              {'id': 'label', 'component': 'Text', 'text': 'Send'},
-            ],
-          },
-        }),
-      ]);
+            }),
+            A2uiMessage.fromJson({
+              'version': 'v0.9',
+              'updateComponents': {
+                'surfaceId': 'main',
+                'components': [
+                  {
+                    'id': 'root',
+                    'component': 'Button',
+                    'child': 'label',
+                    'action': {
+                      'event': {'name': 'submit'},
+                    },
+                  },
+                  {'id': 'label', 'component': 'Text', 'text': 'Send'},
+                ],
+              },
+            }),
+          ]);
 
       tester.pumpComponent(
         Surface(surface: processor.groupModel.getSurface('main')!),

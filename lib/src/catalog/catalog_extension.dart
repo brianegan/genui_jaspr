@@ -1,7 +1,6 @@
 import 'package:a2ui_core/a2ui_core.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
-
-import 'jaspr_component.dart';
 
 /// Derives new catalogs from an existing one.
 ///

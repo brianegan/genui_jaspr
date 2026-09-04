@@ -1,7 +1,11 @@
+// The expected markup below is built from adjacent string literals joined
+// with no space, so it matches the rendered HTML exactly.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
 import '../support/render.dart';
@@ -15,19 +19,19 @@ typedef _LiveSurface = ({
 });
 
 _LiveSurface _emptySurface() {
-  final processor = MessageProcessor<JasprComponent>(
-    catalogs: [buildTestCatalog()],
-  );
-  processor.processMessages([
-    A2uiMessage.fromJson({
-      'version': 'v0.9',
-      'createSurface': {
-        'surfaceId': 'main',
-        'catalogId': testCatalogId,
-        'sendDataModel': true,
-      },
-    }),
-  ]);
+  final processor =
+      MessageProcessor<JasprComponent>(
+        catalogs: [buildTestCatalog()],
+      )..processMessages([
+        A2uiMessage.fromJson({
+          'version': 'v0.9',
+          'createSurface': {
+            'surfaceId': 'main',
+            'catalogId': testCatalogId,
+            'sendDataModel': true,
+          },
+        }),
+      ]);
   return (
     processor: processor,
     surface: processor.groupModel.getSurface('main')!,
@@ -68,7 +72,7 @@ class _SurfaceHostState extends State<_SurfaceHost> {
 
   @override
   Component build(BuildContext context) {
-    if (!_visible) return div([], classes: 'empty');
+    if (!_visible) return const div([], classes: 'empty');
     return Surface(surface: _useB ? component.b : component.a);
   }
 }
@@ -150,7 +154,7 @@ void main() {
       },
     );
 
-    testComponents('leaves its model usable after being removed from the tree', (
+    testComponents('leaves its model usable once removed from the tree', (
       tester,
     ) async {
       final a = _emptySurface();
@@ -267,17 +271,16 @@ void main() {
     });
 
     test('builds children handed to it as plain component ids', () async {
-      final processor = MessageProcessor<JasprComponent>(
-        catalogs: [_rawIdCatalog()],
-      );
-      processor.processMessages(
-        surfaceMessages(
-          components: [
-            {'id': 'root', 'component': 'Column', 'children': <String>[]},
-            {'id': 'greeting', 'component': 'Text', 'text': 'Hello'},
-          ],
-        ),
-      );
+      final processor =
+          MessageProcessor<JasprComponent>(catalogs: [_rawIdCatalog()])
+            ..processMessages(
+              surfaceMessages(
+                components: [
+                  {'id': 'root', 'component': 'Column', 'children': <String>[]},
+                  {'id': 'greeting', 'component': 'Text', 'text': 'Hello'},
+                ],
+              ),
+            );
 
       final html = stripSurface(
         await renderHtml(

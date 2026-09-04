@@ -1,17 +1,17 @@
 import 'package:a2ui_core/a2ui_core.dart';
-import 'package:jaspr/jaspr.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
 import 'package:universal_web/web.dart' as web;
-
-import '../jaspr_component.dart';
 
 /// A labelled text input, bound to the data model in both directions.
 ///
-/// The field is wrapped in its `label`, which associates the two without needing
-/// generated ids. Typing writes straight to the path the model bound `value` to,
-/// so the next request carries what the user entered without the app copying it
-/// anywhere.
+/// The field is wrapped in its `label`, which associates the two without
+/// needing generated ids. Typing writes straight to the path the model bound
+/// `value` to, so the next request carries what the user entered without the
+/// app copying it anywhere.
 class TextFieldComponent extends JasprComponent {
+  /// Creates a [TextFieldComponent].
   TextFieldComponent();
 
   @override
@@ -19,15 +19,15 @@ class TextFieldComponent extends JasprComponent {
 
   @override
   Component build(ComponentScope scope) {
-    final String variant = scope.string('variant') ?? 'shortText';
-    final String labelText = scope.string('label') ?? '';
-    final String value = scope.string('value') ?? '';
-    final void Function(Object?)? write = scope.setter('value');
-    final List<String> errors = scope.validationErrors;
+    final variant = scope.string('variant') ?? 'shortText';
+    final labelText = scope.string('label') ?? '';
+    final value = scope.string('value') ?? '';
+    final write = scope.setter('value');
+    final errors = scope.validationErrors;
 
     // A number input hands over a num, and NaN while its text is not a number.
     // The setter turns that NaN into nothing rather than letting it reach JSON.
-    final Component field = variant == 'longText'
+    final field = variant == 'longText'
         ? _LongText(value: value, onInput: write)
         : input<Object?>(
             classes: 'a2ui-field__input',
@@ -86,7 +86,7 @@ class _LongTextState extends State<_LongText> {
     // textarea's value, even to what it already holds, moves the caret. The
     // key yields no node outside a browser, where the content is all anyone
     // will see, and the null-aware writes make that a quiet no-op.
-    final web.HTMLTextAreaElement? node = _node.currentNode;
+    final node = _node.currentNode;
     if (node?.value != component.value) node?.value = component.value;
   }
 

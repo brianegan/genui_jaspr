@@ -1,3 +1,7 @@
+// The expected markup below is built from adjacent string literals joined
+// with no space, so it matches the rendered HTML exactly.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'dart:async';
 
 import 'package:a2ui_core/a2ui_core.dart';
@@ -8,8 +12,8 @@ import 'support/render.dart';
 
 /// A model's reply: a sentence, then the messages that build a small form.
 ///
-/// Written the way a model writes it, as one text stream with fenced JSON in the
-/// middle, rather than as pre-parsed objects.
+/// Written the way a model writes it, as one text stream with fenced JSON in
+/// the middle, rather than as pre-parsed objects.
 const modelReply = '''
 Sure, here's a quick sign-up form.
 
@@ -74,7 +78,7 @@ void main() {
       );
     });
 
-    test('keeps the model\'s prose out of the surface', () async {
+    test("keeps the model's prose out of the surface", () async {
       final result = await runPipeline(chunked(modelReply, 17));
 
       // Pieces arrive as the stream delivers them; joining them must give back
@@ -101,10 +105,10 @@ void main() {
         results.add(await runPipeline(chunked(modelReply, size)));
       }
 
-      // Chunk size is an accident of the network and must not change what the
-      // user ends up seeing. The prose is checked as well as the markup, because
-      // a boundary inside a fence marker corrupts the text channel while leaving
-      // the surface intact.
+      // Chunk size is an accident of the network and must not change what
+      // the user ends up seeing. The prose is checked as well as the
+      // markup, because a boundary inside a fence marker corrupts the text
+      // channel while leaving the surface intact.
       for (var i = 1; i < results.length; i++) {
         expect(
           results[i].html,
@@ -127,7 +131,7 @@ void main() {
         catalogs: [MinimalJasprCatalog()],
         onAction: actions.add,
       );
-      final Reply reply = await conversation
+      final reply = await conversation
           .receive(Stream.fromIterable(chunked(modelReply, 17)))
           .reply;
 

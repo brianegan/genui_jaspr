@@ -19,6 +19,7 @@ import 'package:jaspr/jaspr.dart';
 /// Writing a value equal to the current one does not notify at all, so repeated
 /// identical data from a model needs no filtering here.
 class SignalBuilder<T> extends StatefulComponent {
+  /// Creates a [SignalBuilder] over [signal].
   const SignalBuilder({required this.signal, required this.builder, super.key});
 
   /// The signal to read and watch.

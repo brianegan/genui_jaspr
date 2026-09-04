@@ -18,7 +18,7 @@ void main() {
       });
     });
 
-    test('uses the A2UI minimal catalog\'s own id', () {
+    test("uses the A2UI minimal catalog's own id", () {
       expect(MinimalJasprCatalog.catalogId, MinimalCatalog().id);
     });
 

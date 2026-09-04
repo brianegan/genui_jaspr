@@ -45,7 +45,7 @@ void main() {
       expect(prompt, contains('"version": "v0.9"'));
     });
 
-    test('carries every component\'s schema straight from the catalog', () {
+    test("carries every component's schema straight from the catalog", () {
       final section = prompt.split('with their schemas:\n\n')[1];
       final schemas =
           jsonDecode(section.split('\n\nThese functions')[0])
@@ -61,7 +61,7 @@ void main() {
       }
     });
 
-    test('lists the catalog\'s functions and theme', () {
+    test("lists the catalog's functions and theme", () {
       expect(prompt, contains('"capitalize"'));
       expect(prompt, contains('"returnType": "string"'));
       expect(prompt, contains('"primaryColor"'));
@@ -82,9 +82,7 @@ void main() {
         prompt.indexOf('A complete reply looks like this:'),
       );
 
-      final Reply reply = await conversation
-          .receive(Stream.value(example))
-          .reply;
+      final reply = await conversation.receive(Stream.value(example)).reply;
 
       expect(reply.errors, isEmpty);
       expect(reply.surfaces, hasLength(1));
@@ -98,7 +96,12 @@ void main() {
     test('follows the catalog it is given', () {
       final custom = catalog.copyWith(
         id: 'com.example.custom',
-        add: [JasprComponent.inline(_DividerApi(), (scope) => throw 0)],
+        add: [
+          JasprComponent.inline(
+            _DividerApi(),
+            (scope) => throw UnimplementedError('never built in this test'),
+          ),
+        ],
       );
 
       final text = a2uiInstructions(custom);

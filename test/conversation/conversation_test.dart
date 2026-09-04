@@ -127,7 +127,7 @@ void main() {
       expect(conversation.surfaces, hasLength(1));
     });
 
-    test('renders a reply\'s surface', () async {
+    test("renders a reply's surface", () async {
       final events = await conversation
           .receive(Stream.fromIterable(greetingReply(text: 'Rendered')))
           .toList();
@@ -180,11 +180,8 @@ void main() {
     test('pauses and resumes the source with its own subscription', () async {
       final chunks = StreamController<String>();
       final received = <GenUiEvent>[];
-      final subscription = conversation
-          .receive(chunks.stream)
-          .listen(received.add);
-
-      subscription.pause();
+      final subscription =
+          conversation.receive(chunks.stream).listen(received.add)..pause();
       chunks.add('Waiting ');
       await settle();
       expect(received, isEmpty);
@@ -313,17 +310,17 @@ void main() {
         onError: reported.add,
       );
 
+      const oldVersionMessage =
+          '```json\n{"version":"v0.8","createSurface":{"surfaceId":"s1"}}\n'
+          '```\n';
       final events = await conversation
           .receive(
-            Stream.fromIterable([
-              '```json\n{"version":"v0.8","createSurface":{"surfaceId":"s1"}}\n```\n',
-              ...greetingReply(),
-            ]),
+            Stream.fromIterable([oldVersionMessage, ...greetingReply()]),
           )
           .toList();
       await settle();
 
-      final List<A2uiClientError> errors = errorsIn(events);
+      final errors = errorsIn(events);
       expect(errors, hasLength(1));
       expect(errors.single.code, 'VALIDATION_ERROR');
       expect(errors.single.message, contains('v0.9'));
@@ -342,7 +339,7 @@ void main() {
           )
           .toList();
 
-      final A2uiClientError error = errorsIn(events).single;
+      final error = errorsIn(events).single;
       expect(error.code, 'STATE_ERROR');
       expect(error.surfaceId, 's1');
       expect(error.message, contains('already exists'));
@@ -418,8 +415,9 @@ void main() {
           .receive(chunks.stream)
           .listen(received.add, onError: (Object e) => failure = e);
 
-      chunks.add('Partial ');
-      chunks.addError(StateError('cut off'));
+      chunks
+        ..add('Partial ')
+        ..addError(StateError('cut off'));
       await chunks.close();
       await settle();
 
@@ -429,7 +427,7 @@ void main() {
   });
 
   group('GenUiConversation actions', () {
-    test('reports a generated button\'s action', () async {
+    test("reports a generated button's action", () async {
       final actions = <A2uiClientAction>[];
       conversation = GenUiConversation(
         catalogs: [MinimalJasprCatalog()],
@@ -542,7 +540,7 @@ void main() {
         await renderHtml(
           Surface(
             surface: surface,
-            placeholder: (context) => Component.text('gone'),
+            placeholder: (context) => const Component.text('gone'),
           ),
         ),
       );

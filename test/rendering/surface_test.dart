@@ -1,3 +1,7 @@
+// The expected markup below is built from adjacent string literals joined
+// with no space, so it matches the rendered HTML exactly.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:jaspr_test/jaspr_test.dart';
@@ -8,28 +12,27 @@ import '../support/test_catalog.dart';
 void main() {
   group('Surface', () {
     test('renders a nested component tree', () async {
-      final processor = MessageProcessor<JasprComponent>(
-        catalogs: [buildTestCatalog()],
-      );
-      processor.processMessages(
-        surfaceMessages(
-          components: [
-            {
-              'id': 'root',
-              'component': 'Column',
-              'children': ['greeting', 'names'],
-            },
-            {'id': 'greeting', 'component': 'Text', 'text': 'Hello'},
-            {
-              'id': 'names',
-              'component': 'Row',
-              'children': ['first', 'second'],
-            },
-            {'id': 'first', 'component': 'Text', 'text': 'Ada'},
-            {'id': 'second', 'component': 'Text', 'text': 'Grace'},
-          ],
-        ),
-      );
+      final processor =
+          MessageProcessor<JasprComponent>(catalogs: [buildTestCatalog()])
+            ..processMessages(
+              surfaceMessages(
+                components: [
+                  {
+                    'id': 'root',
+                    'component': 'Column',
+                    'children': ['greeting', 'names'],
+                  },
+                  {'id': 'greeting', 'component': 'Text', 'text': 'Hello'},
+                  {
+                    'id': 'names',
+                    'component': 'Row',
+                    'children': ['first', 'second'],
+                  },
+                  {'id': 'first', 'component': 'Text', 'text': 'Ada'},
+                  {'id': 'second', 'component': 'Text', 'text': 'Grace'},
+                ],
+              ),
+            );
 
       final html = stripSurface(
         await renderHtml(
@@ -49,22 +52,21 @@ void main() {
     test(
       'renders a fallback for an unknown component, keeping its siblings',
       () async {
-        final processor = MessageProcessor<JasprComponent>(
-          catalogs: [buildTestCatalog()],
-        );
-        processor.processMessages(
-          surfaceMessages(
-            components: [
-              {
-                'id': 'root',
-                'component': 'Column',
-                'children': ['mystery', 'after'],
-              },
-              {'id': 'mystery', 'component': 'HoloDeck'},
-              {'id': 'after', 'component': 'Text', 'text': 'still here'},
-            ],
-          ),
-        );
+        final processor =
+            MessageProcessor<JasprComponent>(catalogs: [buildTestCatalog()])
+              ..processMessages(
+                surfaceMessages(
+                  components: [
+                    {
+                      'id': 'root',
+                      'component': 'Column',
+                      'children': ['mystery', 'after'],
+                    },
+                    {'id': 'mystery', 'component': 'HoloDeck'},
+                    {'id': 'after', 'component': 'Text', 'text': 'still here'},
+                  ],
+                ),
+              );
 
         final html = stripSurface(
           await renderHtml(
@@ -86,19 +88,18 @@ void main() {
     );
 
     test('renders nothing until its root component exists', () async {
-      final processor = MessageProcessor<JasprComponent>(
-        catalogs: [buildTestCatalog()],
-      );
-      processor.processMessages([
-        A2uiMessage.fromJson({
-          'version': 'v0.9',
-          'createSurface': {
-            'surfaceId': 'main',
-            'catalogId': testCatalogId,
-            'sendDataModel': true,
-          },
-        }),
-      ]);
+      final processor =
+          MessageProcessor<JasprComponent>(catalogs: [buildTestCatalog()])
+            ..processMessages([
+              A2uiMessage.fromJson({
+                'version': 'v0.9',
+                'createSurface': {
+                  'surfaceId': 'main',
+                  'catalogId': testCatalogId,
+                  'sendDataModel': true,
+                },
+              }),
+            ]);
 
       final html = stripSurface(
         await renderHtml(
@@ -112,19 +113,18 @@ void main() {
     testComponents('appears when its components arrive after mounting', (
       tester,
     ) async {
-      final processor = MessageProcessor<JasprComponent>(
-        catalogs: [buildTestCatalog()],
-      );
-      processor.processMessages([
-        A2uiMessage.fromJson({
-          'version': 'v0.9',
-          'createSurface': {
-            'surfaceId': 'main',
-            'catalogId': testCatalogId,
-            'sendDataModel': true,
-          },
-        }),
-      ]);
+      final processor =
+          MessageProcessor<JasprComponent>(catalogs: [buildTestCatalog()])
+            ..processMessages([
+              A2uiMessage.fromJson({
+                'version': 'v0.9',
+                'createSurface': {
+                  'surfaceId': 'main',
+                  'catalogId': testCatalogId,
+                  'sendDataModel': true,
+                },
+              }),
+            ]);
       final surface = processor.groupModel.getSurface('main')!;
 
       tester.pumpComponent(Surface(surface: surface));
