@@ -148,8 +148,10 @@ void main() {
     test('an interaction with the generated UI becomes the next turn, '
         'with the history that gives it meaning', () async {
       final interactions = <A2uiClientAction>[];
-      final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
-      conversation.actions.listen(interactions.add);
+      final conversation = GenUiConversation(
+        catalogs: [MinimalJasprCatalog()],
+        onAction: interactions.add,
+      );
       final AgentChat<dynamic> chat = openChat();
 
       // Turn one: the model builds a form.
@@ -166,7 +168,6 @@ void main() {
       await surface.dispatchAction({
         'event': {'name': 'submit'},
       }, 'send');
-      await Future<void>.delayed(Duration.zero);
       expect(interactions, hasLength(1));
 
       // Turn two: what the model is told about that interaction.

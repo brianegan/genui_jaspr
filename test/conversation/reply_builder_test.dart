@@ -206,6 +206,71 @@ void main() {
     });
   });
 
+  group('Stream<GenUiEvent>.replies', () {
+    test('snapshots the reply after each event, then once complete', () async {
+      final surface = emptySurface(conversation);
+      final snapshots = await Stream.fromIterable([
+        const GenUiText('Hi '),
+        GenUiSurface(surface),
+        const GenUiText('there'),
+      ]).replies.toList();
+
+      expect(snapshots.map((r) => r.text), [
+        'Hi ',
+        'Hi ',
+        'Hi there',
+        'Hi there',
+      ]);
+      expect(snapshots.map((r) => r.surfaces.length), [0, 1, 1, 1]);
+      expect(snapshots.map((r) => r.isComplete), [false, false, false, true]);
+    });
+
+    test(
+      'turns a failure of the stream into the snapshot\'s failure',
+      () async {
+        final events = StreamController<GenUiEvent>();
+        final snapshots = events.stream.replies.toList();
+
+        events.add(const GenUiText('Partial'));
+        events.addError(StateError('cut off'));
+        await events.close();
+
+        final replies = await snapshots;
+        expect(replies.last.text, 'Partial');
+        expect(replies.last.failure, isA<StateError>());
+        expect(replies.last.isComplete, isTrue);
+      },
+    );
+  });
+
+  group('Stream<GenUiEvent>.reply', () {
+    test('is the finished reply', () async {
+      final reply = await conversation
+          .receive(
+            Stream.fromIterable([
+              'Done.\n',
+              '```json\n{"version":"v0.9","createSurface":{"surfaceId":"s1",'
+                  '"catalogId":"${MinimalJasprCatalog.catalogId}","sendDataModel":true}}\n```\n',
+            ]),
+          )
+          .reply;
+
+      expect(reply.text, 'Done.\n');
+      expect(reply.surfaces.map((surface) => surface.id), ['s1']);
+      expect(reply.isComplete, isTrue);
+      expect(reply.errors, isEmpty);
+    });
+
+    test('never throws, carrying a failed model call as failure', () async {
+      final reply = await Stream<GenUiEvent>.error(
+        StateError('model unavailable'),
+      ).reply;
+
+      expect(reply.failure, isA<StateError>());
+      expect(reply.isEmpty, isTrue);
+    });
+  });
+
   group('Reply', () {
     test('is empty until it has words or a surface', () {
       expect(const Reply.empty().isEmpty, isTrue);

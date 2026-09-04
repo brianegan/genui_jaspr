@@ -308,7 +308,10 @@ void main() {
   group('GenUiConversation errors', () {
     test('reports a message the parser rejects and carries on', () async {
       final reported = <A2uiClientError>[];
-      conversation.errors.listen(reported.add);
+      conversation = GenUiConversation(
+        catalogs: [MinimalJasprCatalog()],
+        onError: reported.add,
+      );
 
       final events = await conversation
           .receive(
@@ -393,7 +396,10 @@ void main() {
 
     test('a failed model call is an error on the stream, not a mistake', () {
       final reported = <A2uiClientError>[];
-      conversation.errors.listen(reported.add);
+      conversation = GenUiConversation(
+        catalogs: [MinimalJasprCatalog()],
+        onError: reported.add,
+      );
 
       expect(
         conversation
@@ -425,7 +431,10 @@ void main() {
   group('GenUiConversation actions', () {
     test('reports a generated button\'s action', () async {
       final actions = <A2uiClientAction>[];
-      conversation.actions.listen(actions.add);
+      conversation = GenUiConversation(
+        catalogs: [MinimalJasprCatalog()],
+        onAction: actions.add,
+      );
       final events = await conversation
           .receive(Stream.fromIterable(greetingReply()))
           .toList();
@@ -441,7 +450,10 @@ void main() {
 
     test('reports an error a surface raises after its reply', () async {
       final errors = <A2uiClientError>[];
-      conversation.errors.listen(errors.add);
+      conversation = GenUiConversation(
+        catalogs: [MinimalJasprCatalog()],
+        onError: errors.add,
+      );
       final events = await conversation
           .receive(Stream.fromIterable(greetingReply()))
           .toList();
@@ -498,7 +510,10 @@ void main() {
   group('GenUiConversation surfaces deleted by the model', () {
     test('are reported by id and forgotten', () async {
       final deleted = <String>[];
-      conversation.deletedSurfaces.listen(deleted.add);
+      conversation = GenUiConversation(
+        catalogs: [MinimalJasprCatalog()],
+        onSurfaceDeleted: deleted.add,
+      );
 
       await conversation
           .receive(
@@ -537,25 +552,23 @@ void main() {
   });
 
   group('GenUiConversation.dispose', () {
-    test('releases the surfaces and closes its streams', () async {
-      final local = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
+    test('releases the surfaces and stops calling back', () async {
       final actions = <A2uiClientAction>[];
-      var actionsClosed = false;
-      local.actions.listen(actions.add, onDone: () => actionsClosed = true);
+      final local = GenUiConversation(
+        catalogs: [MinimalJasprCatalog()],
+        onAction: actions.add,
+      );
       final events = await local
           .receive(Stream.fromIterable(greetingReply()))
           .toList();
       final surface = surfacesIn(events).single;
 
       local.dispose();
-      await settle();
 
       expect(local.surfaces, isEmpty);
-      expect(actionsClosed, isTrue);
       await surface.dispatchAction({
         'event': {'name': 'submit'},
       }, 'root');
-      await settle();
       expect(actions, isEmpty);
     });
   });

@@ -17,8 +17,10 @@ import 'gen_ui_event.dart';
 /// its output to [receive] and render the events that come back.
 ///
 /// ```dart
-/// final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
-/// conversation.actions.listen((action) => send(conversation.actionText(action)));
+/// final conversation = GenUiConversation(
+///   catalogs: [MinimalJasprCatalog()],
+///   onAction: (action) => send(conversation.actionText(action)),
+/// );
 ///
 /// final Stream<GenUiEvent> reply = conversation.receive(model.stream(prompt));
 /// // GenUiText, GenUiSurface, and GenUiError events arrive as the model writes.
@@ -28,43 +30,44 @@ import 'gen_ui_event.dart';
 /// client, so the app decides how a prompt becomes a `Stream<String>` and what
 /// to do with an action once the user presses a generated button.
 class GenUiConversation {
-  GenUiConversation({required List<Catalog<JasprComponent>> catalogs})
-    : processor = MessageProcessor<JasprComponent>(catalogs: catalogs) {
-    processor.groupModel.onAction.addListener(_actions.add);
+  GenUiConversation({
+    required List<Catalog<JasprComponent>> catalogs,
+    this.onAction,
+    this.onError,
+    this.onSurfaceDeleted,
+  }) : processor = MessageProcessor<JasprComponent>(catalogs: catalogs) {
+    processor.groupModel.onAction.addListener(_onAction);
     processor.groupModel.onSurfaceCreated.addListener(_onSurfaceCreated);
-    processor.groupModel.onSurfaceDeleted.addListener(_deletedSurfaces.add);
+    processor.groupModel.onSurfaceDeleted.addListener(_onSurfaceDeleted);
   }
 
   /// The runtime underneath, for anything this class does not cover.
   final MessageProcessor<JasprComponent> processor;
 
-  final _actions = StreamController<A2uiClientAction>.broadcast();
-  final _errors = StreamController<A2uiClientError>.broadcast();
-  final _deletedSurfaces = StreamController<String>.broadcast();
-
-  /// The events of the reply currently applying messages, so the surfaces it
-  /// creates can be attributed to it.
-  StreamSink<GenUiEvent>? _receiving;
-
-  /// What the user does in a generated surface, such as pressing a button.
+  /// Called when the user does something in a generated surface, such as
+  /// pressing a button.
   ///
   /// The model has no view of the page, so it has to be told. [actionText]
   /// composes the text to send it as the next turn.
-  Stream<A2uiClientAction> get actions => _actions.stream;
+  final void Function(A2uiClientAction action)? onAction;
 
-  /// Everything that goes wrong that the model should hear about.
+  /// Called for everything that goes wrong that the model should hear about.
   ///
   /// Errors inside a reply also arrive on that reply's own stream as
   /// [GenUiError]. Errors raised later, such as a generated button whose action
   /// fails when pressed, only arrive here.
-  Stream<A2uiClientError> get errors => _errors.stream;
+  final void Function(A2uiClientError error)? onError;
 
-  /// The ids of surfaces the model has deleted.
+  /// Called with the id of a surface the model has deleted.
   ///
   /// A deleted surface's model is disposed, and a `Surface` still showing it
-  /// renders its placeholder the next time it builds. Listen here to drop it
-  /// from wherever the app keeps it.
-  Stream<String> get deletedSurfaces => _deletedSurfaces.stream;
+  /// renders its placeholder the next time it builds. Use this to drop it from
+  /// wherever the app keeps it.
+  final void Function(String surfaceId)? onSurfaceDeleted;
+
+  /// The events of the reply currently applying messages, so the surfaces it
+  /// creates can be attributed to it.
+  StreamSink<GenUiEvent>? _receiving;
 
   /// The surface with [id], or null if the model has not created it.
   SurfaceModel<JasprComponent>? surface(String id) =>
@@ -179,26 +182,29 @@ class GenUiConversation {
 
   void _report(StreamSink<GenUiEvent> out, A2uiClientError error) {
     out.add(GenUiError(error));
-    _errors.add(error);
+    onError?.call(error);
   }
+
+  void _onAction(A2uiClientAction action) => onAction?.call(action);
+
+  void _onLaterError(A2uiClientError error) => onError?.call(error);
+
+  void _onSurfaceDeleted(String surfaceId) => onSurfaceDeleted?.call(surfaceId);
 
   void _onSurfaceCreated(SurfaceModel<JasprComponent> surface) {
     // A surface raises errors from user interaction, which happens after its
     // reply has ended, so those are the conversation's rather than any reply's.
-    surface.onError.addListener(_errors.add);
+    surface.onError.addListener(_onLaterError);
     _receiving?.add(GenUiSurface(surface));
   }
 
-  /// Releases every surface and closes [actions], [errors], and
-  /// [deletedSurfaces]. Surfaces handed out earlier can no longer be rendered.
+  /// Releases every surface. Surfaces handed out earlier can no longer be
+  /// rendered, and no callback fires afterwards.
   void dispose() {
-    processor.groupModel.onAction.removeListener(_actions.add);
+    processor.groupModel.onAction.removeListener(_onAction);
     processor.groupModel.onSurfaceCreated.removeListener(_onSurfaceCreated);
-    processor.groupModel.onSurfaceDeleted.removeListener(_deletedSurfaces.add);
+    processor.groupModel.onSurfaceDeleted.removeListener(_onSurfaceDeleted);
     processor.groupModel.dispose();
-    _actions.close();
-    _errors.close();
-    _deletedSurfaces.close();
   }
 }
 

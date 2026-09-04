@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genkit/client.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
@@ -88,7 +86,6 @@ class ChatView extends StatefulComponent {
 // reports combine.
 class _ChatViewState extends State<ChatView> {
   late final GenUiConversation _conversation;
-  late final StreamSubscription<A2uiClientAction> _actions;
 
   final List<Turn> _turns = [];
   String _draft = '';
@@ -109,14 +106,15 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-    _conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
-    _actions = _conversation.actions.listen(_onSurfaceAction);
+    _conversation = GenUiConversation(
+      catalogs: [MinimalJasprCatalog()],
+      onAction: _onSurfaceAction,
+    );
   }
 
   // coverage:ignore-start
   @override
   void dispose() {
-    _actions.cancel();
     _conversation.dispose();
     super.dispose();
   }

@@ -123,17 +123,16 @@ void main() {
       tester,
     ) async {
       final actions = <A2uiClientAction>[];
-      final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
-      conversation.actions.listen(actions.add);
-      final events = await conversation
-          .receive(Stream.fromIterable(chunked(modelReply, 17)))
-          .toList();
-
-      tester.pumpComponent(
-        Surface(surface: events.whereType<GenUiSurface>().single.surface),
+      final conversation = GenUiConversation(
+        catalogs: [MinimalJasprCatalog()],
+        onAction: actions.add,
       );
+      final Reply reply = await conversation
+          .receive(Stream.fromIterable(chunked(modelReply, 17)))
+          .reply;
+
+      tester.pumpComponent(Surface(surface: reply.surfaces.single));
       await tester.click(find.tag('button'));
-      await tester.pump();
 
       expect(actions, hasLength(1));
       expect(actions.single.name, 'signUp');

@@ -90,16 +90,15 @@ class ChatView extends StatefulComponent {
 
 class _ChatViewState extends State<ChatView> {
   late final GenUiConversation _conversation;
-  late final StreamSubscription<A2uiClientAction> _actions;
   final List<Stream<GenUiEvent>> _replies = [];
 
   @override
   void initState() {
     super.initState();
-    _conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
-    // A button in a generated surface was pressed. Tell the model.
-    _actions = _conversation.actions.listen(
-      (action) => _ask(_conversation.actionText(action)),
+    _conversation = GenUiConversation(
+      catalogs: [MinimalJasprCatalog()],
+      // A button in a generated surface was pressed. Tell the model.
+      onAction: (action) => _ask(_conversation.actionText(action)),
     );
   }
 
@@ -128,7 +127,6 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
-    _actions.cancel();
     _conversation.dispose();
     super.dispose();
   }
@@ -136,7 +134,7 @@ class _ChatViewState extends State<ChatView> {
 ```
 
 That's the whole loop. The user asks, the model answers, and a press on a
-generated button comes back through `actions` as the next prompt.
+generated button comes back through `onAction` as the next prompt.
 
 A reply has two parts, and the snippet renders them differently on purpose. The
 model's conversational words, "Here's a short form to get started", are prose
@@ -187,9 +185,14 @@ re-enabling its composer, give the builder an `onComplete` callback rather than
 subscribing a second time. Like every stream builder in Jaspr it runs only in
 the browser, which is where a reply exists anyway.
 
+Outside a component, the same fold is an extension on the stream:
+`events.replies` is a `Stream<Reply>` with one snapshot per event, and
+`events.reply` is a `Future<Reply>` of the finished one. Neither throws; a
+failed model call arrives as `Reply.failure`.
+
 Actions, errors raised after a reply has ended, and surfaces the model deletes
-arrive on the conversation's own `actions`, `errors`, and `deletedSurfaces`
-streams.
+are single events rather than sequences, so they reach the app through the
+conversation's `onAction`, `onError`, and `onSurfaceDeleted` callbacks.
 
 Pass `surfaceId` to `receive` to render each reply into a surface your app
 names. A model that reuses an id across turns then cannot overwrite an earlier
