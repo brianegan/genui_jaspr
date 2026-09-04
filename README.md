@@ -34,9 +34,11 @@ runtime, so they speak exactly the same messages.
 
 - `GenUiConversation` owns the surfaces a model builds and everything the user
   types into them. Hand it each reply as a stream of text and it gives you back
-  a `Reply` that fills in as the stream arrives.
-- `Surface` renders one of those surfaces and keeps rendering as messages land,
-  so a form appears while the model is still writing it.
+  a stream of events: the prose, each surface the model opens, and each
+  mistake it makes.
+- `ReplyBuilder` folds that stream into a `Reply` and rebuilds as it arrives,
+  and `Surface` renders each surface and keeps rendering as messages land, so a
+  form appears while the model is still writing it.
 - A catalog with the five components of the A2UI minimal catalog, `Text`, `Row`,
   `Column`, `Button`, and `TextField`, each rendered as the HTML element it
   should be. Add your own or swap one out with `copyWith`.
@@ -88,20 +90,21 @@ class ChatView extends StatefulComponent {
 
 class _ChatViewState extends State<ChatView> {
   late final GenUiConversation _conversation;
-  final List<Reply> _replies = [];
+  late final StreamSubscription<A2uiClientAction> _actions;
+  final List<Stream<GenUiEvent>> _replies = [];
 
   @override
   void initState() {
     super.initState();
-    _conversation = GenUiConversation(
-      catalogs: [MinimalJasprCatalog()],
-      // A button in a generated surface was pressed. Tell the model.
-      onAction: (action) => _ask(_conversation.actionText(action)),
+    _conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
+    // A button in a generated surface was pressed. Tell the model.
+    _actions = _conversation.actions.listen(
+      (action) => _ask(_conversation.actionText(action)),
     );
   }
 
   void _ask(String prompt) {
-    final Reply reply = _conversation.receive(component.send(prompt));
+    final Stream<GenUiEvent> reply = _conversation.receive(component.send(prompt));
     setState(() => _replies.add(reply));
   }
 
@@ -109,10 +112,11 @@ class _ChatViewState extends State<ChatView> {
   Component build(BuildContext context) {
     return div([
       for (final reply in _replies)
-        // A Reply is a Listenable, so this re-renders as the reply streams.
-        ListenableBuilder(
-          listenable: reply,
-          builder: (context) => div([
+        // Folds the reply's events as they arrive, so this re-renders as the
+        // model writes.
+        ReplyBuilder(
+          events: reply,
+          builder: (context, reply) => div([
             // The model's own words, outside any surface.
             p([Component.text(reply.text)]),
             // The UI it built.
@@ -124,6 +128,7 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
+    _actions.cancel();
     _conversation.dispose();
     super.dispose();
   }
@@ -131,7 +136,7 @@ class _ChatViewState extends State<ChatView> {
 ```
 
 That's the whole loop. The user asks, the model answers, and a press on a
-generated button comes back through `onAction` as the next prompt.
+generated button comes back through `actions` as the next prompt.
 
 A reply has two parts, and the snippet renders them differently on purpose. The
 model's conversational words, "Here's a short form to get started", are prose
@@ -163,11 +168,27 @@ just as well as in the browser.
 
 ### Following a reply
 
-`receive` returns at once, and the `Reply` fills in as chunks arrive. Listen to
-it, or await `reply.done`, which never throws. A model call that failed lands in
-`reply.failure`. Messages the model got wrong, such as a component the catalog
-lacks or a surface created twice, land in `reply.errors` rather than stopping
-the reply, already in the shape `a2uiErrorMessage` sends back to the model.
+`receive` returns a `Stream<GenUiEvent>`, single-subscription and lazy, so
+nothing is parsed until something listens. Three kinds of event arrive:
+`GenUiText` carries a piece of prose, `GenUiSurface` carries a surface the model
+has just opened, once, and `GenUiError` carries a message the model got wrong,
+such as a component the catalog lacks or a surface created twice, already in the
+shape `a2uiErrorMessage` sends back to the model. The stream carries on after a
+`GenUiError`. A failure of the model call itself is an error on the stream,
+which then ends.
+
+`ReplyBuilder` is the fold most apps want: it turns the events into a `Reply`
+with `text`, `surfaces`, `errors`, `failure`, and `isComplete`, and rebuilds its
+subtree on each event. Keep the stream in state and hand the same instance to
+the builder on every build, since a new instance makes it resubscribe and a
+reply can only be listened to once. If something else also needs the stream,
+such as a transcript waiting for the reply to end, call `asBroadcastStream()`
+before handing it out. Like every stream builder in Jaspr it runs only in the
+browser, which is where a reply exists anyway.
+
+Actions, errors raised after a reply has ended, and surfaces the model deletes
+arrive on the conversation's own `actions`, `errors`, and `deletedSurfaces`
+streams.
 
 Pass `surfaceId` to `receive` to render each reply into a surface your app
 names. A model that reuses an id across turns then cannot overwrite an earlier

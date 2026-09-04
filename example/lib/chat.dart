@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genkit/client.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
@@ -15,8 +17,11 @@ class Turn {
 
   final String text;
 
-  /// The model's reply, which fills in as it streams. Null for the user's turns.
-  final Reply? reply;
+  /// The model's reply as a stream of events. Null for the user's turns.
+  ///
+  /// A broadcast stream, because two things listen: the [ReplyBuilder] that
+  /// renders it, and the transcript, which needs to know when it has ended.
+  final Stream<GenUiEvent>? reply;
 }
 
 /// Streams the model's reply to [prompt] as text chunks.
@@ -86,6 +91,7 @@ class ChatView extends StatefulComponent {
 // reports combine.
 class _ChatViewState extends State<ChatView> {
   late final GenUiConversation _conversation;
+  late final StreamSubscription<A2uiClientAction> _actions;
 
   final List<Turn> _turns = [];
   String _draft = '';
@@ -106,15 +112,14 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-    _conversation = GenUiConversation(
-      catalogs: [MinimalJasprCatalog()],
-      onAction: _onSurfaceAction,
-    );
+    _conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
+    _actions = _conversation.actions.listen(_onSurfaceAction);
   }
 
   // coverage:ignore-start
   @override
   void dispose() {
+    _actions.cancel();
     _conversation.dispose();
     super.dispose();
   }
@@ -144,10 +149,9 @@ class _ChatViewState extends State<ChatView> {
     // Each reply renders into a surface named here rather than one the model
     // invents, so a model that reuses an id cannot overwrite an earlier answer.
     // coverage:ignore-start
-    final Reply reply = _conversation.receive(
-      component.send(prompt),
-      surfaceId: 'reply${_replies++}',
-    );
+    final Stream<GenUiEvent> reply = _conversation
+        .receive(component.send(prompt), surfaceId: 'reply${_replies++}')
+        .asBroadcastStream();
     final turn = Turn.model(reply);
     // coverage:ignore-end
 
@@ -158,15 +162,22 @@ class _ChatViewState extends State<ChatView> {
       _turns.add(turn);
     });
 
-    await reply.done;
+    // The builder in the transcript renders the events. This listener only
+    // waits for the end, and hears whether the model call itself failed.
+    var produced = false;
+    try {
+      await for (final GenUiEvent event in reply) {
+        produced = produced || event is! GenUiError;
+      }
+    } catch (error) {
+      setState(() => _error = '$error');
+    }
 
     setState(() {
       _busy = false;
-      final Object? failure = reply.failure;
-      if (failure != null) _error = '$failure';
       // A turn with neither words nor a surface would render as an empty
       // bubble, which is what a failed request used to leave behind.
-      if (reply.isEmpty) _turns.remove(turn);
+      if (!produced) _turns.remove(turn);
     });
   }
 
@@ -205,17 +216,17 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Component _turnView(Turn turn) {
-    final Reply? reply = turn.reply;
+    final Stream<GenUiEvent>? reply = turn.reply;
     if (reply == null) {
       return div([
         p([Component.text(turn.text)]),
       ], classes: 'turn turn--user');
     }
-    // The reply notifies as prose and surfaces arrive, so the bubble fills in
+    // The builder folds the events as they arrive, so the bubble fills in
     // while the model is still writing.
-    return ListenableBuilder(
-      listenable: reply,
-      builder: (context) {
+    return ReplyBuilder(
+      events: reply,
+      builder: (context, reply) {
         if (reply.isEmpty) return const Component.empty();
         return div([
           if (reply.text.trim().isNotEmpty) p([Component.text(reply.text)]),

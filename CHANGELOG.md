@@ -4,10 +4,14 @@ First release. Renders A2UI generative user interfaces in Jaspr, building on
 `a2ui_core` for the protocol runtime.
 
 - `GenUiConversation` owns the surfaces of one conversation and turns each model
-  reply into a `Reply`: prose, surfaces, and the model's mistakes, filling in as
-  the stream arrives. A `Reply` is a `Listenable`. `receiveMessages` takes A2UI
-  that arrives already parsed, and `actionText` composes the text a chat app
-  sends the model after an interaction.
+  reply into a `Stream<GenUiEvent>`: `GenUiText` for prose, `GenUiSurface` for
+  each surface the model opens, and `GenUiError` for each message it got wrong.
+  Actions, later errors, and deleted surfaces arrive on the conversation's
+  `actions`, `errors`, and `deletedSurfaces` streams. `receiveMessages` takes
+  A2UI that arrives already parsed, and `actionText` composes the text a chat
+  app sends the model after an interaction.
+- `ReplyBuilder` folds a reply's events into a `Reply` and rebuilds as they
+  arrive, built on Jaspr's `StreamBuilderBase`.
 - `a2uiActionMessage`, `a2uiErrorMessage`, and `clientErrorFrom` produce the
   client-to-server envelopes the protocol defines.
 - `a2uiInstructions` writes the protocol half of a system prompt from a catalog,

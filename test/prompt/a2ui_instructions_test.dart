@@ -82,13 +82,13 @@ void main() {
         prompt.indexOf('A complete reply looks like this:'),
       );
 
-      final reply = conversation.receive(Stream.value(example));
-      await reply.done;
+      final events = await conversation.receive(Stream.value(example)).toList();
 
-      expect(reply.errors, isEmpty);
-      expect(reply.surfaces, hasLength(1));
+      expect(events.whereType<GenUiError>(), isEmpty);
+      final surfaces = events.whereType<GenUiSurface>().toList();
+      expect(surfaces, hasLength(1));
       expect(
-        reply.surfaces.single.componentsModel.all.map((c) => c.type),
+        surfaces.single.surface.componentsModel.all.map((c) => c.type),
         containsAll(['Column', 'Text', 'TextField', 'Button']),
       );
       conversation.dispose();

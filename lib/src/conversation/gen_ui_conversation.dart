@@ -2,68 +2,69 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:a2ui_core/a2ui_core.dart';
-import 'package:jaspr/jaspr.dart';
 
 import '../catalog/jaspr_component.dart';
 import '../transport/a2ui_parser_transformer.dart';
 import '../transport/generation_events.dart';
 import 'client_messages.dart';
+import 'gen_ui_event.dart';
 
 /// One conversation's worth of generative UI.
 ///
 /// This owns the A2UI runtime for as long as the conversation lasts: the
 /// surfaces a model has built so far, the data the user has typed into them,
 /// and the catalogs the model may draw on. Each time the model answers, hand
-/// its output to [receive] and render the [Reply] that comes back.
+/// its output to [receive] and render the events that come back.
 ///
 /// ```dart
-/// final conversation = GenUiConversation(
-///   catalogs: [MinimalJasprCatalog()],
-///   onAction: (action) => send(jsonEncode(a2uiActionMessage(action))),
-/// );
+/// final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
+/// conversation.actions.listen((action) => send(conversation.actionText(action)));
 ///
-/// final reply = conversation.receive(model.stream(prompt));
-/// // reply.text and reply.surfaces fill in as the stream arrives.
+/// final Stream<GenUiEvent> reply = conversation.receive(model.stream(prompt));
+/// // GenUiText, GenUiSurface, and GenUiError events arrive as the model writes.
 /// ```
 ///
 /// Nothing here talks to a model. The package stays free of any particular
 /// client, so the app decides how a prompt becomes a `Stream<String>` and what
 /// to do with an action once the user presses a generated button.
 class GenUiConversation {
-  GenUiConversation({
-    required List<Catalog<JasprComponent>> catalogs,
-    this.onAction,
-    this.onError,
-  }) : processor = MessageProcessor<JasprComponent>(catalogs: catalogs) {
-    processor.groupModel.onAction.addListener(_dispatchAction);
+  GenUiConversation({required List<Catalog<JasprComponent>> catalogs})
+    : processor = MessageProcessor<JasprComponent>(catalogs: catalogs) {
+    processor.groupModel.onAction.addListener(_actions.add);
     processor.groupModel.onSurfaceCreated.addListener(_onSurfaceCreated);
-    processor.groupModel.onSurfaceDeleted.addListener(_onSurfaceDeleted);
+    processor.groupModel.onSurfaceDeleted.addListener(_deletedSurfaces.add);
   }
 
   /// The runtime underneath, for anything this class does not cover.
   final MessageProcessor<JasprComponent> processor;
 
-  /// Called when the user does something in a generated surface, such as
-  /// pressing a button.
-  ///
-  /// The model has no view of the page, so it has to be told. Pass the action
-  /// through [a2uiActionMessage] to get the message the protocol defines, and
-  /// send it as the next turn.
-  final void Function(A2uiClientAction action)? onAction;
+  final _actions = StreamController<A2uiClientAction>.broadcast();
+  final _errors = StreamController<A2uiClientError>.broadcast();
+  final _deletedSurfaces = StreamController<String>.broadcast();
 
-  /// Called when something goes wrong that the model should hear about.
+  /// The events of the reply currently applying messages, so the surfaces it
+  /// creates can be attributed to it.
+  StreamSink<GenUiEvent>? _receiving;
+
+  /// What the user does in a generated surface, such as pressing a button.
   ///
-  /// Errors that happen while a reply is being received are also recorded on
-  /// that [Reply]. Errors raised later, such as a generated button whose action
+  /// The model has no view of the page, so it has to be told. [actionText]
+  /// composes the text to send it as the next turn.
+  Stream<A2uiClientAction> get actions => _actions.stream;
+
+  /// Everything that goes wrong that the model should hear about.
+  ///
+  /// Errors inside a reply also arrive on that reply's own stream as
+  /// [GenUiError]. Errors raised later, such as a generated button whose action
   /// fails when pressed, only arrive here.
-  final void Function(A2uiClientError error)? onError;
+  Stream<A2uiClientError> get errors => _errors.stream;
 
-  final Map<String, void Function(A2uiClientError)> _surfaceErrorForwarders =
-      {};
-
-  /// The reply currently applying messages, so surfaces it creates and errors it
-  /// raises can be attributed to it.
-  Reply? _receiving;
+  /// The ids of surfaces the model has deleted.
+  ///
+  /// A deleted surface's model is disposed, and a `Surface` still showing it
+  /// renders its placeholder the next time it builds. Listen here to drop it
+  /// from wherever the app keeps it.
+  Stream<String> get deletedSurfaces => _deletedSurfaces.stream;
 
   /// The surface with [id], or null if the model has not created it.
   SurfaceModel<JasprComponent>? surface(String id) =>
@@ -94,19 +95,20 @@ class GenUiConversation {
     ].join('\n');
   }
 
-  /// Feeds one model reply in as it streams, and returns it as a [Reply].
+  /// Applies one model reply as it streams, and reports what it produces.
   ///
-  /// The reply is returned at once and fills in as [chunks] arrive: prose lands
-  /// in [Reply.text], each `createSurface` adds to [Reply.surfaces], and later
-  /// messages update those surfaces in place. Listen to the reply, or await
-  /// [Reply.done], to follow along.
+  /// Prose arrives as [GenUiText], each surface the model opens as
+  /// [GenUiSurface], and each message it got wrong as [GenUiError]. A failure
+  /// of [chunks] itself is an error on the returned stream, which then ends. The
+  /// stream is single-subscription and does nothing until it is listened to.
+  /// `ReplyBuilder` folds it into something a component can render.
   ///
   /// Pass a [surfaceId] to render this reply into a surface named by the app
   /// rather than by the model. Every message in the reply is redirected to it,
   /// so a model that reuses an id across turns cannot overwrite an earlier
   /// answer. Leave it null to let the model manage surface ids itself, which is
   /// what lets one reply revise a surface from an earlier one.
-  Reply receive(Stream<String> chunks, {String? surfaceId}) {
+  Stream<GenUiEvent> receive(Stream<String> chunks, {String? surfaceId}) {
     return _receive(
       chunks.transform(const A2uiParserTransformer()),
       surfaceId: surfaceId,
@@ -117,81 +119,86 @@ class GenUiConversation {
   ///
   /// For transports that deliver A2UI already parsed, such as an A2A agent or a
   /// tool result, so they need not be serialized to text to be re-parsed here.
-  /// The reply has no prose; a failure of the stream is [Reply.failure].
-  Reply receiveMessages(Stream<A2uiMessage> messages, {String? surfaceId}) {
+  /// Such a reply has no prose.
+  Stream<GenUiEvent> receiveMessages(
+    Stream<A2uiMessage> messages, {
+    String? surfaceId,
+  }) {
     return _receive(messages.map(A2uiMessageEvent.new), surfaceId: surfaceId);
   }
 
-  Reply _receive(Stream<GenerationEvent> events, {String? surfaceId}) {
-    final reply = Reply._();
-    events.listen(
-      (event) => switch (event) {
-        TextEvent(:final text) => reply._addText(text),
-        A2uiMessageEvent(:final message) => _apply(
-          reply,
-          surfaceId == null ? message : _retarget(message, surfaceId),
-        ),
+  Stream<GenUiEvent> _receive(
+    Stream<GenerationEvent> events, {
+    String? surfaceId,
+  }) {
+    late final StreamController<GenUiEvent> out;
+    StreamSubscription<GenerationEvent>? subscription;
+
+    out = StreamController<GenUiEvent>(
+      onListen: () {
+        subscription = events.listen(
+          (event) => switch (event) {
+            TextEvent(:final text) => out.add(GenUiText(text)),
+            A2uiMessageEvent(:final message) => _apply(
+              out,
+              surfaceId == null ? message : _retarget(message, surfaceId),
+            ),
+          },
+          onError: (Object error, StackTrace stack) {
+            if (error is A2uiValidationException) {
+              // The model wrote something that was meant as a message and is
+              // not one. That is the model's mistake, so the reply carries on.
+              _report(out, clientErrorFrom(error, surfaceId: surfaceId ?? ''));
+            } else {
+              // Not a bad message but a failed stream: the model call itself
+              // broke. The parser passes the source's own errors through.
+              out.addError(error, stack);
+            }
+          },
+          onDone: out.close,
+          cancelOnError: false,
+        );
       },
-      onError: (Object error) {
-        if (error is A2uiValidationException) {
-          // The model wrote something that was meant as a message and is not
-          // one. That is the model's mistake, so it is recorded for the model.
-          _report(reply, clientErrorFrom(error, surfaceId: surfaceId ?? ''));
-        } else {
-          // Not a bad message but a failed stream: the model call itself
-          // broke. The parser passes the source's own errors through.
-          reply._fail(error);
-        }
-      },
-      onDone: reply._complete,
-      cancelOnError: false,
+      onPause: () => subscription?.pause(),
+      onResume: () => subscription?.resume(),
+      onCancel: () => subscription?.cancel(),
     );
-    return reply;
+    return out.stream;
   }
 
-  void _apply(Reply reply, A2uiMessage message) {
-    _receiving = reply;
+  void _apply(StreamSink<GenUiEvent> out, A2uiMessage message) {
+    _receiving = out;
     try {
       processor.processMessages([message]);
     } catch (error) {
-      _report(reply, clientErrorFrom(error, surfaceId: _surfaceIdOf(message)));
+      _report(out, clientErrorFrom(error, surfaceId: _surfaceIdOf(message)));
     } finally {
       _receiving = null;
     }
   }
 
-  void _report(Reply reply, A2uiClientError error) {
-    reply._addError(error);
-    onError?.call(error);
+  void _report(StreamSink<GenUiEvent> out, A2uiClientError error) {
+    out.add(GenUiError(error));
+    _errors.add(error);
   }
-
-  void _dispatchAction(A2uiClientAction action) => onAction?.call(action);
 
   void _onSurfaceCreated(SurfaceModel<JasprComponent> surface) {
     // A surface raises errors from user interaction, which happens after its
-    // reply has been received, so these are the conversation's rather than any
-    // reply's.
-    void forward(A2uiClientError error) => onError?.call(error);
-
-    surface.onError.addListener(forward);
-    _surfaceErrorForwarders[surface.id] = forward;
-    _receiving?._addSurface(surface);
+    // reply has ended, so those are the conversation's rather than any reply's.
+    surface.onError.addListener(_errors.add);
+    _receiving?.add(GenUiSurface(surface));
   }
 
-  void _onSurfaceDeleted(String surfaceId) {
-    // The surface has already been disposed along with its listeners; only the
-    // bookkeeping remains.
-    _surfaceErrorForwarders.remove(surfaceId);
-  }
-
-  /// Releases every surface. Replies handed out earlier can no longer be
-  /// rendered.
+  /// Releases every surface and closes [actions], [errors], and
+  /// [deletedSurfaces]. Surfaces handed out earlier can no longer be rendered.
   void dispose() {
-    processor.groupModel.onAction.removeListener(_dispatchAction);
+    processor.groupModel.onAction.removeListener(_actions.add);
     processor.groupModel.onSurfaceCreated.removeListener(_onSurfaceCreated);
-    processor.groupModel.onSurfaceDeleted.removeListener(_onSurfaceDeleted);
+    processor.groupModel.onSurfaceDeleted.removeListener(_deletedSurfaces.add);
     processor.groupModel.dispose();
-    _surfaceErrorForwarders.clear();
+    _actions.close();
+    _errors.close();
+    _deletedSurfaces.close();
   }
 }
 
@@ -217,78 +224,4 @@ String _surfaceIdOf(A2uiMessage message) {
     }
   }
   return '';
-}
-
-/// One model reply, filling in as it streams.
-///
-/// A reply is a [Listenable], so a `ListenableBuilder` over it re-renders as
-/// prose and surfaces arrive. The surfaces it lists are live models owned by
-/// the [GenUiConversation]: render each with a `Surface`, and they keep
-/// updating as later messages in the same reply change them.
-class Reply extends ChangeNotifier {
-  Reply._();
-
-  final StringBuffer _text = StringBuffer();
-  final List<SurfaceModel<JasprComponent>> _surfaces = [];
-  final List<A2uiClientError> _errors = [];
-  final Completer<void> _done = Completer<void>();
-  Object? _failure;
-
-  /// The prose the model has written so far, exactly as it wrote it.
-  String get text => _text.toString();
-
-  /// The surfaces this reply has created, in the order they were created.
-  List<SurfaceModel<JasprComponent>> get surfaces =>
-      List.unmodifiable(_surfaces);
-
-  /// Messages in this reply that could not be applied.
-  ///
-  /// A malformed message, a surface created twice, or a catalog the app does
-  /// not have all land here rather than stopping the reply. Each is in the
-  /// shape the protocol sends back to a model, see `a2uiErrorMessage`.
-  List<A2uiClientError> get errors => List.unmodifiable(_errors);
-
-  /// Whether the model has finished, one way or another.
-  bool get isComplete => _done.isCompleted;
-
-  /// Why the reply stopped early, when the model call itself failed.
-  ///
-  /// Distinct from [errors], which are the model's mistakes. This is the
-  /// network's, or the server's. Null while streaming and after a clean end.
-  Object? get failure => _failure;
-
-  /// Completes when the model has finished, whether cleanly or with [failure].
-  ///
-  /// Never completes with an error, so awaiting it in a UI is safe. Check
-  /// [failure] afterwards.
-  Future<void> get done => _done.future;
-
-  /// Whether the model produced neither words nor a surface.
-  bool get isEmpty => _text.isEmpty && _surfaces.isEmpty;
-
-  void _addText(String text) {
-    _text.write(text);
-    notifyListeners();
-  }
-
-  void _addSurface(SurfaceModel<JasprComponent> surface) {
-    _surfaces.add(surface);
-    notifyListeners();
-  }
-
-  void _addError(A2uiClientError error) {
-    _errors.add(error);
-    notifyListeners();
-  }
-
-  void _fail(Object error) {
-    _failure = error;
-    _complete();
-  }
-
-  void _complete() {
-    if (_done.isCompleted) return;
-    _done.complete();
-    notifyListeners();
-  }
 }

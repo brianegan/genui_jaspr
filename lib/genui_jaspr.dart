@@ -5,7 +5,7 @@
 /// binder that resolves a component's properties into concrete values. This
 /// library supplies the parts that have to know about Jaspr: a renderer for a
 /// surface, a catalog of components that emit HTML, and a conversation that
-/// turns a model's text stream into surfaces to render.
+/// turns a model's text stream into events and surfaces to render.
 library;
 
 export 'src/catalog/catalog_extension.dart';
@@ -13,6 +13,8 @@ export 'src/catalog/jaspr_component.dart';
 export 'src/catalog/minimal_catalog.dart';
 export 'src/conversation/client_messages.dart';
 export 'src/conversation/gen_ui_conversation.dart';
+export 'src/conversation/gen_ui_event.dart';
+export 'src/conversation/reply_builder.dart';
 export 'src/prompt/a2ui_instructions.dart';
 export 'src/rendering/signal_builder.dart';
 export 'src/rendering/surface.dart';
