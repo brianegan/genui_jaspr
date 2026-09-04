@@ -138,6 +138,53 @@ void main() {
       expect(find.text('done'), findsOneComponent);
     });
 
+    testComponents('reports the finished reply once, to onComplete', (
+      tester,
+    ) async {
+      final events = StreamController<GenUiEvent>();
+      final completed = <Reply>[];
+      tester.pumpComponent(
+        ReplyBuilder(
+          events: events.stream,
+          builder: transcriptEntry,
+          onComplete: completed.add,
+        ),
+      );
+
+      events.add(const GenUiText('Hi'));
+      await tester.pump();
+      expect(completed, isEmpty);
+
+      await events.close();
+      await tester.pump();
+
+      expect(completed, hasLength(1));
+      expect(completed.single.text, 'Hi');
+      expect(completed.single.isComplete, isTrue);
+      expect(completed.single.failure, isNull);
+    });
+
+    testComponents('hands onComplete the failure when the stream broke', (
+      tester,
+    ) async {
+      final events = StreamController<GenUiEvent>();
+      Reply? completed;
+      tester.pumpComponent(
+        ReplyBuilder(
+          events: events.stream,
+          builder: transcriptEntry,
+          onComplete: (reply) => completed = reply,
+        ),
+      );
+
+      events.addError(StateError('cut off'));
+      await events.close();
+      await tester.pump();
+
+      expect(completed?.failure, isA<StateError>());
+      expect(completed?.isEmpty, isTrue);
+    });
+
     testComponents('folds a real reply from the conversation', (tester) async {
       final events = conversation.receive(
         Stream.fromIterable([

@@ -18,9 +18,6 @@ class Turn {
   final String text;
 
   /// The model's reply as a stream of events. Null for the user's turns.
-  ///
-  /// A broadcast stream, because two things listen: the [ReplyBuilder] that
-  /// renders it, and the transcript, which needs to know when it has ended.
   final Stream<GenUiEvent>? reply;
 }
 
@@ -136,48 +133,44 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Future<void> _sendDraft() async {
+  void _sendDraft() {
     final String text = _draft.trim();
     if (text.isEmpty || _busy) return;
     setState(() => _draft = '');
-    await _send(text, show: text);
+    _send(text, show: text);
   }
 
-  Future<void> _send(String prompt, {required String show}) async {
+  void _send(String prompt, {required String show}) {
     if (_busy) return;
 
     // Each reply renders into a surface named here rather than one the model
     // invents, so a model that reuses an id cannot overwrite an earlier answer.
+    // The ReplyBuilder in the transcript is the stream's one listener; it
+    // reports back through [_onReplyComplete] when the reply has ended.
     // coverage:ignore-start
-    final Stream<GenUiEvent> reply = _conversation
-        .receive(component.send(prompt), surfaceId: 'reply${_replies++}')
-        .asBroadcastStream();
-    final turn = Turn.model(reply);
+    final Stream<GenUiEvent> reply = _conversation.receive(
+      component.send(prompt),
+      surfaceId: 'reply${_replies++}',
+    );
     // coverage:ignore-end
 
     setState(() {
       _busy = true;
       _error = null;
       _turns.add(Turn.user(show));
-      _turns.add(turn);
+      _turns.add(Turn.model(reply));
     });
+  }
 
-    // The builder in the transcript renders the events. This listener only
-    // waits for the end, and hears whether the model call itself failed.
-    var produced = false;
-    try {
-      await for (final GenUiEvent event in reply) {
-        produced = produced || event is! GenUiError;
-      }
-    } catch (error) {
-      setState(() => _error = '$error');
-    }
-
+  /// The model has finished [turn], cleanly or not.
+  void _onReplyComplete(Turn turn, Reply reply) {
     setState(() {
       _busy = false;
+      final Object? failure = reply.failure;
+      if (failure != null) _error = '$failure';
       // A turn with neither words nor a surface would render as an empty
       // bubble, which is what a failed request used to leave behind.
-      if (!produced) _turns.remove(turn);
+      if (reply.isEmpty) _turns.remove(turn);
     });
   }
 
@@ -226,6 +219,7 @@ class _ChatViewState extends State<ChatView> {
     // while the model is still writing.
     return ReplyBuilder(
       events: reply,
+      onComplete: (reply) => _onReplyComplete(turn, reply),
       builder: (context, reply) {
         if (reply.isEmpty) return const Component.empty();
         return div([

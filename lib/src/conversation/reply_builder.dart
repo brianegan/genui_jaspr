@@ -92,17 +92,27 @@ final class Reply {
 ///
 /// Keep the stream in state rather than calling `receive` in `build`: a
 /// different stream instance makes this resubscribe, and a reply's stream can
-/// only be listened to once. Like every stream builder in Jaspr, this cannot
-/// run on the server, where a reply cannot exist anyway.
+/// only be listened to once. This is that one listener, so anything else that
+/// needs to know how the reply ended, such as a transcript re-enabling its
+/// composer, gets it from [onComplete] rather than a second subscription. Like
+/// every stream builder in Jaspr, this cannot run on the server, where a reply
+/// cannot exist anyway.
 class ReplyBuilder extends StreamBuilderBase<GenUiEvent, Reply> {
   const ReplyBuilder({
     required Stream<GenUiEvent> events,
     required this.builder,
+    this.onComplete,
     super.key,
   }) : super(stream: events);
 
   /// Builds the reply as it stands after each event.
   final Component Function(BuildContext context, Reply reply) builder;
+
+  /// Called once, when the reply has ended, with the finished [Reply].
+  ///
+  /// The reply's [Reply.failure] says whether the model call broke, and
+  /// [Reply.isEmpty] whether it produced anything worth keeping.
+  final void Function(Reply reply)? onComplete;
 
   @override
   Reply initial() => const Reply.empty();
@@ -115,7 +125,11 @@ class ReplyBuilder extends StreamBuilderBase<GenUiEvent, Reply> {
       current._with(failure: error);
 
   @override
-  Reply afterDone(Reply current) => current._with(isComplete: true);
+  Reply afterDone(Reply current) {
+    final Reply complete = current._with(isComplete: true);
+    onComplete?.call(complete);
+    return complete;
+  }
 
   @override
   Component build(BuildContext context, Reply currentSummary) =>

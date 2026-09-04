@@ -181,10 +181,11 @@ which then ends.
 with `text`, `surfaces`, `errors`, `failure`, and `isComplete`, and rebuilds its
 subtree on each event. Keep the stream in state and hand the same instance to
 the builder on every build, since a new instance makes it resubscribe and a
-reply can only be listened to once. If something else also needs the stream,
-such as a transcript waiting for the reply to end, call `asBroadcastStream()`
-before handing it out. Like every stream builder in Jaspr it runs only in the
-browser, which is where a reply exists anyway.
+reply can only be listened to once. The builder is that one listener, so when
+something else needs to know how the reply ended, such as a transcript
+re-enabling its composer, give the builder an `onComplete` callback rather than
+subscribing a second time. Like every stream builder in Jaspr it runs only in
+the browser, which is where a reply exists anyway.
 
 Actions, errors raised after a reply has ended, and surfaces the model deletes
 arrive on the conversation's own `actions`, `errors`, and `deletedSurfaces`
