@@ -64,8 +64,9 @@ jobs:
       - name: 🧪 Check Coverage
         run: ./tool/coverage.sh
 
-  # The hops a VM test cannot reach: a real keystroke in a real input element
-  # writing to the data model, and a real click on a generated button.
+  # The hops a VM test cannot reach: a real keystroke or click on a real input
+  # element writing to the data model (a text field, checkbox, radio, checkbox
+  # group, range, or date/time input), and a real click on a generated button.
   #
   # This is hand-written rather than another `dart_package.yml` job with
   # `platform: chrome`. Only `test/browser` is annotated `@TestOn('browser')`,
