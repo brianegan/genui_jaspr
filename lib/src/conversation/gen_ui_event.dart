@@ -49,6 +49,6 @@ final class GenUiError extends GenUiEvent {
   /// Creates a [GenUiError] carrying [error].
   const GenUiError(this.error);
 
-  /// The message that could not be applied.
+  /// The error, in the shape the protocol sends back to a model.
   final A2uiClientError error;
 }

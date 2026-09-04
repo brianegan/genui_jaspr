@@ -138,7 +138,7 @@ typedef ComponentBuilder = Component Function(ComponentScope scope);
 /// For a one-off, or in a test, [JasprComponent.inline] takes the two halves
 /// directly without a class of their own.
 abstract class JasprComponent implements ComponentApi {
-  /// Creates a [JasprComponent].
+  /// A constructor for subclasses to call.
   const JasprComponent();
 
   /// A component from its [api] and a [build] closure.
