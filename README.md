@@ -1,95 +1,234 @@
 # genui_jaspr
 
-Render A2UI generative user interfaces in [Jaspr](https://jaspr.site), so a web
-app can offer a generative UI without shipping Flutter web.
+Render [A2UI](https://a2ui.org) generative user interfaces in
+[Jaspr](https://jaspr.site), so your web app can offer a generative UI without
+shipping Flutter web.
 
-A model replies with [A2UI](https://a2ui.org) messages instead of prose, and this
-package turns them into real HTML: headings are headings, inputs are inputs, and
-the browser supplies its own keyboards, validation, and focus handling.
+## What generative UI is
 
-This is the Jaspr counterpart to Flutter's
-[`genui`](https://github.com/flutter/genui/tree/main/packages/genui). It renders
-the same protocol to a different target.
+Ask a chat assistant to help you book a flight and you get a wall of text: a
+list of options to read, questions to answer by typing, and a summary you have
+to check by hand. Everything the app knows how to display, its date pickers and
+forms and lists, sits unused next to the chat box, because the model can only
+produce prose.
 
-## How it fits together
+Generative UI lets the model answer with an interface instead. The app publishes
+a catalog of components it knows how to render, and the model composes them at
+runtime: a form with the right fields, a quiz, a checklist, a set of options as
+buttons. What the user types or picks flows back to the model on the next turn,
+so the conversation continues through the UI rather than around it. The model
+never writes code and never draws anything the catalog does not offer, so what
+appears on screen is always something the app chose to make possible.
 
-The protocol runtime is not reimplemented here. It lives in
-[`a2ui_core`](https://pub.dev/packages/a2ui_core), which is pure Dart and owns the
-message model, the data model, expression evaluation, and the binder that resolves
-a component's properties into concrete values. This package adds the parts that
-have to know about Jaspr:
+A2UI is the protocol for this. A model emits small JSON messages that open a
+surface, fill it with components, and update the data behind them, and the
+client sends back the user's actions and entries. Flutter has an A2UI renderer in
+the [`genui`](https://github.com/flutter/genui/tree/main/packages/genui) package.
+This package is the Jaspr counterpart: the same messages, rendered to real HTML,
+so headings are headings, inputs are inputs, and the browser supplies its own
+keyboards, validation, and focus handling. Both build on
+[`a2ui_core`](https://pub.dev/packages/a2ui_core), the pure Dart protocol
+runtime, so they speak exactly the same messages.
 
-| | |
-|---|---|
-| `Surface` | renders a surface, and keeps rendering as messages arrive |
-| `minimalJasprCatalog()` | the components a model may use, and how each becomes HTML |
-| `A2uiTransportAdapter` | turns a model's text stream into A2UI messages |
-| `genuiJasprStyles` | a default appearance you can use, extend, or replace |
-| `SignalBuilder` | rebuilds a component when the data it reads changes |
+## What it gives you
 
-## Components
+- `GenUiConversation` owns the surfaces a model builds and everything the user
+  types into them. Hand it each reply as a stream of text and it gives you back
+  a `Reply` that fills in as the stream arrives.
+- `Surface` renders one of those surfaces and keeps rendering as messages land,
+  so a form appears while the model is still writing it.
+- A catalog with the five components of the A2UI minimal catalog, `Text`, `Row`,
+  `Column`, `Button`, and `TextField`, each rendered as the HTML element it
+  should be. Add your own or swap one out with `copyWith`.
+- `genuiJasprStyles`, a finished look against stable class names. Use it,
+  extend it, or replace it.
+- `a2uiInstructions`, which writes the protocol half of your system prompt from
+  the catalog, so what the model is told it may send and what the renderer can
+  draw cannot drift apart.
+- `actionText`, which gives you exactly what to send the model when the user
+  presses a generated button, in the shape the protocol defines, with what the
+  user entered alongside.
 
-This release renders the five components of the A2UI **minimal catalog**:
-`Text`, `Row`, `Column`, `Button`, and `TextField`.
+## Getting started
 
-Their schemas come from `a2ui_core` unchanged, and the catalog keeps that
-catalog's own id, so what a model is told it may send and what this renders cannot
-drift apart.
+Add the package, and `a2ui_core` for the protocol types you will meet in
+callbacks:
 
-`Text` becomes `h1` through `h5`, `small`, or `p` depending on its variant.
-`Row` and `Column` become flex containers. `Button` dispatches an action and
-disables itself while its `checks` fail. `TextField` becomes an `input` or
-`textarea`, picks an input type from its variant, and writes what the user types
-back to the data model so the next request carries it.
-
-A component the catalog does not implement renders a visible placeholder rather
-than throwing, so one unknown component does not take down the surface around it.
-
-### Not included yet
-
-Flutter's `genui` ships a larger basic catalog. `Card`, `Divider`, `List`,
-`Image`, `Icon`, `Modal`, `Tabs`, `Slider`, `DateTimeInput`, `ChoicePicker`,
-`AudioPlayer`, and `Video` are not here. Most are inexpensive in HTML, so the gap
-is scope rather than difficulty.
-
-There is also no prompt builder. The system prompt that teaches a model this
-protocol lives in the app, and `example/lib/prompt.dart` is a working one you can
-copy. It generates the component schemas from the catalog rather than restating
-them, which is worth keeping if you adapt it.
-
-## Usage
-
-```dart
-import 'package:a2ui_core/a2ui_core.dart';
-import 'package:genui_jaspr/genui_jaspr.dart';
-
-// One processor per conversation, one catalog.
-final processor = MessageProcessor<JasprComponent>(
-  catalogs: [minimalJasprCatalog()],
-  onAction: (action) {
-    // A button in a generated surface was pressed. Tell the model.
-  },
-);
-
-// Feed the model's output in as it arrives.
-final adapter = A2uiTransportAdapter();
-adapter.incomingMessages.listen((m) => processor.processMessages([m]));
-adapter.incomingText.listen(appendToTranscript);
-
-await for (final chunk in yourModelStream) {
-  adapter.addChunk(chunk);
-}
-await adapter.flush();
-
-// Render it.
-Surface(surface: processor.groupModel.getSurface('main')!);
+```sh
+dart pub add genui_jaspr a2ui_core
 ```
 
-Add `genuiJasprStyles` to your app's styles for a usable default appearance:
+Add the default styles to your `Document`:
 
 ```dart
 runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
 ```
+
+Then create one conversation and render its replies. This runs in the browser,
+under a `@client` component, because a generated surface only exists once the
+model has answered. How your app reaches the model is up to you: the component
+below takes a `send` function that returns the reply as a stream of text, and
+the example supplies one that streams from a Genkit agent behind a server route.
+
+```dart
+import 'package:a2ui_core/a2ui_core.dart';
+import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
+
+class ChatView extends StatefulComponent {
+  const ChatView({required this.send, super.key});
+
+  /// Sends a prompt to the model and streams its reply back as text chunks.
+  final Stream<String> Function(String prompt) send;
+
+  @override
+  State<ChatView> createState() => _ChatViewState();
+}
+
+class _ChatViewState extends State<ChatView> {
+  late final GenUiConversation _conversation;
+  final List<Reply> _replies = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _conversation = GenUiConversation(
+      catalogs: [MinimalJasprCatalog()],
+      // A button in a generated surface was pressed. Tell the model.
+      onAction: (action) => _ask(_conversation.actionText(action)),
+    );
+  }
+
+  void _ask(String prompt) {
+    final Reply reply = _conversation.receive(component.send(prompt));
+    setState(() => _replies.add(reply));
+  }
+
+  @override
+  Component build(BuildContext context) {
+    return div([
+      for (final reply in _replies)
+        // A Reply is a Listenable, so this re-renders as the reply streams.
+        ListenableBuilder(
+          listenable: reply,
+          builder: (context) => div([
+            // The model's own words, outside any surface.
+            p([Component.text(reply.text)]),
+            // The UI it built.
+            for (final surface in reply.surfaces) Surface(surface: surface),
+          ]),
+        ),
+    ]);
+  }
+
+  @override
+  void dispose() {
+    _conversation.dispose();
+    super.dispose();
+  }
+}
+```
+
+That's the whole loop. The user asks, the model answers, and a press on a
+generated button comes back through `onAction` as the next prompt.
+
+A reply has two parts, and the snippet renders them differently on purpose. The
+model's conversational words, "Here's a short form to get started", are prose
+the model wrote outside any surface, so they arrive in `reply.text` and the app
+shows them however its transcript looks, here as a paragraph. The UI the model
+built arrives as surfaces, and only `Surface` renders those, so a surface holds
+exactly what the model put on screen and nothing the app added around it. If you
+would rather the model said nothing outside the UI, tell it so in your system
+prompt and skip the paragraph.
+
+## Usage
+
+### Teaching the model the protocol
+
+The model has to be told how to speak A2UI to your app, and it has to be told
+exactly which components exist. `a2uiInstructions` writes that half of the
+system prompt from the catalog. You write the other half, which is what your
+assistant is for and how it should sound:
+
+```dart
+final systemPrompt = [
+  'You help people plan trips. Reply with a sentence, then the UI.',
+  a2uiInstructions(MinimalJasprCatalog()),
+].join('\n\n');
+```
+
+It imports nothing from Jaspr, so it runs on the server that holds your prompt
+just as well as in the browser.
+
+### Following a reply
+
+`receive` returns at once, and the `Reply` fills in as chunks arrive. Listen to
+it, or await `reply.done`, which never throws. A model call that failed lands in
+`reply.failure`. Messages the model got wrong, such as a component the catalog
+lacks or a surface created twice, land in `reply.errors` rather than stopping
+the reply, already in the shape `a2uiErrorMessage` sends back to the model.
+
+Pass `surfaceId` to `receive` to render each reply into a surface your app
+names. A model that reuses an id across turns then cannot overwrite an earlier
+answer, which is what a chat transcript wants, and it pairs with the default
+`a2uiInstructions`, which tells the model to open a new surface every reply.
+Leave `surfaceId` out to let the model manage surface ids itself, and pass
+`allowUpdates: true` to `a2uiInstructions` so it knows it may revise a surface
+from an earlier turn.
+
+A backend that delivers A2UI already parsed, such as an A2A agent, goes through
+`receiveMessages` instead. The protocol runtime is a public field,
+`conversation.processor`, for anything the conversation does not cover.
+
+### Adding a component
+
+A component is a `JasprComponent`: an `a2ui_core` API, which owns the name and
+the schema, plus a `build` method that turns resolved properties into HTML. The
+API classes for the minimal catalog come from `a2ui_core`. For a component of
+your own, define the API and the renderer together:
+
+```dart
+class DividerApi extends ComponentApi {
+  @override
+  String get name => 'Divider';
+
+  @override
+  Schema get schema => Schema.object(properties: {});
+}
+
+class DividerComponent extends JasprComponent {
+  @override
+  final ComponentApi api = DividerApi();
+
+  @override
+  Component build(ComponentScope scope) => hr(classes: 'a2ui-divider');
+}
+```
+
+Then derive a catalog. Give the copy its own id, since that id is what the model
+is told to target, and `a2uiInstructions` will describe the new component from
+its schema:
+
+```dart
+final catalog = MinimalJasprCatalog().copyWith(
+  id: 'com.example.catalog',
+  add: [DividerComponent()],
+);
+```
+
+`build` gets a `ComponentScope` with the properties already resolved: data
+bindings read, function calls evaluated, actions turned into callbacks. Read a
+value with `scope.string`, children with `scope.children()`, and the callback
+behind an action property with `scope.action`, which reports a failure to the
+surface instead of throwing out of a click handler. For a one-off, or in a test,
+`JasprComponent.inline(api, build)` takes the two halves as arguments.
+
+A component the catalog does not implement renders a visible notice rather than
+throwing, so one unknown component does not take down the surface around it.
+`Surface.fallback` replaces that notice with whatever fits your app, and
+`Surface.placeholder` fills the moment between a surface being created and its
+components arriving.
 
 ### Styling
 
@@ -108,17 +247,17 @@ static stylesheet reacts to a colour the model picked at runtime.
 
 ### Rendering on the server
 
-The renderer imports no `dart:html` or `dart:js_interop`, so it compiles on the
-server. A generated surface still cannot be server-rendered in any useful way,
-because it only exists once the model has answered something the user did. Render
-the shell on the server and let a `@client` component own the conversation, which
-is what the example does.
+The renderer reaches the DOM only through `universal_web`, the same stubs Jaspr
+uses, so it compiles on the server. A generated surface still cannot be
+server-rendered in any useful way, because it only exists once the model has
+answered something the user did. Render the shell on the server and let a
+`@client` component own the conversation, which is what the example does.
 
-## Running the example
+## Running the sample app
 
 The example is a Jaspr app with a server-rendered shell, the chat as a `@client`
-component, and the model call behind a server route so the API key never reaches
-the browser. It talks to Gemini through [Genkit](https://pub.dev/packages/genkit).
+component, and the model behind a Genkit agent on the server, so the API key
+never reaches the browser and the agent keeps each conversation's history.
 
 ```sh
 dart pub global activate jaspr_cli
@@ -137,31 +276,13 @@ It uses `gemini-3.5-flash-lite`. Set `MODEL` to try another:
 MODEL=gemini-3.5-flash jaspr serve
 ```
 
-The generated `lib/main.*.options.dart` files are committed, so the tests run
-without a build step. Re-run `build_runner` after adding or removing an `@client`
-component.
+The example's own [README](example/README.md) walks through its pieces.
 
-## Tests
+## Contributing
 
-```sh
-dart test                          # the package
-dart test -p chrome test/browser   # the browser-only tests, needs Chrome
-cd example && dart test            # the example, including a real HTTP round trip
-```
-
-The example's round-trip test starts a real server and drives the real route with
-a stand-in for the model, so everything between browser and model is covered
-without a key. Only the model call itself needs one.
-
-The browser tests are marked `@TestOn('browser')`, so the plain `dart test` runs
-skip them. They exist because two hops cannot be reached from the VM: a real
-keystroke in a real input element reaching the data model, and a real click on a
-generated button. Deleting a field's `onInput` handler passes every VM test and
-fails there.
-
-## Additional information
-
-Issues and pull requests: https://github.com/brianegan/genui_jaspr
+Issues and pull requests are welcome at
+https://github.com/brianegan/genui_jaspr. [CONTRIBUTING.md](CONTRIBUTING.md)
+has the test commands and explains how the suites fit together.
 
 - A2UI protocol: https://a2ui.org
 - Jaspr: https://jaspr.site

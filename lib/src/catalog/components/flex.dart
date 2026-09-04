@@ -15,7 +15,7 @@ Component flexContainer(
   required String className,
 }) {
   return div(
-    scope.buildChildren(scope.props['children']),
+    scope.children(),
     classes: className,
     styles: Styles(
       display: Display.flex,

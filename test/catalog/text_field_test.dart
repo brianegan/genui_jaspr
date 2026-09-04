@@ -173,6 +173,57 @@ void main() {
         expect(captured.surface.dataModel.get('/name'), 'Grace');
       });
 
+      testComponents('writes NaN as nothing, since JSON cannot carry it', (
+        tester,
+      ) async {
+        // A number input reports NaN while it is empty or mid-edit. The browser
+        // suite shows the real event arriving; this shows what the setter does
+        // with it.
+        final captured = await captureScope(
+          tester,
+          MinimalTextFieldApi(),
+          [
+            {
+              'id': 'root',
+              'component': 'TextField',
+              'label': 'Age',
+              'variant': 'number',
+              'value': {'path': '/age'},
+            },
+          ],
+          data: {'/age': 41},
+        );
+
+        captured.scope.setter('value')!(double.nan);
+
+        expect(captured.surface.dataModel.get('/age'), isNull);
+      });
+
+      testComponents('a long-text field follows the data model', (
+        tester,
+      ) async {
+        final surface = buildSurfaceModel(
+          [
+            {
+              'id': 'root',
+              'component': 'TextField',
+              'label': 'Notes',
+              'variant': 'longText',
+              'value': {'path': '/notes'},
+            },
+          ],
+          data: {'/notes': 'before'},
+        );
+
+        tester.pumpComponent(surfaceComponent(surface));
+        expect(find.text('before'), findsOneComponent);
+
+        surface.dataModel.set('/notes', 'after');
+        await tester.pump();
+
+        expect(find.text('after'), findsOneComponent);
+      });
+
       testComponents('a literal value provides no setter', (tester) async {
         final captured = await captureScope(tester, MinimalTextFieldApi(), [
           {

@@ -98,6 +98,22 @@ void main() {
       expect(messages[1], isA<UpdateComponentsMessage>());
     });
 
+    test(
+      'drops the whitespace a model leaves after its last message',
+      () async {
+        final events = await parse(['```json\n$createSurfaceJson\n```\n\n']);
+
+        expect(events.whereType<TextEvent>(), isEmpty);
+        expect(messagesOf(events), hasLength(1));
+      },
+    );
+
+    test('keeps prose that follows the last message', () async {
+      final events = await parse(['```json\n$createSurfaceJson\n```\nDone.']);
+
+      expect(textsOf(events), ['Done.']);
+    });
+
     test('parses a bare message with no fence', () async {
       final events = await parse([createSurfaceJson]);
 
@@ -266,72 +282,6 @@ void main() {
         'Cause: the underlying complaint\n'
         'JSON: {version: v0.8}',
       );
-    });
-  });
-
-  group('A2uiTransportAdapter', () {
-    test('publishes parsed messages to listeners', () async {
-      final adapter = A2uiTransportAdapter();
-      final received = <A2uiMessage>[];
-      adapter.incomingMessages.listen(received.add);
-
-      adapter.addChunk('```json\n$createSurfaceJson\n```');
-      await adapter.flush();
-
-      expect(received, hasLength(1));
-      adapter.dispose();
-    });
-
-    test('publishes prose separately from messages', () async {
-      final adapter = A2uiTransportAdapter();
-      final texts = <String>[];
-      adapter.incomingText.listen(texts.add);
-
-      adapter.addChunk('Thinking about it. ');
-      adapter.addChunk('```json\n$createSurfaceJson\n```');
-      await adapter.flush();
-
-      expect(texts.join(), 'Thinking about it. ');
-      adapter.dispose();
-    });
-
-    test('accepts a message that did not come from text', () async {
-      final adapter = A2uiTransportAdapter();
-      final received = <A2uiMessage>[];
-      adapter.incomingMessages.listen(received.add);
-
-      adapter.addMessage(
-        A2uiMessage.fromJson({
-          'version': 'v0.9',
-          'deleteSurface': {'surfaceId': 'main'},
-        }),
-      );
-      await Future<void>.delayed(Duration.zero);
-
-      expect(received, hasLength(1));
-      adapter.dispose();
-    });
-
-    test('hands the user\'s text to onSend', () async {
-      final sent = <String>[];
-      final adapter = A2uiTransportAdapter(
-        onSend: (text) async => sent.add(text),
-      );
-
-      await adapter.sendRequest('Plan me a trip');
-
-      expect(sent, ['Plan me a trip']);
-      adapter.dispose();
-    });
-
-    test('refuses to send without an onSend callback', () async {
-      final adapter = A2uiTransportAdapter();
-
-      await expectLater(
-        adapter.sendRequest('anything'),
-        throwsA(isA<StateError>()),
-      );
-      adapter.dispose();
     });
   });
 }

@@ -6,18 +6,17 @@ import 'package:jaspr/dom.dart';
 import 'package:universal_web/web.dart' as web;
 
 import 'interaction.dart';
+import 'server/chat_agent.dart' show chatPath;
 
-/// One entry in the transcript.
+/// One entry in the transcript: something the user said, or a model's reply.
 class Turn {
-  Turn.user(this.text) : surface = null, fromUser = true;
-  Turn.model(this.text, this.surface) : fromUser = false;
+  Turn.user(this.text) : reply = null;
+  Turn.model(this.reply) : text = ''; // coverage:ignore-line
 
   final String text;
 
-  /// The surface this turn generated, if it generated one.
-  final SurfaceModel<JasprComponent>? surface;
-
-  final bool fromUser;
+  /// The model's reply, which fills in as it streams. Null for the user's turns.
+  final Reply? reply;
 }
 
 /// Streams the model's reply to [prompt] as text chunks.
@@ -45,20 +44,27 @@ class Chat extends StatefulComponent {
 }
 
 class _ChatState extends State<Chat> {
-  /// Calls the server route. Genkit's client handles the frames and surfaces a
-  /// server-side failure as an error on the stream.
+  /// One chat with the agent behind the server route, for the life of the page.
   ///
-  /// The two decoder closures run only against a live server, which no test
-  /// provides, so they are ignored for coverage.
-  final _chat = defineRemoteAction<String, String, String, void>(
-    url: '/api/chat',
-    fromStreamChunk: (json) => json as String, // coverage:ignore-line
-    fromResponse: (json) => json as String, // coverage:ignore-line
-  );
+  /// The agent keeps this session's history on the server, so every turn the
+  /// model sees the UI it built earlier and can make sense of an interaction
+  /// with it. The browser holds nothing but the session's id, inside [_chat].
+  final AgentChat<dynamic> _chat = remoteAgent(url: '/$chatPath').chat();
 
   @override
   Component build(BuildContext context) {
-    return ChatView(send: (prompt) => _chat.stream(input: prompt));
+    return ChatView(
+      // Only a live server exercises this: the browser tests hand ChatView a
+      // stand-in for the model, and the round-trip test drives the agent from
+      // the VM.
+      // coverage:ignore-start
+      send: (prompt) => _chat
+          .sendStream(text: prompt)
+          .stream
+          .map((chunk) => chunk.text)
+          .where((text) => text.isNotEmpty),
+      // coverage:ignore-end
+    );
   }
 }
 
@@ -72,21 +78,21 @@ class ChatView extends StatefulComponent {
   State<ChatView> createState() => _ChatViewState();
 }
 
-// The `coverage:ignore-line` markers below mark dart2js source-map artifacts:
+// The `coverage:ignore` markers in this file mark dart2js source-map artifacts:
 // the browser suite executes those lines, but dart2js folds them into a
 // neighbouring line in its source map, so no platform's line table can
 // attribute them. Editing this file can shift which lines fold; move the
 // marker with the line. tool/merge_lcov.dart explains how the VM and Chrome
 // reports combine.
 class _ChatViewState extends State<ChatView> {
-  late final MessageProcessor<JasprComponent> _processor;
+  late final GenUiConversation _conversation;
 
   final List<Turn> _turns = [];
   String _draft = '';
   bool _busy = false;
   String? _error;
 
-  /// Surfaces are numbered so each reply renders into its own.
+  /// Replies are numbered so each renders into its own surface.
   int _replies = 0;
 
   /// An empty element after the last turn, scrolled into view to follow the
@@ -100,21 +106,27 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-    _processor = MessageProcessor<JasprComponent>(
-      catalogs: [minimalJasprCatalog()],
+    _conversation = GenUiConversation(
+      catalogs: [MinimalJasprCatalog()],
       onAction: _onSurfaceAction,
     );
   }
+
+  // coverage:ignore-start
+  @override
+  void dispose() {
+    _conversation.dispose();
+    super.dispose();
+  }
+  // coverage:ignore-end
 
   /// A button in a generated surface was pressed.
   ///
   /// The interaction becomes the next thing the model hears, along with whatever
   /// the user typed into that surface, which the data model already holds.
   void _onSurfaceAction(A2uiClientAction action) {
-    final SurfaceModel<JasprComponent>? surface = _processor.groupModel
-        .getSurface(action.surfaceId);
     _send(
-      describeInteraction(action, surface?.dataModel.get('/')),
+      _conversation.actionText(action), // coverage:ignore-line
       show: summariseInteraction(action), // coverage:ignore-line
     );
   }
@@ -129,51 +141,33 @@ class _ChatViewState extends State<ChatView> {
   Future<void> _send(String prompt, {required String show}) async {
     if (_busy) return;
 
-    final adapter = A2uiTransportAdapter(); // coverage:ignore-line
-    final surfaceId = 'reply${_replies++}'; // coverage:ignore-line
-    final prose = StringBuffer(); // coverage:ignore-line
+    // Each reply renders into a surface named here rather than one the model
+    // invents, so a model that reuses an id cannot overwrite an earlier answer.
+    // coverage:ignore-start
+    final Reply reply = _conversation.receive(
+      component.send(prompt),
+      surfaceId: 'reply${_replies++}',
+    );
+    final turn = Turn.model(reply);
+    // coverage:ignore-end
 
     setState(() {
       _busy = true;
       _error = null;
       _turns.add(Turn.user(show));
+      _turns.add(turn);
     });
 
-    // Each reply targets a surface named here rather than one the model invents,
-    // so a model that reuses an id cannot overwrite an earlier answer.
-    adapter.incomingMessages.listen((message) {
-      try {
-        _processor.processMessages([retargetSurface(message, surfaceId)]);
-      } catch (error) {
-        setState(() => _error = '$error');
-      }
-    });
-    adapter.incomingText.listen((chunk) {
-      prose.write(chunk);
-      setState(() {});
-    });
+    await reply.done;
 
-    try {
-      await for (final String chunk in component.send(prompt)) {
-        adapter.addChunk(chunk); // coverage:ignore-line
-      }
-      await adapter.flush();
-    } catch (error) {
-      setState(() => _error = '$error');
-    } finally {
-      adapter.dispose(); // coverage:ignore-line
-      final SurfaceModel<JasprComponent>? surface = _processor.groupModel
-          .getSurface(surfaceId); // coverage:ignore-line
-      final String text = prose.toString().trim();
-      setState(() {
-        _busy = false;
-        // A turn with neither words nor a surface would render as an empty
-        // bubble, which is what a failed request used to leave behind.
-        if (text.isNotEmpty || surface != null) {
-          _turns.add(Turn.model(text, surface));
-        }
-      });
-    }
+    setState(() {
+      _busy = false;
+      final Object? failure = reply.failure;
+      if (failure != null) _error = '$failure';
+      // A turn with neither words nor a surface would render as an empty
+      // bubble, which is what a failed request used to leave behind.
+      if (reply.isEmpty) _turns.remove(turn);
+    });
   }
 
   /// Follows the conversation after the next frame is laid out.
@@ -210,13 +204,27 @@ class _ChatViewState extends State<ChatView> {
     ], classes: 'chat');
   }
 
-  // coverage:ignore-start
   Component _turnView(Turn turn) {
-    // coverage:ignore-end
-    return div([
-      if (turn.text.isNotEmpty) p([Component.text(turn.text)]),
-      if (turn.surface != null) Surface(surface: turn.surface!),
-    ], classes: turn.fromUser ? 'turn turn--user' : 'turn turn--model');
+    final Reply? reply = turn.reply;
+    if (reply == null) {
+      return div([
+        p([Component.text(turn.text)]),
+      ], classes: 'turn turn--user');
+    }
+    // The reply notifies as prose and surfaces arrive, so the bubble fills in
+    // while the model is still writing.
+    return ListenableBuilder(
+      listenable: reply,
+      builder: (context) {
+        if (reply.isEmpty) return const Component.empty();
+        return div([
+          if (reply.text.trim().isNotEmpty) p([Component.text(reply.text)]),
+          for (final surface in reply.surfaces) Surface(surface: surface),
+          for (final error in reply.errors)
+            p([Component.text(error.message)], classes: 'error'),
+        ], classes: 'turn turn--model');
+      },
+    );
   }
 
   /// The prompt bar, pinned to the bottom of the viewport.

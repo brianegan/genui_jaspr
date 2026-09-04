@@ -14,8 +14,14 @@ Future<String> renderSurface(
   List<Map<String, dynamic>> components, {
   Map<String, Object?> data = const {},
   Map<String, dynamic>? theme,
+  Catalog<JasprComponent>? catalog,
 }) async {
-  final surface = buildSurfaceModel(components, data: data, theme: theme);
+  final surface = buildSurfaceModel(
+    components,
+    data: data,
+    theme: theme,
+    catalog: catalog,
+  );
   return stripSurface(await renderHtml(Surface(surface: surface)));
 }
 
@@ -36,9 +42,10 @@ SurfaceModel<JasprComponent> buildSurfaceModel(
   Map<String, Object?> data = const {},
   Map<String, dynamic>? theme,
   void Function(A2uiClientAction)? onAction,
+  Catalog<JasprComponent>? catalog,
 }) {
   final processor = MessageProcessor<JasprComponent>(
-    catalogs: [minimalJasprCatalog()],
+    catalogs: [catalog ?? MinimalJasprCatalog()],
     onAction: onAction,
   );
 
@@ -47,7 +54,7 @@ SurfaceModel<JasprComponent> buildSurfaceModel(
       'version': 'v0.9',
       'createSurface': {
         'surfaceId': 'main',
-        'catalogId': minimalJasprCatalogId,
+        'catalogId': MinimalJasprCatalog.catalogId,
         'theme': ?theme,
         'sendDataModel': true,
       },
@@ -95,9 +102,9 @@ captureScope(
   final processor = MessageProcessor<JasprComponent>(
     catalogs: [
       Catalog<JasprComponent>(
-        id: minimalJasprCatalogId,
+        id: MinimalJasprCatalog.catalogId,
         components: [
-          JasprComponent(api, (scope) {
+          JasprComponent.inline(api, (scope) {
             captured = scope;
             return const Component.empty();
           }),
@@ -111,7 +118,7 @@ captureScope(
       'version': 'v0.9',
       'createSurface': {
         'surfaceId': 'main',
-        'catalogId': minimalJasprCatalogId,
+        'catalogId': MinimalJasprCatalog.catalogId,
         'sendDataModel': true,
       },
     }),

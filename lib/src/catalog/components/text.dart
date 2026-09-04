@@ -9,8 +9,14 @@ import '../jaspr_component.dart';
 /// A heading variant becomes a real heading element rather than a styled `div`,
 /// so a generated page keeps a document outline that screen readers and search
 /// engines can follow.
-JasprComponent textComponent() {
-  return JasprComponent(MinimalTextApi(), (scope) {
+class TextComponent extends JasprComponent {
+  TextComponent();
+
+  @override
+  final ComponentApi api = MinimalTextApi();
+
+  @override
+  Component build(ComponentScope scope) {
     final String variant = scope.string('variant') ?? 'body';
     final String content = scope.string('text') ?? '';
     final String classes = 'a2ui-text a2ui-text--$variant';
@@ -25,5 +31,5 @@ JasprComponent textComponent() {
       'caption' => small(children, classes: classes),
       _ => p(children, classes: classes),
     };
-  });
+  }
 }

@@ -3,21 +3,54 @@ import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
 
 import '../catalog/jaspr_component.dart';
+import '../conversation/client_messages.dart';
 import '../styles.dart';
 import 'signal_builder.dart';
 
-/// Renders an A2UI surface, starting from the component named [rootId].
+/// Builds what a surface shows while it has no root component yet.
+typedef SurfacePlaceholderBuilder = Component Function(BuildContext context);
+
+/// Builds what stands in for a component the surface cannot render.
+///
+/// [message] says why: the catalog has no entry for the component's type, or
+/// the surface has no component with the id a parent referred to.
+typedef SurfaceFallbackBuilder =
+    Component Function(BuildContext context, String message);
+
+/// The id of the component a surface renders as the root of its tree.
+///
+/// Fixed by the protocol: nothing appears until a component with this id
+/// exists.
+const String rootComponentId = 'root';
+
+/// Renders an A2UI surface.
 ///
 /// A surface arrives empty and fills in as messages are applied, so this
-/// renders nothing until its root component exists and then appears on its own.
+/// renders [placeholder], or nothing, until its root component exists and then
+/// appears on its own.
 class Surface extends StatefulComponent {
-  const Surface({required this.surface, this.rootId = 'root', super.key});
+  const Surface({
+    required this.surface,
+    this.placeholder,
+    this.fallback,
+    super.key,
+  });
 
   /// The surface to render. Owned by the caller, not disposed here.
   final SurfaceModel<JasprComponent> surface;
 
-  /// The id of the component to render as the root of the tree.
-  final String rootId;
+  /// Shown while the surface has no root component, such as during the moment
+  /// between `createSurface` arriving and the components that follow it.
+  ///
+  /// Nothing is shown when this is null.
+  final SurfacePlaceholderBuilder? placeholder;
+
+  /// Shown in place of a component that cannot be rendered.
+  ///
+  /// By default a visible notice is rendered, which is right while developing
+  /// and may not be what an end user should see. Return an empty component to
+  /// hide such gaps, or something that fits the app.
+  final SurfaceFallbackBuilder? fallback;
 
   @override
   State<Surface> createState() => _SurfaceState();
@@ -63,15 +96,23 @@ class _SurfaceState extends State<Surface> {
 
   @override
   Component build(BuildContext context) {
+    final bool hasRoot =
+        component.surface.componentsModel.get(rootComponentId) != null;
+
     // The surface root carries the theme as custom properties, so the static
     // stylesheet can react to colours the model chose at runtime.
     return div(
       [
-        if (component.surface.componentsModel.get(component.rootId) != null)
-          A2uiComponent(
-            surface: component.surface,
-            componentId: component.rootId,
-          ),
+        if (hasRoot)
+          _SurfaceOptions(
+            fallback: component.fallback,
+            child: A2uiComponent(
+              surface: component.surface,
+              componentId: rootComponentId,
+            ),
+          )
+        else if (component.placeholder != null)
+          component.placeholder!(context),
       ],
       classes: 'a2ui-surface',
       styles: themeProperties(component.surface.theme),
@@ -79,8 +120,31 @@ class _SurfaceState extends State<Surface> {
   }
 }
 
+/// Carries a [Surface]'s options down to every [A2uiComponent] beneath it,
+/// so a nested component can find the fallback without every level passing it
+/// along.
+class _SurfaceOptions extends InheritedComponent {
+  const _SurfaceOptions({required this.fallback, required super.child});
+
+  final SurfaceFallbackBuilder? fallback;
+
+  static SurfaceFallbackBuilder? fallbackOf(BuildContext context) {
+    return context
+        .dependOnInheritedComponentOfExactType<_SurfaceOptions>()
+        ?.fallback;
+  }
+
+  @override
+  bool updateShouldNotify(_SurfaceOptions oldComponent) =>
+      oldComponent.fallback != fallback;
+}
+
 /// Renders one component of a surface, and through its children the subtree
 /// beneath it.
+///
+/// [Surface] renders one of these for the root component, and containers
+/// render one per child through `ComponentScope`. Use it directly only to
+/// render a single component outside its surface's tree.
 ///
 /// Each instance owns a [GenericBinder] for its component. The binder resolves
 /// the component's raw properties into concrete values and republishes them
@@ -94,7 +158,10 @@ class A2uiComponent extends StatefulComponent {
     super.key,
   });
 
+  /// The surface the component belongs to.
   final SurfaceModel<JasprComponent> surface;
+
+  /// The id of the component to render, within [surface].
   final String componentId;
 
   /// The data-model path children resolve against.
@@ -203,7 +270,10 @@ class _A2uiComponentState extends State<A2uiComponent> {
   Component build(BuildContext context) {
     final ComponentModel? model = _model;
     if (model == null) {
-      return _missing('No component with id "${component.componentId}".');
+      return _missing(
+        context,
+        'No component with id "${component.componentId}".',
+      );
     }
 
     final JasprComponent? entry = _entry;
@@ -212,7 +282,7 @@ class _A2uiComponentState extends State<A2uiComponent> {
       // The model asked for a component this catalog does not implement. Say so
       // in the page rather than throwing, so one unknown component does not
       // take down the surrounding surface.
-      return _missing('Unknown component "${model.type}".');
+      return _missing(context, 'Unknown component "${model.type}".');
     }
 
     return SignalBuilder<Map<String, dynamic>>(
@@ -225,6 +295,7 @@ class _A2uiComponentState extends State<A2uiComponent> {
           theme: component.surface.theme,
           buildChild: _buildChild,
           buildChildren: _buildChildren,
+          reportError: _reportError,
         ),
       ),
     );
@@ -257,7 +328,19 @@ class _A2uiComponentState extends State<A2uiComponent> {
     return children;
   }
 
-  Component _missing(String message) {
+  /// Hands an error to the surface, which is where a `GenUiConversation`
+  /// listens for them.
+  void _reportError(Object error) {
+    component.surface.dispatchError(
+      clientErrorFrom(error, surfaceId: component.surface.id),
+    );
+  }
+
+  Component _missing(BuildContext context, String message) {
+    final SurfaceFallbackBuilder? fallback = _SurfaceOptions.fallbackOf(
+      context,
+    );
+    if (fallback != null) return fallback(context, message);
     return div(
       [Component.text(message)],
       classes: 'a2ui-missing',

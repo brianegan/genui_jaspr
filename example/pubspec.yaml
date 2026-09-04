@@ -13,6 +13,7 @@ dependencies:
   a2ui_core: ^0.1.0
   genkit: ^0.15.1
   genkit_google_genai: ^0.2.12
+  genkit_shelf: ^0.1.11
   genui_jaspr: ^0.1.0
   jaspr: ^0.23.2
   shelf: ^1.4.0
