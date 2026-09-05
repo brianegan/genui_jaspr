@@ -1,12 +1,8 @@
 import 'package:genkit/genkit.dart';
 import 'package:genkit_shelf/genkit_shelf.dart';
 import 'package:genui_jaspr_example/prompt.dart';
+import 'package:genui_jaspr_example/server/chat_path.dart';
 import 'package:shelf/shelf.dart';
-
-/// The path the browser reaches the agent at. Two more hang off it, for
-/// reading a session back and for aborting a turn, which the Genkit client
-/// expects.
-const String chatPath = 'api/chat';
 
 /// The agent that answers the user, with the conversation's history.
 ///

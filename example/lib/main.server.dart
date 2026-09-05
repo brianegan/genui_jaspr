@@ -5,6 +5,7 @@ import 'package:genkit_google_genai/genkit_google_genai.dart';
 import 'package:genui_jaspr_example/app.dart';
 import 'package:genui_jaspr_example/main.server.options.dart';
 import 'package:genui_jaspr_example/server/chat_agent.dart';
+import 'package:genui_jaspr_example/server/chat_path.dart';
 import 'package:jaspr/server.dart';
 
 /// The model this example talks to.

@@ -4,6 +4,7 @@ import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genkit/genkit.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:genui_jaspr_example/server/chat_agent.dart';
+import 'package:genui_jaspr_example/server/chat_path.dart';
 import 'package:jaspr/server.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
