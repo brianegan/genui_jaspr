@@ -7,8 +7,7 @@ on:
       - main
 
 jobs:
-  # Formatting, analysis, and the VM suite for the published library. Coverage is
-  # held at 100%: everything `lib/` exposes is reachable from a VM test.
+  # Formatting, analysis, and the VM suite for the published library.
   #
   # `example/` is a workspace member with its own bar, checked by verify-example
   # below: its `chat.dart` is an `@client` component that no VM test can enter,
@@ -17,17 +16,57 @@ jobs:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/dart_package.yml@v1
     with:
       dart_sdk: stable
-      min_coverage: 100
+      # min_coverage defaults to 100 and dart_package.yml passes
+      # `--min-coverage` unconditionally, so it must be set here, not just
+      # omitted, to actually disable it. very_good_cli's own coverage check
+      # does not honor this package's `coverage:ignore` comments even with
+      # its own `check_ignore: true` (its `HitMap.parseFiles` resolves
+      # `packagePath` in a way that never finds this package's sources), so
+      # letting it enforce a bar here would fail this job over lines the bar
+      # deliberately excludes. Coverage is enforced by verify-coverage
+      # instead, which reads those comments correctly.
+      min_coverage: 0
       # There is no bloc in this package, so the default lint pass would only
       # activate bloc_tools for nothing.
       run_bloc_lint: false
       # `test_optimization` is deliberately left on. The generated entrypoint
       # only chokes on `test/browser` when the run has no `--platform vm`, and
-      # `platform` defaults to vm here, so all 84 tests compile and pass under
-      # the optimizer. Drop the optimization only if that default ever changes.
+      # `platform` defaults to vm here, so every test in test/ (excluding
+      # test/browser) compiles and passes under the optimizer. Drop the
+      # optimization only if that default ever changes.
 
-  # The hops a VM test cannot reach: a real keystroke in a real input element
-  # writing to the data model, and a real click on a generated button.
+  # Coverage is held at 100%: everything `lib/` exposes is reachable from a VM
+  # test, or, for the few lines only a browser can execute, from the
+  # browser-test job below with a `coverage:ignore` comment saying so.
+  #
+  # Hand-written rather than `verify-dart`'s own `min_coverage`, because
+  # `very_good_cli`'s coverage check does not honor those comments in this
+  # package: its `HitMap.parseFiles` resolves `packagePath` in a way that
+  # never finds this package's sources, so the markers are silently never
+  # read and it reports the bar below where the ignored lines put it.
+  # `format_coverage --check-ignore` reads them correctly, so `tool/coverage.sh`
+  # runs that directly, the same way `example/tool/coverage.sh` already does.
+  verify-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v6
+
+      - name: 🎯 Setup Dart
+        uses: dart-lang/setup-dart@v1.7.2
+        with:
+          sdk: stable
+
+      - name: 📦 Install Dependencies
+        run: dart pub get
+
+      - name: 🧪 Check Coverage
+        run: ./tool/coverage.sh
+
+  # The hops a VM test cannot reach: a real keystroke or click on a real input
+  # element writing to the data model (a text field, checkbox, radio, checkbox
+  # group, range, or date/time input), and a real click on a generated button.
   #
   # This is hand-written rather than another `dart_package.yml` job with
   # `platform: chrome`. Only `test/browser` is annotated `@TestOn('browser')`,

@@ -9,6 +9,17 @@
 
 include: package:very_good_analysis/analysis_options.yaml
 
+# very_good_analysis sets this too, but only through its own `include:` chain.
+# `pana` (see .github/workflows/main.yaml's verify-pana job) computes its own
+# restricted analysis options for scoring by shallow-parsing this file's own
+# top-level keys, not the fully-resolved merge through `include:`, so it never
+# sees a setting that only lives inside an included file. Repeating it here
+# directly is what lets pana's own `dart format` check agree with this file's
+# actual formatting instead of wanting to collapse every multi-line collection
+# literal that already fits on one line.
+formatter:
+  trailing_commas: preserve
+
 # Uncomment the following section to specify additional rules.
 
 # linter:

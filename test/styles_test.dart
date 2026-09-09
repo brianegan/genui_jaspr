@@ -1,10 +1,14 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr/src/catalog/components/check_box.dart';
+import 'package:genui_jaspr/src/catalog/components/choice_picker.dart';
+import 'package:genui_jaspr/src/catalog/components/date_time_input.dart';
+import 'package:genui_jaspr/src/catalog/components/slider.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
 import 'support/harness.dart';
 
 /// Every class name the catalog can emit, gathered by rendering a surface that
-/// uses all five components across their variants.
+/// uses every component across their variants.
 Future<Set<String>> emittedClassNames() async {
   final html = <String>[];
 
@@ -73,6 +77,184 @@ Future<Set<String>> emittedClassNames() async {
       data: {'/ok': false},
     ),
   );
+
+  final checkBoxCatalog = MinimalJasprCatalog().copyWith(
+    add: [CheckBoxComponent()],
+  );
+
+  html
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {'id': 'root', 'component': 'CheckBox', 'label': 'Subscribe'},
+        ], catalog: checkBoxCatalog),
+      ),
+    )
+    // An invalid checkbox, for the error classes.
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel(
+          [
+            {
+              'id': 'root',
+              'component': 'CheckBox',
+              'label': 'Subscribe',
+              'checks': [
+                {
+                  'condition': {'path': '/ok'},
+                  'message': 'nope',
+                },
+              ],
+            },
+          ],
+          data: {'/ok': false},
+          catalog: checkBoxCatalog,
+        ),
+      ),
+    );
+
+  final choicePickerCatalog = MinimalJasprCatalog().copyWith(
+    add: [ChoicePickerComponent()],
+  );
+  final choicePickerOptions = [
+    {'label': 'Red', 'value': 'red'},
+    {'label': 'Blue', 'value': 'blue'},
+  ];
+
+  html
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {
+            'id': 'root',
+            'component': 'ChoicePicker',
+            'label': 'Colour',
+            'variant': 'mutuallyExclusive',
+            'options': choicePickerOptions,
+            'value': 'red',
+          },
+        ], catalog: choicePickerCatalog),
+      ),
+    )
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {
+            'id': 'root',
+            'component': 'ChoicePicker',
+            'variant': 'multipleSelection',
+            'options': choicePickerOptions,
+            'value': ['red'],
+          },
+        ], catalog: choicePickerCatalog),
+      ),
+    )
+    // An invalid choice picker, for the error classes.
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel(
+          [
+            {
+              'id': 'root',
+              'component': 'ChoicePicker',
+              'label': 'Colour',
+              'options': choicePickerOptions,
+              'value': 'red',
+              'checks': [
+                {
+                  'condition': {'path': '/ok'},
+                  'message': 'nope',
+                },
+              ],
+            },
+          ],
+          data: {'/ok': false},
+          catalog: choicePickerCatalog,
+        ),
+      ),
+    );
+
+  final sliderCatalog = MinimalJasprCatalog().copyWith(
+    add: [SliderComponent()],
+  );
+
+  html
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {
+            'id': 'root',
+            'component': 'Slider',
+            'label': 'Amount',
+            'value': 5,
+          },
+        ], catalog: sliderCatalog),
+      ),
+    )
+    // An invalid slider, for the error classes.
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel(
+          [
+            {
+              'id': 'root',
+              'component': 'Slider',
+              'label': 'Amount',
+              'value': 5,
+              'checks': [
+                {
+                  'condition': {'path': '/ok'},
+                  'message': 'nope',
+                },
+              ],
+            },
+          ],
+          data: {'/ok': false},
+          catalog: sliderCatalog,
+        ),
+      ),
+    );
+
+  final dateTimeInputCatalog = MinimalJasprCatalog().copyWith(
+    add: [DateTimeInputComponent()],
+  );
+
+  html
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {
+            'id': 'root',
+            'component': 'DateTimeInput',
+            'label': 'When',
+            'value': '2024-01-01',
+          },
+        ], catalog: dateTimeInputCatalog),
+      ),
+    )
+    // An invalid date/time input, for the error classes.
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel(
+          [
+            {
+              'id': 'root',
+              'component': 'DateTimeInput',
+              'label': 'When',
+              'value': '2024-01-01',
+              'checks': [
+                {
+                  'condition': {'path': '/ok'},
+                  'message': 'nope',
+                },
+              ],
+            },
+          ],
+          data: {'/ok': false},
+          catalog: dateTimeInputCatalog,
+        ),
+      ),
+    );
 
   for (final component in const ['Row', 'Column']) {
     html.add(

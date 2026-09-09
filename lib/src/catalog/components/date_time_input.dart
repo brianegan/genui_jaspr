@@ -1,0 +1,111 @@
+import 'package:a2ui_core/a2ui_core.dart';
+import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
+import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
+import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:universal_web/web.dart' as web;
+
+/// `DateTimeInput`'s API, one of the basic catalog's components that
+/// `a2ui_core` does not ship. Its schema matches the A2UI spec's basic
+/// catalog, taken from Flutter's `genui` reference implementation since
+/// `a2ui_core` has none to copy it from.
+class DateTimeInputApi extends ComponentApi {
+  @override
+  String get name => 'DateTimeInput';
+
+  @override
+  Schema get schema => Schema.combined(
+    allOf: [
+      CommonSchemas.checkable,
+      Schema.object(
+        properties: {
+          'value': CommonSchemas.dynamicString,
+          'variant': Schema.string(enumValues: ['date', 'time', 'datetime']),
+          'min': Schema.string(),
+          'max': Schema.string(),
+          'label': CommonSchemas.dynamicString,
+        },
+        required: ['value'],
+      ),
+    ],
+  );
+}
+
+/// A date, time, or date-and-time input, bound to the data model in both
+/// directions. Omitting `variant` renders both a date and a time picker, the
+/// same default the A2UI spec's other renderers use.
+///
+/// Jaspr's own `onInput` converts a date, time, or datetime-local input's
+/// value to a `DateTime`, which throws once the field is cleared (its
+/// `valueAsNumber` is `NaN`, and `NaN.toInt()` has no web implementation).
+/// This registers a raw `input` listener instead and reads the element's
+/// `value` directly, which is already the exact string the schema binds, so
+/// nothing needs converting or reformatting, and clearing the field writes
+/// null the same way Slider and `TextField`'s number variant treat their own
+/// missing-value case, rather than throwing.
+class DateTimeInputComponent extends JasprComponent {
+  /// Creates a [DateTimeInputComponent].
+  DateTimeInputComponent();
+
+  @override
+  final ComponentApi api = DateTimeInputApi();
+
+  @override
+  Component build(ComponentScope scope) {
+    final variant = scope.string('variant') ?? 'datetime';
+    final labelText = scope.string('label');
+    final value = scope.string('value');
+    final write = scope.setter('value');
+    final errors = scope.validationErrors;
+
+    return label(
+      [
+        if (labelText != null)
+          span([
+            Component.text(labelText),
+          ], classes: 'a2ui-date-time-input__label'),
+        input<Object?>(
+          classes: 'a2ui-date-time-input__input',
+          type: _inputType(variant),
+          value: value == null || value.isEmpty ? null : value,
+          events: write == null ? null : {'input': _writeRawValue(write)},
+          attributes: {
+            'min': ?scope.string('min'),
+            'max': ?scope.string('max'),
+          },
+        ),
+        for (final error in errors)
+          small([
+            Component.text(error),
+          ], classes: 'a2ui-date-time-input__error'),
+      ],
+      classes: errors.isEmpty
+          ? 'a2ui-date-time-input'
+          : 'a2ui-date-time-input a2ui-date-time-input--invalid',
+    );
+  }
+}
+
+/// Maps the schema's `variant` onto the input type that gives the browser's
+/// own date or time picker for that kind of value.
+InputType _inputType(String variant) => switch (variant) {
+  'date' => InputType.date,
+  'time' => InputType.time,
+  _ => InputType.dateTimeLocal,
+};
+
+/// Writes the input's raw string value straight to the data model, or null
+/// once it is emptied.
+///
+/// Only a real browser ever calls this: a VM test can drive `build` but has
+/// no DOM to dispatch an `input` event from, which is what the browser suite
+/// covers instead. The event always comes from the `<input>` this listener is
+/// attached to, so its target is always an `HTMLInputElement`.
+void Function(web.Event) _writeRawValue(void Function(Object?) write) {
+  // coverage:ignore-start
+  return (event) {
+    final input = event.target! as web.HTMLInputElement;
+    write(input.value.isEmpty ? null : input.value);
+  };
+  // coverage:ignore-end
+}

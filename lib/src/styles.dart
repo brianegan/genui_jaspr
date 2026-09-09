@@ -141,6 +141,170 @@ final List<StyleRule> genuiJasprStyles = [
     styles: Styles(raw: {'border-color': 'var(--a2ui-error-color, #b3261e)'}),
   ),
 
+  // Checkbox
+  const StyleRule(
+    selector: Selector('.a2ui-checkbox'),
+    styles: Styles(
+      raw: {
+        'display': 'inline-flex',
+        'align-items': 'center',
+        'gap': '0.5rem',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-checkbox__input'),
+    styles: Styles(
+      raw: {'width': '1.125rem', 'height': '1.125rem'},
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-checkbox__label'),
+    styles: Styles(raw: {'font-size': '0.9375rem'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-checkbox__error'),
+    styles: Styles(
+      raw: {
+        'color': 'var(--a2ui-error-color, #b3261e)',
+        'font-size': '0.8125rem',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-checkbox--invalid .a2ui-checkbox__label'),
+    styles: Styles(raw: {'color': 'var(--a2ui-error-color, #b3261e)'}),
+  ),
+
+  // Choice picker
+  const StyleRule(
+    selector: Selector('.a2ui-choice-picker'),
+    styles: Styles(
+      raw: {
+        'display': 'flex',
+        'flex-direction': 'column',
+        'gap': '0.375rem',
+        'border': 'none',
+        'padding': '0',
+        'margin': '0',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-choice-picker__label'),
+    styles: Styles(
+      raw: {'font-size': '0.875rem', 'font-weight': '500', 'padding': '0'},
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-choice-picker__option'),
+    styles: Styles(
+      raw: {
+        'display': 'inline-flex',
+        'align-items': 'center',
+        'gap': '0.5rem',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-choice-picker__input'),
+    styles: Styles(
+      raw: {'width': '1.125rem', 'height': '1.125rem'},
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-choice-picker__option-label'),
+    styles: Styles(raw: {'font-size': '0.9375rem'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-choice-picker__error'),
+    styles: Styles(
+      raw: {
+        'color': 'var(--a2ui-error-color, #b3261e)',
+        'font-size': '0.8125rem',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector(
+      '.a2ui-choice-picker--invalid .a2ui-choice-picker__label',
+    ),
+    styles: Styles(raw: {'color': 'var(--a2ui-error-color, #b3261e)'}),
+  ),
+
+  // Slider
+  const StyleRule(
+    selector: Selector('.a2ui-slider'),
+    styles: Styles(
+      raw: {'display': 'flex', 'flex-direction': 'column', 'gap': '0.25rem'},
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-slider__label'),
+    styles: Styles(raw: {'font-size': '0.875rem', 'font-weight': '500'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-slider__input'),
+    styles: Styles(raw: {'accent-color': 'var(--a2ui-primary-color, #1a73e8)'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-slider__error'),
+    styles: Styles(
+      raw: {
+        'color': 'var(--a2ui-error-color, #b3261e)',
+        'font-size': '0.8125rem',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-slider--invalid .a2ui-slider__label'),
+    styles: Styles(raw: {'color': 'var(--a2ui-error-color, #b3261e)'}),
+  ),
+
+  // Date/time input
+  const StyleRule(
+    selector: Selector('.a2ui-date-time-input'),
+    styles: Styles(
+      raw: {'display': 'flex', 'flex-direction': 'column', 'gap': '0.25rem'},
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-date-time-input__label'),
+    styles: Styles(raw: {'font-size': '0.875rem', 'font-weight': '500'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-date-time-input__input'),
+    styles: Styles(
+      raw: {
+        'font': 'inherit',
+        'padding': '0.5rem',
+        'border': '1px solid var(--a2ui-border-color, #c4c7c5)',
+        'border-radius': '0.375rem',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-date-time-input__input:focus-visible'),
+    styles: Styles(
+      raw: {'outline': '2px solid var(--a2ui-primary-color, #1a73e8)'},
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-date-time-input__error'),
+    styles: Styles(
+      raw: {
+        'color': 'var(--a2ui-error-color, #b3261e)',
+        'font-size': '0.8125rem',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector(
+      '.a2ui-date-time-input--invalid .a2ui-date-time-input__input',
+    ),
+    styles: Styles(raw: {'border-color': 'var(--a2ui-error-color, #b3261e)'}),
+  ),
+
   // The renderer's own fallback for a component the catalog cannot build.
   const StyleRule(
     selector: Selector('.a2ui-missing'),
