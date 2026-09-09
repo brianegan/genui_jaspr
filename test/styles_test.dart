@@ -1,7 +1,10 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr/src/catalog/components/card.dart';
 import 'package:genui_jaspr/src/catalog/components/check_box.dart';
 import 'package:genui_jaspr/src/catalog/components/choice_picker.dart';
 import 'package:genui_jaspr/src/catalog/components/date_time_input.dart';
+import 'package:genui_jaspr/src/catalog/components/divider.dart';
+import 'package:genui_jaspr/src/catalog/components/list.dart';
 import 'package:genui_jaspr/src/catalog/components/slider.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
@@ -261,6 +264,44 @@ Future<Set<String>> emittedClassNames() async {
       await renderSurfaceRaw([
         {'id': 'root', 'component': component, 'children': <String>[]},
       ]),
+    );
+  }
+
+  html.add(
+    await renderSurfaceModel(
+      buildSurfaceModel([
+        {'id': 'root', 'component': 'Card', 'child': 'content'},
+        {'id': 'content', 'component': 'Text', 'text': 'x'},
+      ], catalog: MinimalJasprCatalog().copyWith(add: [CardComponent()])),
+    ),
+  );
+
+  final listCatalog = MinimalJasprCatalog().copyWith(add: [ListComponent()]);
+  for (final direction in const ['vertical', 'horizontal']) {
+    html.add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {
+            'id': 'root',
+            'component': 'List',
+            'children': <String>[],
+            'direction': direction,
+          },
+        ], catalog: listCatalog),
+      ),
+    );
+  }
+
+  final dividerCatalog = MinimalJasprCatalog().copyWith(
+    add: [DividerComponent()],
+  );
+  for (final axis in const ['horizontal', 'vertical']) {
+    html.add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {'id': 'root', 'component': 'Divider', 'axis': axis},
+        ], catalog: dividerCatalog),
+      ),
     );
   }
 
