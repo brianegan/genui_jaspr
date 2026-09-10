@@ -52,6 +52,52 @@ final List<StyleRule> genuiJasprStyles = [
       ),
     ),
 
+  // Image. The fit is set inline because the model chooses it per instance.
+  const StyleRule(
+    selector: Selector('.a2ui-image'),
+    styles: Styles(
+      raw: {'display': 'block', 'max-width': '100%'},
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-image--icon'),
+    styles: Styles(raw: {'width': '1.5rem', 'height': '1.5rem'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-image--avatar'),
+    styles: Styles(
+      raw: {'width': '2.5rem', 'height': '2.5rem', 'border-radius': '50%'},
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-image--small-feature'),
+    styles: Styles(raw: {'width': '6.25rem', 'height': '6.25rem'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-image--medium-feature'),
+    styles: Styles(raw: {'width': '100%', 'max-width': '18.75rem'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-image--large-feature'),
+    styles: Styles(raw: {'width': '100%', 'max-height': '25rem'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-image--header'),
+    styles: Styles(raw: {'width': '100%', 'height': '12.5rem'}),
+  ),
+
+  // Audio
+  const StyleRule(
+    selector: Selector('.a2ui-audio-player'),
+    styles: Styles(raw: {'display': 'block', 'width': '100%'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-video'),
+    styles: Styles(
+      raw: {'display': 'block', 'width': '100%', 'max-width': '100%'},
+    ),
+  ),
+
   // Layout. Direction and alignment are set inline per component, because the
   // model chooses them per instance; only the shared spacing lives here.
   const StyleRule(
@@ -113,6 +159,92 @@ final List<StyleRule> genuiJasprStyles = [
         'border-left': '1px solid var(--a2ui-border-color, #c4c7c5)',
       },
     ),
+  ),
+
+  // Tabs
+  const StyleRule(
+    selector: Selector('.a2ui-tabs'),
+    styles: Styles(raw: {'min-width': '0'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-tabs__list'),
+    styles: Styles(
+      raw: {
+        'display': 'flex',
+        'gap': '0.25rem',
+        'border-bottom': '1px solid var(--a2ui-border-color, #c4c7c5)',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-tabs__tab'),
+    styles: Styles(
+      raw: {
+        'font': 'inherit',
+        'padding': '0.5rem 0.75rem',
+        'background': 'transparent',
+        'border': '0',
+        'border-bottom': '2px solid transparent',
+        'cursor': 'pointer',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-tabs__tab--selected'),
+    styles: Styles(
+      raw: {
+        'color': 'var(--a2ui-primary-color, #1a73e8)',
+        'border-bottom-color': 'currentColor',
+        'font-weight': '600',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-tabs__panel'),
+    styles: Styles(raw: {'padding-top': '0.75rem'}),
+  ),
+
+  // Modal
+  const StyleRule(
+    selector: Selector('.a2ui-modal'),
+    styles: Styles(raw: {'display': 'contents'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-modal__trigger'),
+    styles: Styles(raw: {'display': 'inline-block'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-modal__dialog'),
+    styles: Styles(
+      raw: {
+        'box-sizing': 'border-box',
+        'width': 'min(32rem, calc(100% - 2rem))',
+        'max-height': 'calc(100% - 2rem)',
+        'padding': '1rem',
+        'color': 'inherit',
+        'background': 'var(--a2ui-surface-color, #ffffff)',
+        'border': '1px solid var(--a2ui-border-color, #c4c7c5)',
+        'border-radius': '0.5rem',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-modal__dialog::backdrop'),
+    styles: Styles(raw: {'background': 'rgb(0 0 0 / 45%)'}),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-modal__close'),
+    styles: Styles(
+      raw: {
+        'float': 'right',
+        'font': 'inherit',
+        'cursor': 'pointer',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-modal__content'),
+    styles: Styles(raw: {'clear': 'both'}),
   ),
 
   // Button

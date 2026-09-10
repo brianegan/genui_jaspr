@@ -1,13 +1,19 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr/src/catalog/components/audio_player.dart';
 import 'package:genui_jaspr/src/catalog/components/card.dart';
 import 'package:genui_jaspr/src/catalog/components/check_box.dart';
 import 'package:genui_jaspr/src/catalog/components/choice_picker.dart';
 import 'package:genui_jaspr/src/catalog/components/date_time_input.dart';
 import 'package:genui_jaspr/src/catalog/components/divider.dart';
+import 'package:genui_jaspr/src/catalog/components/image.dart';
 import 'package:genui_jaspr/src/catalog/components/list.dart';
+import 'package:genui_jaspr/src/catalog/components/modal.dart';
 import 'package:genui_jaspr/src/catalog/components/slider.dart';
+import 'package:genui_jaspr/src/catalog/components/tabs.dart';
+import 'package:genui_jaspr/src/catalog/components/video.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
+import 'support/basic_catalog_fixtures.dart';
 import 'support/harness.dart';
 
 /// Every class name the catalog can emit, gathered by rendering a surface that
@@ -305,12 +311,71 @@ Future<Set<String>> emittedClassNames() async {
     );
   }
 
-  // The fallback for a component this catalog does not implement.
-  html.add(
-    await renderSurfaceRaw([
-      {'id': 'root', 'component': 'NotARealComponent'},
-    ]),
-  );
+  final imageCatalog = MinimalJasprCatalog().copyWith(add: [ImageComponent()]);
+  for (final variant in const [
+    'icon',
+    'avatar',
+    'smallFeature',
+    'mediumFeature',
+    'largeFeature',
+    'header',
+  ]) {
+    html.add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {
+            'id': 'root',
+            'component': 'Image',
+            'url': '/photo.png',
+            'variant': variant,
+          },
+        ], catalog: imageCatalog),
+      ),
+    );
+  }
+
+  html
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel(
+          tabsFixtureComponents(),
+          catalog: MinimalJasprCatalog().copyWith(add: [TabsComponent()]),
+        ),
+      ),
+    )
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel(
+          modalFixtureComponents(),
+          catalog: MinimalJasprCatalog().copyWith(add: [ModalComponent()]),
+        ),
+      ),
+    )
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel(
+          [
+            {'id': 'root', 'component': 'AudioPlayer', 'url': '/audio.mp3'},
+          ],
+          catalog: MinimalJasprCatalog().copyWith(
+            add: [AudioPlayerComponent()],
+          ),
+        ),
+      ),
+    )
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {'id': 'root', 'component': 'Video', 'url': '/video.mp4'},
+        ], catalog: MinimalJasprCatalog().copyWith(add: [VideoComponent()])),
+      ),
+    )
+    // The fallback for a component this catalog does not implement.
+    ..add(
+      await renderSurfaceRaw([
+        {'id': 'root', 'component': 'NotARealComponent'},
+      ]),
+    );
 
   final names = <String>{};
   final pattern = RegExp('class="([^"]+)"');
@@ -325,16 +390,25 @@ Future<Set<String>> emittedClassNames() async {
 void main() {
   group('genuiJasprStyles', () {
     test('has a rule for every class the catalog emits', () async {
-      final css = genuiJasprStyles.map((rule) => rule.toCss()).join('\n');
+      final selectors = genuiJasprStyles
+          .map((rule) => rule.toCss().split('{').first.trim())
+          .toSet();
+      final classPattern = RegExp(r'\.([a-zA-Z0-9_-]+)');
+      final styledClassNames = {
+        for (final selector in selectors)
+          for (final match in classPattern.allMatches(selector))
+            match.group(1)!,
+      };
       final names = await emittedClassNames();
 
       // Guard the guard: if rendering stopped producing classes, this test
       // would pass while checking nothing.
       expect(names, hasLength(greaterThan(10)));
 
-      final uncovered = names.where((n) => !css.contains('.$n')).toList()
-        ..sort();
+      final uncovered =
+          names.where((n) => !styledClassNames.contains(n)).toList()..sort();
       expect(uncovered, isEmpty, reason: 'classes with no style rule');
+      expect(selectors, contains('.a2ui-modal__dialog::backdrop'));
     });
   });
 
