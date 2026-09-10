@@ -19,9 +19,12 @@
     "Genkit",
     "genui",
     "Jaspr",
+    "labelledby",
     "lede",
     "pana",
     "preact",
+    "tabindex",
+    "tablist",
     "unparseable"
   ]
 }
