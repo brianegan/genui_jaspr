@@ -62,6 +62,58 @@ final List<StyleRule> genuiJasprStyles = [
     selector: Selector('.a2ui-column'),
     styles: Styles(raw: {'gap': '0.5rem'}),
   ),
+  const StyleRule(
+    selector: Selector('.a2ui-list'),
+    styles: Styles(
+      raw: {
+        'gap': '0.5rem',
+        'min-width': '0',
+        'min-height': '0',
+        'padding': '0',
+        'margin': '0',
+      },
+    ),
+  ),
+
+  // Card. A transparent surface plus an outline keeps nested cards distinct
+  // without tracking their depth or alternating background colours.
+  const StyleRule(
+    selector: Selector('.a2ui-card'),
+    styles: Styles(
+      raw: {
+        'box-sizing': 'border-box',
+        'padding': '1rem',
+        'background': 'transparent',
+        'border': '1px solid var(--a2ui-border-color, #c4c7c5)',
+        'border-radius': '0.5rem',
+      },
+    ),
+  ),
+
+  // Divider
+  const StyleRule(
+    selector: Selector('.a2ui-divider'),
+    styles: Styles(
+      raw: {
+        'width': '100%',
+        'height': '0',
+        'margin': '0',
+        'border': '0',
+        'border-top': '1px solid var(--a2ui-border-color, #c4c7c5)',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-divider--vertical'),
+    styles: Styles(
+      raw: {
+        'width': '0',
+        'height': '100%',
+        'border-top': '0',
+        'border-left': '1px solid var(--a2ui-border-color, #c4c7c5)',
+      },
+    ),
+  ),
 
   // Button
   const StyleRule(
