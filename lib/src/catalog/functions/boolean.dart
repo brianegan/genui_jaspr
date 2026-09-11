@@ -31,7 +31,9 @@ class AndFunction extends FunctionImplementation {
     CancellationSignal? cancellationSignal,
   ]) {
     final values = args['values'];
-    return values is List && values.every((value) => value == true);
+    return values is List &&
+        values.length >= 2 &&
+        values.every((value) => value == true);
   }
 }
 
@@ -65,7 +67,9 @@ class OrFunction extends FunctionImplementation {
     CancellationSignal? cancellationSignal,
   ]) {
     final values = args['values'];
-    return values is List && values.any((value) => value == true);
+    return values is List &&
+        values.length >= 2 &&
+        values.any((value) => value == true);
   }
 }
 

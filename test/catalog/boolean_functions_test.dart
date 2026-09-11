@@ -48,6 +48,13 @@ void main() {
         }),
         isFalse,
       );
+      expect(runFunction(function, {'values': <bool>[]}), isFalse);
+      expect(
+        runFunction(function, {
+          'values': [true],
+        }),
+        isFalse,
+      );
       expect(runFunction(function, const {}), isFalse);
     });
 
@@ -84,6 +91,13 @@ void main() {
       expect(
         runFunction(function, {
           'values': [false, 1],
+        }),
+        isFalse,
+      );
+      expect(runFunction(function, {'values': <bool>[]}), isFalse);
+      expect(
+        runFunction(function, {
+          'values': [true],
         }),
         isFalse,
       );
