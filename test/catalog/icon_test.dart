@@ -171,5 +171,30 @@ void main() {
 
       expect(html, '<span class="custom-icon">home</span>');
     });
+
+    test('reports a missing name before calling a custom renderer', () async {
+      final errors = <Object>[];
+      var rendererCalled = false;
+      final component =
+          IconComponent.withRenderer((name) {
+            rendererCalled = true;
+            return Component.text(name);
+          }).build(
+            ComponentScope(
+              id: 'root',
+              type: 'Icon',
+              props: const {},
+              theme: const {},
+              buildChild: (_) => const Component.empty(),
+              buildChildren: (_) => const [],
+              reportError: errors.add,
+            ),
+          );
+
+      expect(await renderHtml(component), isEmpty);
+      expect(rendererCalled, isFalse);
+      expect(errors, hasLength(1));
+      expect(errors.single, isA<ArgumentError>());
+    });
   });
 }

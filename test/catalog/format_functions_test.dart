@@ -157,6 +157,13 @@ void main() {
         }),
         '16 janvier 2026',
       );
+      expect(
+        runFunction(FormatDateFunction(locale: 'not_a_locale'), {
+          'value': '2026-01-16T14:30:00Z',
+          'format': 'yyyy',
+        }),
+        '2026-01-16T14:30:00Z',
+      );
     });
 
     test('pluralize matches the pinned API and CLDR categories', () {
