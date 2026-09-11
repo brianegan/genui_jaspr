@@ -13,6 +13,7 @@
     "**/*.options.dart"
   ],
   "words": [
+    "CLDR",
     "fieldset",
     "flexbox",
     "genai",
@@ -21,10 +22,13 @@
     "Jaspr",
     "labelledby",
     "lede",
+    "noopener",
+    "noreferrer",
     "pana",
     "preact",
     "tabindex",
     "tablist",
+    "subsetting",
     "unparseable"
   ]
 }
