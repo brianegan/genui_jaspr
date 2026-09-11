@@ -4,13 +4,16 @@ library;
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
-import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:test/test.dart';
+import 'package:jaspr_test/jaspr_test.dart';
 import 'package:universal_web/web.dart' as web;
 
+import '../support/harness.dart';
+
 void main() {
-  test('the default opener invokes window.open synchronously', () {
+  testComponents('a Basic catalog button opens the URL synchronously', (
+    tester,
+  ) async {
     final original = web.window.getProperty<JSAny?>('open'.toJS);
     addTearDown(() => web.window.setProperty('open'.toJS, original));
 
@@ -28,10 +31,30 @@ void main() {
     }).toJS;
     web.window.setProperty('open'.toJS, fakeOpen);
 
-    final function = OpenUrlFunction();
-    final context = DataContext(DataModel(), (_, _, _) => null, '/');
+    final surface = buildSurfaceModel(
+      [
+        {
+          'id': 'root',
+          'component': 'Button',
+          'child': 'label',
+          'action': {
+            'functionCall': {
+              'call': 'openUrl',
+              'args': {'url': 'https://example.com/path'},
+              'returnType': 'void',
+            },
+          },
+        },
+        {'id': 'label', 'component': 'Text', 'text': 'Open'},
+      ],
+      catalog: BasicJasprCatalog.withoutIcons(
+        id: 'com.example.basic-browser',
+      ),
+    );
+    tester.pumpComponent(surfaceComponent(surface));
+
     executing = true;
-    function.execute({'url': 'https://example.com/path'}, context);
+    await tester.click(find.tag('button'));
     executing = false;
 
     expect(calledDuringExecute, isTrue);

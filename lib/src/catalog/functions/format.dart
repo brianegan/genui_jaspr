@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:a2ui_core/a2ui_core.dart' hide FormatStringFunction;
 import 'package:a2ui_core/a2ui_core.dart' as core show FormatStringFunction;
 import 'package:genui_jaspr/src/catalog/functions/standard_schemas.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
@@ -107,7 +110,9 @@ class FormatCurrencyFunction extends FunctionImplementation {
 /// Formats an ISO date string or epoch-millisecond timestamp.
 class FormatDateFunction extends FunctionImplementation {
   /// Creates the standard `formatDate` function.
-  FormatDateFunction({this.locale});
+  FormatDateFunction({this.locale}) {
+    _ensureDateFormattingInitialized();
+  }
 
   /// The locale passed to `intl`, or its current default when null.
   final String? locale;
@@ -195,18 +200,29 @@ class PluralizeFunction extends FunctionImplementation {
 
     return Intl.plural(
       value,
-      zero: _string(args['zero']),
-      one: _string(args['one']),
-      two: _string(args['two']),
-      few: _string(args['few']),
-      many: _string(args['many']),
+      zero: _stringOrNull(args['zero']),
+      one: _stringOrNull(args['one']),
+      two: _stringOrNull(args['two']),
+      few: _stringOrNull(args['few']),
+      many: _stringOrNull(args['many']),
       other: other,
       locale: locale,
     );
   }
 }
 
-String? _string(Object? value) => value is String ? value : null;
+String? _stringOrNull(Object? value) => value is String ? value : null;
+
+bool _dateFormattingInitialized = false;
+
+void _ensureDateFormattingInitialized() {
+  if (_dateFormattingInitialized) return;
+  _dateFormattingInitialized = true;
+  // The local initializer registers its data synchronously before returning
+  // an already-completed Future. This keeps FunctionImplementation.execute
+  // synchronous while making every intl locale available.
+  unawaited(initializeDateFormatting());
+}
 
 /// Interpolates data paths and client function calls in a string.
 ///

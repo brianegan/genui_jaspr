@@ -6,6 +6,8 @@ import 'package:jaspr/jaspr.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:test/test.dart';
 
+import '../support/harness.dart';
+
 const _componentNames = {
   'Text',
   'Image',
@@ -104,6 +106,116 @@ void main() {
       );
 
       expect(opened, [Uri.parse('https://example.com/path')]);
+    });
+
+    test('resolves every value function through a rendered surface', () async {
+      Map<String, Object?> call(
+        String name,
+        Map<String, Object?> args,
+        String returnType,
+      ) => {'call': name, 'args': args, 'returnType': returnType};
+
+      final strings = <(String, Map<String, Object?>)>[
+        (
+          'formatString',
+          call('formatString', {'value': r'Hello ${/name}'}, 'string'),
+        ),
+        (
+          'formatNumber',
+          call('formatNumber', {'value': 1234.5, 'decimals': 1}, 'string'),
+        ),
+        (
+          'formatCurrency',
+          call(
+            'formatCurrency',
+            {'value': 12, 'currency': 'USD'},
+            'string',
+          ),
+        ),
+        (
+          'formatDate',
+          call(
+            'formatDate',
+            {'value': '2026-01-16T14:30:00Z', 'format': 'yyyy-MM-dd'},
+            'string',
+          ),
+        ),
+        (
+          'pluralize',
+          call(
+            'pluralize',
+            {'value': 2, 'one': 'item', 'other': 'items'},
+            'string',
+          ),
+        ),
+      ];
+      final booleans = <(String, Map<String, Object?>)>[
+        ('required', call('required', {'value': 'present'}, 'boolean')),
+        (
+          'regex',
+          call(
+            'regex',
+            {'value': 'ABC-12', 'pattern': r'^[A-Z]+-[0-9]+$'},
+            'boolean',
+          ),
+        ),
+        (
+          'length',
+          call('length', {'value': 'four', 'min': 4, 'max': 4}, 'boolean'),
+        ),
+        (
+          'numeric',
+          call('numeric', {'value': 12.5, 'min': 10}, 'boolean'),
+        ),
+        ('email', call('email', {'value': 'ada@example.com'}, 'boolean')),
+        (
+          'and',
+          call('and', {
+            'values': [true, true],
+          }, 'boolean'),
+        ),
+        (
+          'or',
+          call('or', {
+            'values': [false, true],
+          }, 'boolean'),
+        ),
+        ('not', call('not', {'value': false}, 'boolean')),
+      ];
+
+      final html = await renderSurface(
+        [
+          {
+            'id': 'root',
+            'component': 'Column',
+            'children': [
+              for (final (id, _) in strings) id,
+              for (final (id, _) in booleans) id,
+            ],
+          },
+          for (final (id, value) in strings)
+            {'id': id, 'component': 'Text', 'text': value},
+          for (final (id, value) in booleans)
+            {
+              'id': id,
+              'component': 'CheckBox',
+              'label': id,
+              'value': value,
+            },
+        ],
+        data: {'/name': 'Ada'},
+        catalog: BasicJasprCatalog.withoutIcons(
+          id: 'com.example.basic-integration',
+          locale: 'en_US',
+        ),
+      );
+
+      expect(html, contains('Hello Ada'));
+      expect(html, contains('1,234.5'));
+      expect(html, contains(r'$12.00'));
+      expect(html, contains('2026-01-16'));
+      expect(html, contains('items'));
+      expect(RegExp(' checked(?:="")?').allMatches(html), hasLength(8));
     });
 
     test('does not change the minimal catalog', () {

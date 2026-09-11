@@ -4,5 +4,8 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
 
 void main() {
-  print(MinimalJasprCatalog.catalogId);
+  final catalog = MinimalJasprCatalog();
+  print(
+    '${catalog.id}:${catalog.components.length}:${catalog.functions.length}',
+  );
 }
