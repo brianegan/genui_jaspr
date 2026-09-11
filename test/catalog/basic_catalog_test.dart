@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:jaspr/jaspr.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:test/test.dart';
 
@@ -70,28 +69,6 @@ void main() {
         ).value,
       );
       expect(catalog.functions, isNot(contains('capitalize')));
-    });
-
-    test('supports custom and icon-free construction without lying by id', () {
-      final custom = BasicJasprCatalog.withIconRenderer(
-        (name) => Component.text('custom:$name'),
-      );
-      final iconFree = BasicJasprCatalog.withoutIcons(
-        id: 'com.example.basic-without-icons',
-      );
-
-      expect(custom.id, BasicJasprCatalog.catalogId);
-      expect(custom.components.keys.toSet(), _componentNames);
-      expect(iconFree.id, 'com.example.basic-without-icons');
-      expect(iconFree.components, isNot(contains('Icon')));
-      expect(iconFree.components, hasLength(17));
-      expect(iconFree.functions.keys.toSet(), _functionNames);
-      expect(
-        () => BasicJasprCatalog.withoutIcons(
-          id: BasicJasprCatalog.catalogId,
-        ),
-        throwsArgumentError,
-      );
     });
 
     test('passes openUrl through the application policy hook', () {
@@ -204,10 +181,7 @@ void main() {
             },
         ],
         data: {'/name': 'Ada'},
-        catalog: BasicJasprCatalog.withoutIcons(
-          id: 'com.example.basic-integration',
-          locale: 'en_US',
-        ),
+        catalog: BasicJasprCatalog(locale: 'en_US'),
       );
 
       expect(html, contains('Hello Ada'));

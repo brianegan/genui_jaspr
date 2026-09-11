@@ -59,7 +59,7 @@ void main() {
       );
     });
 
-    test('documents both catalogs and each icon payload choice', () {
+    test('documents both catalogs and the Basic icon contract', () {
       final readme = File('README.md').readAsStringSync();
       final basic = BasicJasprCatalog();
 
@@ -68,8 +68,7 @@ void main() {
       expect(readme, contains('18 components'));
       expect(readme, contains('14 functions'));
       expect(readme, contains('BasicJasprCatalog()'));
-      expect(readme, contains('BasicJasprCatalog.withIconRenderer'));
-      expect(readme, contains('BasicJasprCatalog.withoutIcons'));
+      expect(readme, contains('always includes `Icon`'));
       expect(readme, contains('MinimalJasprCatalog'));
       expect(readme, contains('tree-shaken'));
     });

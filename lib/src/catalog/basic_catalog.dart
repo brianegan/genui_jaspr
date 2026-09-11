@@ -26,65 +26,16 @@ import 'package:json_schema_builder/json_schema_builder.dart';
 
 /// The complete pinned A2UI v0.9 standard catalog, rendered as HTML.
 ///
-/// The default constructor includes the package's 59 built-in Material SVG
-/// paths. Use [BasicJasprCatalog.withIconRenderer] to keep the official catalog
-/// contract while rendering those names yourself. Use
-/// [BasicJasprCatalog.withoutIcons] when the application intentionally offers
-/// a smaller, custom catalog and wants the built-in icon data tree-shaken.
+/// The catalog always includes the package's 59 built-in Material SVG paths,
+/// because its official catalog ID promises the standard `Icon` component.
 class BasicJasprCatalog extends Catalog<JasprComponent> {
   /// Creates the complete catalog with the built-in icon renderer.
-  factory BasicJasprCatalog({
+  BasicJasprCatalog({
     String? locale,
     UrlOpener? urlOpener,
-  }) => BasicJasprCatalog._(
-    id: catalogId,
-    icon: IconComponent(),
-    locale: locale,
-    urlOpener: urlOpener,
-  );
-
-  /// Creates the complete catalog with an application-owned icon renderer.
-  factory BasicJasprCatalog.withIconRenderer(
-    IconRenderer renderer, {
-    String? locale,
-    UrlOpener? urlOpener,
-  }) => BasicJasprCatalog._(
-    id: catalogId,
-    icon: IconComponent.withRenderer(renderer),
-    locale: locale,
-    urlOpener: urlOpener,
-  );
-
-  /// Creates the standard catalog minus `Icon` under a custom [id].
-  ///
-  /// The official id promises all 18 components, so passing [catalogId] throws
-  /// rather than advertising a contract this catalog does not implement.
-  factory BasicJasprCatalog.withoutIcons({
-    required String id,
-    String? locale,
-    UrlOpener? urlOpener,
-  }) {
-    if (id == catalogId) {
-      throw ArgumentError.value(
-        id,
-        'id',
-        'An icon-free catalog cannot use the official standard catalog ID',
-      );
-    }
-    return BasicJasprCatalog._(
-      id: id,
-      locale: locale,
-      urlOpener: urlOpener,
-    );
-  }
-
-  BasicJasprCatalog._({
-    required super.id,
-    required String? locale,
-    required UrlOpener? urlOpener,
-    JasprComponent? icon,
   }) : super(
-         components: _components(icon),
+         id: catalogId,
+         components: _components(),
          functions: _functions(locale: locale, urlOpener: urlOpener),
          themeSchema: _themeSchema,
        );
@@ -94,10 +45,10 @@ class BasicJasprCatalog extends Catalog<JasprComponent> {
       'https://a2ui.org/specification/v0_9/standard_catalog.json';
 }
 
-List<JasprComponent> _components(JasprComponent? icon) => [
+List<JasprComponent> _components() => [
   TextComponent(),
   ImageComponent(),
-  ?icon,
+  IconComponent(),
   VideoComponent(),
   AudioPlayerComponent(),
   RowComponent(),

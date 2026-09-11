@@ -168,10 +168,11 @@ prompt and skip the paragraph.
 
 ## Usage
 
-### Choosing a catalog and its icon payload
+### Choosing a catalog
 
 `BasicJasprCatalog()` implements the complete pinned A2UI v0.9 standard
-catalog. It includes a private table of the 59 icon names that catalog permits,
+catalog. Its one constructor always includes `Icon`, backed by a private table
+of the 59 names that catalog permits,
 rendered as inline 24px SVG using `currentColor`. It does not load a font, make
 a network request, or add an icon package to your app at runtime:
 
@@ -179,30 +180,11 @@ a network request, or add an icon package to your app at runtime:
 final catalog = BasicJasprCatalog();
 ```
 
-Constructing that catalog keeps all 59 paths, because an `Icon` message can
-arrive at runtime. If your app already has an icon system, supply a renderer and
-the built-in paths are tree-shaken:
-
-```dart
-final catalog = BasicJasprCatalog.withIconRenderer(
-  (name) => MyIcon(name: name),
-);
-```
-
-If the app deliberately offers everything except `Icon`, give that smaller
-catalog its own ID. The official ID promises `Icon`, so it is rejected here:
-
-```dart
-final catalog = BasicJasprCatalog.withoutIcons(
-  id: 'com.example.standard-without-icons',
-);
-```
-
-`MinimalJasprCatalog()` is still the five-component option. Importing this
-package, using the minimal catalog, using `withIconRenderer`, or using
-`withoutIcons` does not retain the built-in icon paths in a production web
-build. The package checks those four cases by compiling real consumer
-entrypoints.
+Constructing that catalog keeps all 59 paths, because any standard `Icon`
+message can arrive at runtime. `MinimalJasprCatalog()` remains the
+five-component option and does not include `Icon`. Importing this package or
+using only the minimal catalog means the built-in icon paths are tree-shaken
+from a production web build; a compiler regression test protects that boundary.
 
 The standard `openUrl` function accepts any valid URI, as the protocol
 specifies. Pass `urlOpener` when the host application needs to allow only

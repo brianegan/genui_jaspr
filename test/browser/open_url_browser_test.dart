@@ -47,9 +47,7 @@ void main() {
         },
         {'id': 'label', 'component': 'Text', 'text': 'Open'},
       ],
-      catalog: BasicJasprCatalog.withoutIcons(
-        id: 'com.example.basic-browser',
-      ),
+      catalog: BasicJasprCatalog(),
     );
     tester.pumpComponent(surfaceComponent(surface));
 
