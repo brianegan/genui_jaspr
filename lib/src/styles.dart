@@ -86,6 +86,18 @@ final List<StyleRule> genuiJasprStyles = [
     styles: Styles(raw: {'width': '100%', 'height': '12.5rem'}),
   ),
 
+  // Icon
+  const StyleRule(
+    selector: Selector('.a2ui-icon'),
+    styles: Styles(
+      raw: {
+        'display': 'inline-block',
+        'flex-shrink': '0',
+        'vertical-align': 'middle',
+      },
+    ),
+  ),
+
   // Audio
   const StyleRule(
     selector: Selector('.a2ui-audio-player'),

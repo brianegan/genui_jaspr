@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
 import 'package:test/test.dart';
@@ -55,6 +57,21 @@ void main() {
         MinimalJasprCatalog().components.keys,
         isNot(anyElement(isIn(deferred))),
       );
+    });
+
+    test('documents both catalogs and each icon payload choice', () {
+      final readme = File('README.md').readAsStringSync();
+      final basic = BasicJasprCatalog();
+
+      expect(basic.components, hasLength(18));
+      expect(basic.functions, hasLength(14));
+      expect(readme, contains('18 components'));
+      expect(readme, contains('14 functions'));
+      expect(readme, contains('BasicJasprCatalog()'));
+      expect(readme, contains('BasicJasprCatalog.withIconRenderer'));
+      expect(readme, contains('BasicJasprCatalog.withoutIcons'));
+      expect(readme, contains('MinimalJasprCatalog'));
+      expect(readme, contains('tree-shaken'));
     });
   });
 }

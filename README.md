@@ -39,9 +39,9 @@ runtime, so they speak exactly the same messages.
 - `ReplyBuilder` folds that stream into a `Reply` and rebuilds as it arrives,
   and `Surface` renders each surface and keeps rendering as messages land, so a
   form appears while the model is still writing it.
-- A catalog with the five components of the A2UI minimal catalog, `Text`, `Row`,
-  `Column`, `Button`, and `TextField`, each rendered as the HTML element it
-  should be. Add your own or swap one out with `copyWith`.
+- `BasicJasprCatalog`, with all 18 components, all 14 functions, and the theme
+  from the A2UI standard catalog. `MinimalJasprCatalog` remains available when
+  five components and one small string function are enough.
 - `genuiJasprStyles`, a finished look against stable class names. Use it,
   extend it, or replace it.
 - `a2uiInstructions`, which writes the protocol half of your system prompt from
@@ -117,7 +117,7 @@ class _ChatViewState extends State<ChatView> {
   void initState() {
     super.initState();
     _conversation = GenUiConversation(
-      catalogs: [MinimalJasprCatalog()],
+      catalogs: [BasicJasprCatalog()],
       // A button in a generated surface was pressed. Tell the model.
       onAction: (action) => _ask(_conversation.actionText(action)),
     );
@@ -168,6 +168,55 @@ prompt and skip the paragraph.
 
 ## Usage
 
+### Choosing a catalog and its icon payload
+
+`BasicJasprCatalog()` implements the complete pinned A2UI v0.9 standard
+catalog. It includes a private table of the 59 icon names that catalog permits,
+rendered as inline 24px SVG using `currentColor`. It does not load a font, make
+a network request, or add an icon package to your app at runtime:
+
+```dart
+final catalog = BasicJasprCatalog();
+```
+
+Constructing that catalog keeps all 59 paths, because an `Icon` message can
+arrive at runtime. If your app already has an icon system, supply a renderer and
+the built-in paths are tree-shaken:
+
+```dart
+final catalog = BasicJasprCatalog.withIconRenderer(
+  (name) => MyIcon(name: name),
+);
+```
+
+If the app deliberately offers everything except `Icon`, give that smaller
+catalog its own ID. The official ID promises `Icon`, so it is rejected here:
+
+```dart
+final catalog = BasicJasprCatalog.withoutIcons(
+  id: 'com.example.standard-without-icons',
+);
+```
+
+`MinimalJasprCatalog()` is still the five-component option. Importing this
+package, using the minimal catalog, using `withIconRenderer`, or using
+`withoutIcons` does not retain the built-in icon paths in a production web
+build. The package checks those four cases by compiling real consumer
+entrypoints.
+
+The standard `openUrl` function accepts any valid URI, as the protocol
+specifies. Pass `urlOpener` when the host application needs to allow only
+particular schemes or domains. The injected callback runs synchronously in the
+user action and also makes navigation straightforward to test:
+
+```dart
+final catalog = BasicJasprCatalog(
+  urlOpener: (uri) {
+    if (uri.scheme == 'https') openTrustedUrl(uri);
+  },
+);
+```
+
 ### Teaching the model the protocol
 
 The model has to be told how to speak A2UI to your app, and it has to be told
@@ -178,7 +227,7 @@ assistant is for and how it should sound:
 ```dart
 final systemPrompt = [
   'You help people plan trips. Reply with a sentence, then the UI.',
-  a2uiInstructions(MinimalJasprCatalog()),
+  a2uiInstructions(BasicJasprCatalog()),
 ].join('\n\n');
 ```
 
