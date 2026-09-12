@@ -42,8 +42,10 @@ runtime, so they speak exactly the same messages.
 - `BasicJasprCatalog`, with all 18 components, all 14 functions, and the theme
   from the A2UI standard catalog. `MinimalJasprCatalog` remains available when
   five components and one small string function are enough.
-- `genuiJasprStyles`, a finished look against stable class names. Use it,
-  extend it, or replace it.
+- A `styles` getter on any `Catalog<JasprComponent>`, added by the
+  `JasprCatalogComposition` extension, which gathers the default rules of the
+  components that catalog holds. Use them, extend them, or replace them. A
+  catalog derived with `copyWith` carries the rules for what it actually has.
 - `a2uiInstructions`, which writes the protocol half of your system prompt from
   the catalog, so what the model is told it may send and what the renderer can
   draw cannot drift apart.
@@ -60,11 +62,18 @@ callbacks:
 dart pub add genui_jaspr a2ui_core
 ```
 
-Add the default styles to your `Document`:
+Pick your catalog once and hold it. The styles you ship and the components the
+renderer can draw both come from it, so one value is what keeps them in step:
 
 ```dart
-runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
+final catalog = BasicJasprCatalog();
+
+runApp(Document(styles: [...catalog.styles, ...myStyles], body: MyApp()));
 ```
+
+The package styles the components and nothing else. The surface wrapper
+(`.a2ui-surface`) and the renderer's missing-component fallback (`.a2ui-missing`)
+belong to no component, so their appearance is yours to set.
 
 Then create one conversation and render its replies. This runs in the browser,
 under a `@client` component, because a generated surface only exists once the
@@ -117,7 +126,7 @@ class _ChatViewState extends State<ChatView> {
   void initState() {
     super.initState();
     _conversation = GenUiConversation(
-      catalogs: [BasicJasprCatalog()],
+      catalogs: [catalog],
       // A button in a generated surface was pressed. Tell the model.
       onAction: (action) => _ask(_conversation.actionText(action)),
     );
@@ -174,11 +183,8 @@ prompt and skip the paragraph.
 catalog. Its one constructor always includes `Icon`, backed by a private table
 of the 59 names that catalog permits,
 rendered as inline 24px SVG using `currentColor`. It does not load a font, make
-a network request, or add an icon package to your app at runtime:
-
-```dart
-final catalog = BasicJasprCatalog();
-```
+a network request, or add an icon package to your app at runtime. It is the
+`catalog` the snippets above build.
 
 Constructing that catalog keeps all 59 paths, because any standard `Icon`
 message can arrive at runtime. `MinimalJasprCatalog()` remains the
@@ -209,7 +215,7 @@ assistant is for and how it should sound:
 ```dart
 final systemPrompt = [
   'You help people plan trips. Reply with a sentence, then the UI.',
-  a2uiInstructions(BasicJasprCatalog()),
+  a2uiInstructions(catalog),
 ].join('\n\n');
 ```
 
@@ -261,9 +267,10 @@ A backend that delivers A2UI already parsed, such as an A2A agent, goes through
 ### Adding a component
 
 A component is a `JasprComponent`: an `a2ui_core` API, which owns the name and
-the schema, plus a `build` method that turns resolved properties into HTML. The
-API classes for the minimal catalog come from `a2ui_core`. For a component of
-your own, define the API and the renderer together:
+the schema, a `build` method that turns resolved properties into HTML, and the
+style rules for the classes that `build` emits. The API classes for the minimal
+catalog come from `a2ui_core`. For a component of your own, define all three
+together:
 
 ```dart
 class DividerApi extends ComponentApi {
@@ -280,8 +287,20 @@ class DividerComponent extends JasprComponent {
 
   @override
   Component build(ComponentScope scope) => hr(classes: 'a2ui-divider');
+
+  @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-divider'),
+      styles: Styles(raw: {'border': 'none', 'height': '1px'}),
+    ),
+  ];
 }
 ```
+
+Declaring `styles` next to the `build` that emits the class is what keeps a
+catalog's bundle complete. Leave it out and the component still renders; it just
+contributes no rules, and a host stylesheet supplies them instead.
 
 Then derive a catalog. Give the copy its own id, since that id is what the model
 is told to target, and `a2uiInstructions` will describe the new component from
@@ -294,12 +313,17 @@ final catalog = MinimalJasprCatalog().copyWith(
 );
 ```
 
+`catalog.styles` now carries the divider's rule along with the minimal
+components'. That is the point of deriving the bundle from the catalog rather
+than writing it out: there is no second list to remember to update.
+
 `build` gets a `ComponentScope` with the properties already resolved: data
 bindings read, function calls evaluated, actions turned into callbacks. Read a
 value with `scope.string`, children with `scope.children()`, and the callback
 behind an action property with `scope.action`, which reports a failure to the
 surface instead of throwing out of a click handler. For a one-off, or in a test,
-`JasprComponent.inline(api, build)` takes the two halves as arguments.
+`JasprComponent.inline(api, build, styles: rules)` takes the parts as arguments
+without a class of their own. `styles` is optional and defaults to none.
 
 A component the catalog does not implement renders a visible notice rather than
 throwing, so one unknown component does not take down the surface around it.
@@ -314,8 +338,9 @@ are deliberately kept apart:
 
 - Layout the model chose per component, such as `justify` and `align`, is written
   inline, because it varies per instance and cannot live in a stylesheet.
-- Appearance goes through class names, so `genuiJasprStyles` can be replaced
-  wholesale without touching the renderer.
+- Appearance goes through class names, so a catalog's `styles` can be replaced
+  wholesale without touching the renderer. A component declares the rules for
+  the classes it emits, which is how the bundle stays correct for any catalog.
 
 A surface publishes the theme from its `createSurface` message as CSS custom
 properties on its root element, kebab-cased and `--a2ui-` prefixed. So

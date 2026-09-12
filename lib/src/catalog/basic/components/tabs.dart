@@ -40,6 +40,51 @@ class TabsComponent extends JasprComponent {
   final ComponentApi api = TabsApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-tabs'),
+      styles: Styles(raw: {'min-width': '0'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-tabs__list'),
+      styles: Styles(
+        raw: {
+          'display': 'flex',
+          'gap': '0.25rem',
+          'border-bottom': '1px solid var(--a2ui-border-color, #c4c7c5)',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-tabs__tab'),
+      styles: Styles(
+        raw: {
+          'font': 'inherit',
+          'padding': '0.5rem 0.75rem',
+          'background': 'transparent',
+          'border': '0',
+          'border-bottom': '2px solid transparent',
+          'cursor': 'pointer',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-tabs__tab--selected'),
+      styles: Styles(
+        raw: {
+          'color': 'var(--a2ui-primary-color, #1a73e8)',
+          'border-bottom-color': 'currentColor',
+          'font-weight': '600',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-tabs__panel'),
+      styles: Styles(raw: {'padding-top': '0.75rem'}),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     final rawTabs = scope.props['tabs'];
     final tabs = rawTabs is List

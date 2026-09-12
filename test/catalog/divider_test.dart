@@ -1,5 +1,5 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:genui_jaspr/src/catalog/components/divider.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/divider.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:test/test.dart';
 

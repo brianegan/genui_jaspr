@@ -16,6 +16,44 @@ class ButtonComponent extends JasprComponent {
   final ComponentApi api = MinimalButtonApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-button'),
+      styles: Styles(
+        raw: {
+          'font': 'inherit',
+          'padding': '0.5rem 1rem',
+          'border-radius': '0.375rem',
+          'border': '1px solid transparent',
+          'cursor': 'pointer',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-button:disabled'),
+      styles: Styles(raw: {'opacity': '0.5', 'cursor': 'not-allowed'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-button--primary'),
+      styles: Styles(
+        raw: {
+          'background': 'var(--a2ui-primary-color, #1a73e8)',
+          'color': 'var(--a2ui-primary-text-color, #ffffff)',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-button--borderless'),
+      styles: Styles(
+        raw: {
+          'background': 'transparent',
+          'color': 'var(--a2ui-primary-color, #1a73e8)',
+        },
+      ),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     final variant = scope.string('variant') ?? 'primary';
     final childId = scope.string('child');

@@ -1,6 +1,7 @@
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genkit/client.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr_example/catalog.dart';
 import 'package:genui_jaspr_example/interaction.dart';
 import 'package:genui_jaspr_example/server/chat_path.dart';
 import 'package:jaspr/dom.dart';
@@ -116,7 +117,7 @@ class _ChatViewState extends State<ChatView> {
   void initState() {
     super.initState();
     _conversation = GenUiConversation(
-      catalogs: [MinimalJasprCatalog()],
+      catalogs: [appCatalog],
       onAction: _onSurfaceAction,
     );
   }

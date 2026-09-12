@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genkit/genkit.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr_example/catalog.dart';
 import 'package:genui_jaspr_example/server/chat_agent.dart';
 import 'package:genui_jaspr_example/server/chat_path.dart';
 import 'package:jaspr/server.dart';
@@ -10,11 +11,12 @@ import 'package:jaspr_test/jaspr_test.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
 /// What a model would reply with, standing in for the model itself.
-const reply = '''
+final reply =
+    '''
 Here's a short form.
 
 ```json
-{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"https://a2ui.org/specification/v0_9/catalogs/minimal/minimal_catalog.json","sendDataModel":true}}
+{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"${appCatalog.id}","sendDataModel":true}}
 ```
 
 ```json
@@ -95,7 +97,7 @@ void main() {
 
     /// Runs one turn the way the browser's @client component does.
     Future<({String html, String prose})> turn(String prompt) async {
-      final conversation = GenUiConversation(catalogs: [MinimalJasprCatalog()]);
+      final conversation = GenUiConversation(catalogs: [appCatalog]);
       final events = await conversation
           .receive(ask(openChat(), prompt))
           .toList();
@@ -125,7 +127,7 @@ void main() {
       await turn('make me a form');
 
       final system = textsOf(requests.single, Role.system).join();
-      expect(system, contains(MinimalJasprCatalog.catalogId));
+      expect(system, contains(appCatalog.id));
       expect(system, contains('"TextField"'));
     });
 
@@ -153,7 +155,7 @@ void main() {
         'with the history that gives it meaning', () async {
       final interactions = <A2uiClientAction>[];
       final conversation = GenUiConversation(
-        catalogs: [MinimalJasprCatalog()],
+        catalogs: [appCatalog],
         onAction: interactions.add,
       );
       final chat = openChat();

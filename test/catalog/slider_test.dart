@@ -3,7 +3,7 @@
 // ignore_for_file: missing_whitespace_between_adjacent_strings
 
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:genui_jaspr/src/catalog/components/slider.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/slider.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
 import '../support/harness.dart';

@@ -4,7 +4,7 @@ import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:genui_jaspr/src/conversation/client_messages.dart';
 import 'package:genui_jaspr/src/rendering/signal_builder.dart';
-import 'package:genui_jaspr/src/styles.dart';
+import 'package:genui_jaspr/src/rendering/theme_properties.dart';
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 

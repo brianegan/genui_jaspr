@@ -25,6 +25,16 @@ class VideoComponent extends JasprComponent {
   final ComponentApi api = VideoApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-video'),
+      styles: Styles(
+        raw: {'display': 'block', 'width': '100%', 'max-width': '100%'},
+      ),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     return video(
       const [],

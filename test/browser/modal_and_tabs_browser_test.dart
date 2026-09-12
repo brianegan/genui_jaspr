@@ -6,8 +6,8 @@ import 'dart:js_interop_unsafe';
 
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:genui_jaspr/src/catalog/components/modal.dart';
-import 'package:genui_jaspr/src/catalog/components/tabs.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/modal.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/tabs.dart';
 import 'package:jaspr_test/client_test.dart';
 import 'package:universal_web/web.dart' as web;
 

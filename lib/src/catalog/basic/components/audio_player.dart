@@ -28,6 +28,14 @@ class AudioPlayerComponent extends JasprComponent {
   final ComponentApi api = AudioPlayerApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-audio-player'),
+      styles: Styles(raw: {'display': 'block', 'width': '100%'}),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     return audio(
       const [],

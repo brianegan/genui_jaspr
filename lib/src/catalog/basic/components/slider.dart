@@ -48,6 +48,39 @@ class SliderComponent extends JasprComponent {
   final ComponentApi api = SliderApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-slider'),
+      styles: Styles(
+        raw: {'display': 'flex', 'flex-direction': 'column', 'gap': '0.25rem'},
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-slider__label'),
+      styles: Styles(raw: {'font-size': '0.875rem', 'font-weight': '500'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-slider__input'),
+      styles: Styles(
+        raw: {'accent-color': 'var(--a2ui-primary-color, #1a73e8)'},
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-slider__error'),
+      styles: Styles(
+        raw: {
+          'color': 'var(--a2ui-error-color, #b3261e)',
+          'font-size': '0.8125rem',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-slider--invalid .a2ui-slider__label'),
+      styles: Styles(raw: {'color': 'var(--a2ui-error-color, #b3261e)'}),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     final labelText = scope.string('label');
     final value = scope.string('value');

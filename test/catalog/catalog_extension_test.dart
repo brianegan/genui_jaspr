@@ -16,6 +16,16 @@ class _DividerApi extends ComponentApi {
   Schema get schema => Schema.object(properties: {});
 }
 
+/// A component that overrides nothing but the two required halves, so it takes
+/// [JasprComponent]'s own default for [JasprComponent.styles].
+class _BareDividerComponent extends JasprComponent {
+  @override
+  final ComponentApi api = _DividerApi();
+
+  @override
+  Component build(ComponentScope scope) => const hr();
+}
+
 class _UpperFunction extends FunctionImplementation {
   @override
   String get name => 'upper';
@@ -35,6 +45,62 @@ class _UpperFunction extends FunctionImplementation {
 }
 
 void main() {
+  group('Catalog.styles', () {
+    test('gathers the rules of every component in the catalog', () {
+      final catalog = MinimalJasprCatalog().copyWith(add: [IconComponent()]);
+
+      expect(_selectorsOf(catalog.styles), contains('.a2ui-icon'));
+    });
+
+    test('a derivation that drops a component drops its rules too', () {
+      final catalog = MinimalJasprCatalog()
+          .copyWith(add: [IconComponent()])
+          .copyWith(remove: ['Icon']);
+
+      expect(_selectorsOf(catalog.styles), isNot(contains('.a2ui-icon')));
+    });
+
+    test('an inline component carries the rules it was given', () {
+      final catalog = MinimalJasprCatalog().copyWith(
+        add: [
+          JasprComponent.inline(
+            _DividerApi(),
+            (scope) => const hr(),
+            styles: const [
+              StyleRule(
+                selector: Selector('.a2ui-divider'),
+                styles: Styles(raw: {'border': 'none'}),
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(_selectorsOf(catalog.styles), contains('.a2ui-divider'));
+    });
+
+    test('a component that declares no rules contributes none', () {
+      final catalog = MinimalJasprCatalog().copyWith(
+        add: [_BareDividerComponent()],
+      );
+
+      expect(_BareDividerComponent().styles, isEmpty);
+      expect(
+        _selectorsOf(catalog.styles),
+        _selectorsOf(MinimalJasprCatalog().styles),
+      );
+    });
+
+    test('an inline component given no rules contributes none', () {
+      final component = JasprComponent.inline(
+        _DividerApi(),
+        (scope) => const hr(),
+      );
+
+      expect(component.styles, isEmpty);
+    });
+  });
+
   group('Catalog.copyWith', () {
     test('adds a component under a new id', () {
       final catalog = MinimalJasprCatalog().copyWith(
@@ -96,3 +162,7 @@ void main() {
     });
   });
 }
+
+Set<String> _selectorsOf(List<StyleRule> rules) => {
+  for (final rule in rules) rule.toCss().split('{').first.trim(),
+};

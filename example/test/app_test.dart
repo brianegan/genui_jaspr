@@ -129,6 +129,17 @@ void main() {
       // so a generated surface is styled without extra work.
       expect(response.body, contains('.a2ui-button'));
       expect(response.body, contains('var(--a2ui-primary-color'));
+
+      // A Basic-only selector. `.a2ui-button` is in both bundles, so on its
+      // own it could not tell a regression to the minimal catalog from a
+      // working page.
+      expect(response.body, contains('.a2ui-tabs__list'));
+
+      // The two classes no component owns. The package ships no rules for
+      // them, so if the app stopped carrying its own the surface would lose
+      // its layout and the error fallback would render as plain text.
+      expect(response.body, contains('.a2ui-surface'));
+      expect(response.body, contains('.a2ui-missing'));
     });
   });
 }

@@ -36,6 +36,43 @@ class CheckBoxComponent extends JasprComponent {
   final ComponentApi api = CheckBoxApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-checkbox'),
+      styles: Styles(
+        raw: {
+          'display': 'inline-flex',
+          'align-items': 'center',
+          'gap': '0.5rem',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-checkbox__input'),
+      styles: Styles(
+        raw: {'width': '1.125rem', 'height': '1.125rem'},
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-checkbox__label'),
+      styles: Styles(raw: {'font-size': '0.9375rem'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-checkbox__error'),
+      styles: Styles(
+        raw: {
+          'color': 'var(--a2ui-error-color, #b3261e)',
+          'font-size': '0.8125rem',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-checkbox--invalid .a2ui-checkbox__label'),
+      styles: Styles(raw: {'color': 'var(--a2ui-error-color, #b3261e)'}),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     final labelText = scope.string('label') ?? '';
     final checked = scope.props['value'] == true;

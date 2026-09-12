@@ -3,7 +3,7 @@ library;
 
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:genui_jaspr/src/catalog/components/slider.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/slider.dart';
 import 'package:jaspr_test/client_test.dart';
 
 /// The hop a VM test cannot reach: a real input event on a real range input

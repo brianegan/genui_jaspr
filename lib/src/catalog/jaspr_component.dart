@@ -1,4 +1,5 @@
 import 'package:a2ui_core/a2ui_core.dart';
+import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
@@ -119,11 +120,11 @@ final class ComponentScope {
 /// Renders a component from its resolved properties.
 typedef ComponentBuilder = Component Function(ComponentScope scope);
 
-/// A catalog entry: a component's A2UI API paired with how to render it.
+/// A catalog entry: a component's A2UI API, how to render it, and how it looks.
 ///
 /// The API side comes from `a2ui_core`, which owns the name and the schema that
-/// decides how each property binds. Subclasses add the Jaspr half, so the
-/// protocol definition and the renderer stay separable:
+/// decides how each property binds. Subclasses add the Jaspr sides, [build] and
+/// [styles], so the protocol definition and the renderer stay separable:
 ///
 /// ```dart
 /// class DividerComponent extends JasprComponent {
@@ -132,26 +133,53 @@ typedef ComponentBuilder = Component Function(ComponentScope scope);
 ///
 ///   @override
 ///   Component build(ComponentScope scope) => hr(classes: 'a2ui-divider');
+///
+///   @override
+///   List<StyleRule> get styles => const [
+///     StyleRule(
+///       selector: Selector('.a2ui-divider'),
+///       styles: Styles(raw: {'border': 'none', 'height': '1px'}),
+///     ),
+///   ];
 /// }
 /// ```
 ///
-/// For a one-off, or in a test, [JasprComponent.inline] takes the two halves
+/// For a one-off, or in a test, [JasprComponent.inline] takes the parts
 /// directly without a class of their own.
 abstract class JasprComponent implements ComponentApi {
   /// A constructor for subclasses to call.
   const JasprComponent();
 
   /// A component from its [api] and a [build] closure.
+  ///
+  /// Takes [styles] too, so a catalog extended this way carries rules for what
+  /// [build] emits the same way one extended with a subclass does. Without it
+  /// an inline component would be the one kind a derived bundle could not
+  /// account for.
   const factory JasprComponent.inline(
     ComponentApi api,
-    ComponentBuilder build,
-  ) = _InlineJasprComponent;
+    ComponentBuilder build, {
+    List<StyleRule> styles,
+  }) = _InlineJasprComponent;
 
   /// The protocol definition for this component.
   ComponentApi get api;
 
   /// Renders the component from its resolved properties.
   Component build(ComponentScope scope);
+
+  /// The default rules for the CSS classes [build] emits.
+  ///
+  /// A component owns the appearance of its own markup, so a catalog can
+  /// gather a complete stylesheet from whatever components it happens to hold
+  /// rather than from a list someone maintains alongside it. Override this to
+  /// style a component; leave it to emit classes a host stylesheet supplies.
+  ///
+  /// The rules this package ships read their colours from custom properties a
+  /// surface publishes from the theme the model sent with `createSurface`, so
+  /// a model can choose an accent at runtime while the rules stay static. Each
+  /// `var()` carries a fallback, so an untouched theme still renders sensibly.
+  List<StyleRule> get styles => const [];
 
   @override
   String get name => api.name;
@@ -161,10 +189,13 @@ abstract class JasprComponent implements ComponentApi {
 }
 
 final class _InlineJasprComponent extends JasprComponent {
-  const _InlineJasprComponent(this.api, this._build);
+  const _InlineJasprComponent(this.api, this._build, {this.styles = const []});
 
   @override
   final ComponentApi api;
+
+  @override
+  final List<StyleRule> styles;
 
   final ComponentBuilder _build;
 

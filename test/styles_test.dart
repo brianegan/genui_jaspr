@@ -1,32 +1,37 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:genui_jaspr/src/catalog/components/audio_player.dart';
-import 'package:genui_jaspr/src/catalog/components/card.dart';
-import 'package:genui_jaspr/src/catalog/components/check_box.dart';
-import 'package:genui_jaspr/src/catalog/components/choice_picker.dart';
-import 'package:genui_jaspr/src/catalog/components/date_time_input.dart';
-import 'package:genui_jaspr/src/catalog/components/divider.dart';
-import 'package:genui_jaspr/src/catalog/components/image.dart';
-import 'package:genui_jaspr/src/catalog/components/list.dart';
-import 'package:genui_jaspr/src/catalog/components/modal.dart';
-import 'package:genui_jaspr/src/catalog/components/slider.dart';
-import 'package:genui_jaspr/src/catalog/components/tabs.dart';
-import 'package:genui_jaspr/src/catalog/components/video.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/audio_player.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/card.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/check_box.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/choice_picker.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/date_time_input.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/divider.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/image.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/list.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/modal.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/slider.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/tabs.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/video.dart';
+import 'package:jaspr/dom.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
 import 'support/basic_catalog_fixtures.dart';
 import 'support/harness.dart';
 
-/// Every class name the catalog can emit, gathered by rendering a surface that
-/// uses every component across their variants.
-Future<Set<String>> emittedClassNames() async {
-  final html = <String>[
-    await renderSurface(
-      [
-        {'id': 'root', 'component': 'Icon', 'name': 'add'},
-      ],
-      catalog: MinimalJasprCatalog().copyWith(add: [IconComponent()]),
-    ),
-  ];
+/// Pulls every `class="..."` value out of rendered markup.
+Set<String> _classNamesIn(List<String> html) {
+  final names = <String>{};
+  final pattern = RegExp('class="([^"]+)"');
+  for (final markup in html) {
+    for (final match in pattern.allMatches(markup)) {
+      names.addAll(match.group(1)!.split(' ').where((n) => n.isNotEmpty));
+    }
+  }
+  return names;
+}
+
+/// Every class the five minimal components emit, across their variants.
+Future<Set<String>> minimalClassNames() async {
+  final html = <String>[];
 
   for (final variant in const [
     'body',
@@ -93,6 +98,30 @@ Future<Set<String>> emittedClassNames() async {
       data: {'/ok': false},
     ),
   );
+
+  for (final component in const ['Row', 'Column']) {
+    html.add(
+      await renderSurfaceRaw([
+        {'id': 'root', 'component': component, 'children': <String>[]},
+      ]),
+    );
+  }
+
+  return _classNamesIn(html);
+}
+
+/// Everything [minimalClassNames] covers, plus every class the Basic-only
+/// components emit. The surface's own fallback markup is in here too, which is
+/// why [surfaceClassNames] is subtracted before asserting coverage.
+Future<Set<String>> basicClassNames() async {
+  final html = <String>[
+    await renderSurface(
+      [
+        {'id': 'root', 'component': 'Icon', 'name': 'add'},
+      ],
+      catalog: MinimalJasprCatalog().copyWith(add: [IconComponent()]),
+    ),
+  ];
 
   final checkBoxCatalog = MinimalJasprCatalog().copyWith(
     add: [CheckBoxComponent()],
@@ -270,24 +299,15 @@ Future<Set<String>> emittedClassNames() async {
           catalog: dateTimeInputCatalog,
         ),
       ),
+    )
+    ..add(
+      await renderSurfaceModel(
+        buildSurfaceModel([
+          {'id': 'root', 'component': 'Card', 'child': 'content'},
+          {'id': 'content', 'component': 'Text', 'text': 'x'},
+        ], catalog: MinimalJasprCatalog().copyWith(add: [CardComponent()])),
+      ),
     );
-
-  for (final component in const ['Row', 'Column']) {
-    html.add(
-      await renderSurfaceRaw([
-        {'id': 'root', 'component': component, 'children': <String>[]},
-      ]),
-    );
-  }
-
-  html.add(
-    await renderSurfaceModel(
-      buildSurfaceModel([
-        {'id': 'root', 'component': 'Card', 'child': 'content'},
-        {'id': 'content', 'component': 'Text', 'text': 'x'},
-      ], catalog: MinimalJasprCatalog().copyWith(add: [CardComponent()])),
-    ),
-  );
 
   final listCatalog = MinimalJasprCatalog().copyWith(add: [ListComponent()]);
   for (final direction in const ['vertical', 'horizontal']) {
@@ -384,39 +404,85 @@ Future<Set<String>> emittedClassNames() async {
       ]),
     );
 
-  final names = <String>{};
-  final pattern = RegExp('class="([^"]+)"');
-  for (final markup in html) {
-    for (final match in pattern.allMatches(markup)) {
-      names.addAll(match.group(1)!.split(' ').where((n) => n.isNotEmpty));
-    }
-  }
-  return names;
+  return {...await minimalClassNames(), ..._classNamesIn(html)};
+}
+
+/// Classes the surface renderer emits itself. No component owns them, and the
+/// package deliberately ships no rules for them, so an app styles them or does
+/// not. Subtracted before any coverage assertion.
+const surfaceClassNames = {'a2ui-surface', 'a2ui-missing'};
+
+List<String> _selectorsOf(List<StyleRule> rules) => [
+  for (final rule in rules) rule.toCss().split('{').first.trim(),
+];
+
+Set<String> _styledClassNames(List<StyleRule> rules) {
+  final pattern = RegExp(r'\.([a-zA-Z0-9_-]+)');
+  return {
+    for (final selector in _selectorsOf(rules))
+      for (final match in pattern.allMatches(selector)) match.group(1)!,
+  };
+}
+
+Future<void> _expectCovers(List<StyleRule> rules, Set<String> emitted) async {
+  emitted.removeAll(surfaceClassNames);
+
+  // Guard the guard: if rendering stopped producing classes, this would pass
+  // while checking nothing.
+  expect(emitted, hasLength(greaterThan(10)));
+
+  final styled = _styledClassNames(rules);
+  final uncovered = emitted.where((n) => !styled.contains(n)).toList()..sort();
+  expect(uncovered, isEmpty, reason: 'classes with no style rule');
 }
 
 void main() {
-  group('genuiJasprStyles', () {
+  group('MinimalJasprCatalog.styles', () {
     test('has a rule for every class the catalog emits', () async {
-      final selectors = genuiJasprStyles
-          .map((rule) => rule.toCss().split('{').first.trim())
-          .toSet();
-      final classPattern = RegExp(r'\.([a-zA-Z0-9_-]+)');
-      final styledClassNames = {
-        for (final selector in selectors)
-          for (final match in classPattern.allMatches(selector))
-            match.group(1)!,
-      };
-      final names = await emittedClassNames();
-
-      // Guard the guard: if rendering stopped producing classes, this test
-      // would pass while checking nothing.
-      expect(names, hasLength(greaterThan(10)));
-
-      final uncovered =
-          names.where((n) => !styledClassNames.contains(n)).toList()..sort();
-      expect(uncovered, isEmpty, reason: 'classes with no style rule');
-      expect(selectors, contains('.a2ui-modal__dialog::backdrop'));
+      await _expectCovers(
+        MinimalJasprCatalog().styles,
+        await minimalClassNames(),
+      );
     });
+
+    test('carries nothing that styles a Basic-only class', () async {
+      final basicOnly = (await basicClassNames())
+        ..removeAll(await minimalClassNames())
+        ..removeAll(surfaceClassNames);
+
+      expect(basicOnly, hasLength(greaterThan(10)));
+      expect(
+        _styledClassNames(MinimalJasprCatalog().styles).intersection(basicOnly),
+        isEmpty,
+        reason: 'Basic-only classes styled by the minimal bundle',
+      );
+    });
+  });
+
+  group('BasicJasprCatalog.styles', () {
+    test('has a rule for every class the catalog emits', () async {
+      await _expectCovers(BasicJasprCatalog().styles, await basicClassNames());
+      expect(
+        _selectorsOf(BasicJasprCatalog().styles),
+        contains('.a2ui-modal__dialog::backdrop'),
+      );
+    });
+  });
+
+  group('both bundles', () {
+    for (final (name, rules) in [
+      ('minimal', MinimalJasprCatalog().styles),
+      ('Basic', BasicJasprCatalog().styles),
+    ]) {
+      test('the $name bundle declares each selector once', () {
+        final selectors = _selectorsOf(rules);
+        final seen = <String>{};
+        final duplicated =
+            selectors.where((selector) => !seen.add(selector)).toList()..sort();
+
+        expect(duplicated, isEmpty, reason: 'selectors declared twice');
+      });
+    }
   });
 
   group('surface theme', () {
@@ -444,8 +510,10 @@ void main() {
       expect(html, isNot(contains('--a2ui-primary-color')));
     });
 
-    test('the primary button resolves against the theme property', () async {
-      final css = genuiJasprStyles.map((rule) => rule.toCss()).join('\n');
+    test('the primary button resolves against the theme property', () {
+      final css = MinimalJasprCatalog().styles
+          .map((rule) => rule.toCss())
+          .join('\n');
 
       expect(css, contains('var(--a2ui-primary-color'));
     });

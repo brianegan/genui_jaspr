@@ -8,15 +8,15 @@
 /// turns a model's text stream into events and surfaces to render.
 library;
 
-export 'src/catalog/basic_catalog.dart';
+export 'src/catalog/basic/basic_catalog.dart';
+export 'src/catalog/basic/components/icon.dart';
+export 'src/catalog/basic/functions/boolean.dart';
+export 'src/catalog/basic/functions/format.dart';
+export 'src/catalog/basic/functions/open_url.dart';
+export 'src/catalog/basic/functions/validation.dart';
 export 'src/catalog/catalog_extension.dart';
-export 'src/catalog/components/icon.dart';
-export 'src/catalog/functions/boolean.dart';
-export 'src/catalog/functions/format.dart';
-export 'src/catalog/functions/open_url.dart';
-export 'src/catalog/functions/validation.dart';
 export 'src/catalog/jaspr_component.dart';
-export 'src/catalog/minimal_catalog.dart';
+export 'src/catalog/minimal/minimal_catalog.dart';
 export 'src/conversation/client_messages.dart';
 export 'src/conversation/gen_ui_conversation.dart';
 export 'src/conversation/gen_ui_event.dart';
@@ -24,6 +24,6 @@ export 'src/conversation/reply_builder.dart';
 export 'src/prompt/a2ui_instructions.dart';
 export 'src/rendering/signal_builder.dart';
 export 'src/rendering/surface.dart';
-export 'src/styles.dart';
+export 'src/rendering/theme_properties.dart';
 export 'src/transport/a2ui_parser_transformer.dart';
 export 'src/transport/generation_events.dart';

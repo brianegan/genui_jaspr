@@ -29,6 +29,22 @@ class ListComponent extends JasprComponent {
   final ComponentApi api = ListApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-list'),
+      styles: Styles(
+        raw: {
+          'gap': '0.5rem',
+          'min-width': '0',
+          'min-height': '0',
+          'padding': '0',
+          'margin': '0',
+        },
+      ),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     final isHorizontal = scope.string('direction') == 'horizontal';
     return div(
