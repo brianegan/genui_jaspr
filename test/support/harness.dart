@@ -44,16 +44,17 @@ SurfaceModel<JasprComponent> buildSurfaceModel(
   void Function(A2uiClientAction)? onAction,
   Catalog<JasprComponent>? catalog,
 }) {
+  final activeCatalog = catalog ?? MinimalJasprCatalog();
   final processor =
       MessageProcessor<JasprComponent>(
-        catalogs: [catalog ?? MinimalJasprCatalog()],
+        catalogs: [activeCatalog],
         onAction: onAction,
       )..processMessages([
         A2uiMessage.fromJson({
           'version': 'v0.9',
           'createSurface': {
             'surfaceId': 'main',
-            'catalogId': MinimalJasprCatalog.catalogId,
+            'catalogId': activeCatalog.id,
             'theme': ?theme,
             'sendDataModel': true,
           },

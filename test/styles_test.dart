@@ -19,7 +19,14 @@ import 'support/harness.dart';
 /// Every class name the catalog can emit, gathered by rendering a surface that
 /// uses every component across their variants.
 Future<Set<String>> emittedClassNames() async {
-  final html = <String>[];
+  final html = <String>[
+    await renderSurface(
+      [
+        {'id': 'root', 'component': 'Icon', 'name': 'add'},
+      ],
+      catalog: MinimalJasprCatalog().copyWith(add: [IconComponent()]),
+    ),
+  ];
 
   for (final variant in const [
     'body',

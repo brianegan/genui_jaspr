@@ -8,7 +8,13 @@
 /// turns a model's text stream into events and surfaces to render.
 library;
 
+export 'src/catalog/basic_catalog.dart';
 export 'src/catalog/catalog_extension.dart';
+export 'src/catalog/components/icon.dart';
+export 'src/catalog/functions/boolean.dart';
+export 'src/catalog/functions/format.dart';
+export 'src/catalog/functions/open_url.dart';
+export 'src/catalog/functions/validation.dart';
 export 'src/catalog/jaspr_component.dart';
 export 'src/catalog/minimal_catalog.dart';
 export 'src/conversation/client_messages.dart';

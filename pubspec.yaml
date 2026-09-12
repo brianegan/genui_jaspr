@@ -16,6 +16,7 @@ dependencies:
   # Also re-exports the preact_signals primitives the binder resolves through,
   # which is why preact_signals is not a direct dependency here.
   a2ui_core: ^0.1.1
+  intl: ^0.20.2
   jaspr: ^0.23.4
   # Schema appears in the public API and a2ui_core does not re-export it.
   json_schema_builder: ^0.1.6
