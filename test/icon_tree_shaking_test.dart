@@ -71,7 +71,7 @@ void main() {
       );
       addTearDown(() => outputDirectory.delete(recursive: true));
 
-      final minimalOnly = await _compile('minimal_styles', outputDirectory);
+      final minimalOnly = await _compile('minimal_only', outputDirectory);
       final withBasic = await _compile('minimal_with_basic', outputDirectory);
 
       // The paired presence assertions are what give the absence ones teeth: a
@@ -80,6 +80,11 @@ void main() {
       expect(withBasic, contains(_basicOnlyBuildMarker));
       expect(minimalOnly, isNot(contains(_basicOnlyStyleMarker)));
       expect(minimalOnly, isNot(contains(_basicOnlyBuildMarker)));
+
+      // Reading `styles` is what the derived getter added, and it is a virtual
+      // call through every component in the catalog. This is the fixture that
+      // makes it, so it is the one that has to show the icon table still goes.
+      expect(minimalOnly, isNot(contains(_iconTableMarker)));
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );

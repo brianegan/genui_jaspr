@@ -11,11 +11,12 @@ import 'package:jaspr_test/jaspr_test.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
 /// What a model would reply with, standing in for the model itself.
-const reply = '''
+final reply =
+    '''
 Here's a short form.
 
 ```json
-{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json","sendDataModel":true}}
+{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"${appCatalog.id}","sendDataModel":true}}
 ```
 
 ```json
@@ -126,7 +127,7 @@ void main() {
       await turn('make me a form');
 
       final system = textsOf(requests.single, Role.system).join();
-      expect(system, contains(BasicJasprCatalog.catalogId));
+      expect(system, contains(appCatalog.id));
       expect(system, contains('"TextField"'));
     });
 

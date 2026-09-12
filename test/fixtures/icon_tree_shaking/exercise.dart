@@ -24,10 +24,8 @@ ComponentScope _scope(String type) => ComponentScope(
   id: 'x',
   type: type,
   props: {
-    'name': DateTime.now().millisecondsSinceEpoch == 0 ? 'add' : 'home',
     'text': 'x',
     'label': 'L',
-    'url': '/u',
     'options': const [
       {'label': 'Red', 'value': 'red'},
     ],

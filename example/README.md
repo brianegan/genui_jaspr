@@ -32,6 +32,9 @@ MODEL=gemini-3.5-flash jaspr serve
 
 ## The pieces
 
+- `lib/catalog.dart` — the one catalog the app renders with. The styles, the
+  renderer and the prompt all read it, so what the page is styled for and what
+  it can draw cannot drift apart.
 - `lib/chat.dart` — the conversation. `Chat` is the param-free `@client`
   boundary holding the genkit client; `ChatView` does the work and takes the
   send function as a parameter, which is how the browser tests fake the model.

@@ -217,7 +217,7 @@ assistant is for and how it should sound:
 ```dart
 final systemPrompt = [
   'You help people plan trips. Reply with a sentence, then the UI.',
-  a2uiInstructions(BasicJasprCatalog()),
+  a2uiInstructions(catalog),
 ].join('\n\n');
 ```
 
