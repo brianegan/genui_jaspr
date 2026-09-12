@@ -2,6 +2,7 @@
 library;
 
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr_example/catalog.dart';
 import 'package:genui_jaspr_example/chat.dart';
 import 'package:jaspr_test/client_test.dart';
 
@@ -43,7 +44,7 @@ void main() {
               'Here you go.\n',
               fenced(
                 '{"version":"v0.9","createSurface":{"surfaceId":"s",'
-                '"catalogId":"${MinimalJasprCatalog.catalogId}",'
+                '"catalogId":"${appCatalog.id}",'
                 '"sendDataModel":true}}',
               ),
               fenced(

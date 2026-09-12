@@ -61,10 +61,11 @@ callbacks:
 dart pub add genui_jaspr a2ui_core
 ```
 
-Add your catalog's default styles to your `Document`:
+Pick your catalog once and hold it. The styles you ship and the components the
+renderer can draw both come from it, so one value is what keeps them in step:
 
 ```dart
-final catalog = MinimalJasprCatalog();
+final catalog = BasicJasprCatalog();
 
 runApp(Document(styles: [...catalog.styles, ...myStyles], body: MyApp()));
 ```
@@ -124,7 +125,7 @@ class _ChatViewState extends State<ChatView> {
   void initState() {
     super.initState();
     _conversation = GenUiConversation(
-      catalogs: [BasicJasprCatalog()],
+      catalogs: [catalog],
       // A button in a generated surface was pressed. Tell the model.
       onAction: (action) => _ask(_conversation.actionText(action)),
     );

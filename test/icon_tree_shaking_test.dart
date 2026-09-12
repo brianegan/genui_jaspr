@@ -17,8 +17,12 @@ const _iconTableMarker = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48';
 const _basicOnlyStyleMarker =
     'a2ui-choice-picker--invalid .a2ui-choice-picker__label';
 
-/// A string only `ChoicePicker`'s `build` contains, standing for Basic-only
-/// catalog code.
+/// A string `ChoicePicker` carries and no style rule does, standing for
+/// Basic-only catalog code.
+///
+/// It is in the component's schema as well as its `build`, and dart2js emits
+/// one shared constant for both, so this says catalog code was retained
+/// without saying which half of it. That is all the test claims.
 ///
 /// Style code and catalog code shake out independently, so each gets a marker
 /// of its own. One string that appears in both would let either half carry the
