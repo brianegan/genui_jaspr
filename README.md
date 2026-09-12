@@ -266,9 +266,10 @@ A backend that delivers A2UI already parsed, such as an A2A agent, goes through
 ### Adding a component
 
 A component is a `JasprComponent`: an `a2ui_core` API, which owns the name and
-the schema, plus a `build` method that turns resolved properties into HTML. The
-API classes for the minimal catalog come from `a2ui_core`. For a component of
-your own, define the API and the renderer together:
+the schema, a `build` method that turns resolved properties into HTML, and the
+style rules for the classes that `build` emits. The API classes for the minimal
+catalog come from `a2ui_core`. For a component of your own, define all three
+together:
 
 ```dart
 class DividerApi extends ComponentApi {
@@ -285,8 +286,20 @@ class DividerComponent extends JasprComponent {
 
   @override
   Component build(ComponentScope scope) => hr(classes: 'a2ui-divider');
+
+  @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-divider'),
+      styles: Styles(raw: {'border': 'none', 'height': '1px'}),
+    ),
+  ];
 }
 ```
+
+Declaring `styles` next to the `build` that emits the class is what keeps a
+catalog's bundle complete. Leave it out and the component still renders; it just
+contributes no rules, and a host stylesheet supplies them instead.
 
 Then derive a catalog. Give the copy its own id, since that id is what the model
 is told to target, and `a2uiInstructions` will describe the new component from
@@ -299,12 +312,17 @@ final catalog = MinimalJasprCatalog().copyWith(
 );
 ```
 
+`catalog.styles` now carries the divider's rule along with the minimal
+components'. That is the point of deriving the bundle from the catalog rather
+than writing it out: there is no second list to remember to update.
+
 `build` gets a `ComponentScope` with the properties already resolved: data
 bindings read, function calls evaluated, actions turned into callbacks. Read a
 value with `scope.string`, children with `scope.children()`, and the callback
 behind an action property with `scope.action`, which reports a failure to the
 surface instead of throwing out of a click handler. For a one-off, or in a test,
-`JasprComponent.inline(api, build)` takes the two halves as arguments.
+`JasprComponent.inline(api, build, styles: rules)` takes the parts as arguments
+without a class of their own. `styles` is optional and defaults to none.
 
 A component the catalog does not implement renders a visible notice rather than
 throwing, so one unknown component does not take down the surface around it.
