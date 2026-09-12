@@ -47,12 +47,12 @@ const _functionNames = {
 
 void main() {
   group('BasicJasprCatalog', () {
-    test('assembles the complete pinned standard catalog', () {
+    test('assembles the complete pinned basic catalog', () {
       final catalog = BasicJasprCatalog();
 
       expect(
         catalog.id,
-        'https://a2ui.org/specification/v0_9/standard_catalog.json',
+        'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json',
       );
       expect(catalog.id, BasicJasprCatalog.catalogId);
       expect(catalog.components.keys.toSet(), _componentNames);

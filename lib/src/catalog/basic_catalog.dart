@@ -24,7 +24,7 @@ import 'package:genui_jaspr/src/catalog/functions/validation.dart';
 import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
-/// The complete pinned A2UI v0.9 standard catalog, rendered as HTML.
+/// The complete pinned A2UI v0.9 basic catalog, rendered as HTML.
 ///
 /// The catalog always includes the package's 59 built-in Material SVG paths,
 /// because its official catalog ID promises the standard `Icon` component.
@@ -42,7 +42,7 @@ class BasicJasprCatalog extends Catalog<JasprComponent> {
 
   /// The exact catalog id published by the pinned A2UI v0.9 schema.
   static const catalogId =
-      'https://a2ui.org/specification/v0_9/standard_catalog.json';
+      'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json';
 }
 
 List<JasprComponent> _components() => [
