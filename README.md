@@ -42,7 +42,8 @@ runtime, so they speak exactly the same messages.
 - `BasicJasprCatalog`, with all 18 components, all 14 functions, and the theme
   from the A2UI standard catalog. `MinimalJasprCatalog` remains available when
   five components and one small string function are enough.
-- A `styles` getter on every catalog, which gathers the default rules of the
+- A `styles` getter on any `Catalog<JasprComponent>`, added by the
+  `JasprCatalogComposition` extension, which gathers the default rules of the
   components that catalog holds. Use them, extend them, or replace them. A
   catalog derived with `copyWith` carries the rules for what it actually has.
 - `a2uiInstructions`, which writes the protocol half of your system prompt from

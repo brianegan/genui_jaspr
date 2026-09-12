@@ -120,11 +120,11 @@ final class ComponentScope {
 /// Renders a component from its resolved properties.
 typedef ComponentBuilder = Component Function(ComponentScope scope);
 
-/// A catalog entry: a component's A2UI API paired with how to render it.
+/// A catalog entry: a component's A2UI API, how to render it, and how it looks.
 ///
 /// The API side comes from `a2ui_core`, which owns the name and the schema that
-/// decides how each property binds. Subclasses add the Jaspr half, so the
-/// protocol definition and the renderer stay separable:
+/// decides how each property binds. Subclasses add the Jaspr sides, [build] and
+/// [styles], so the protocol definition and the renderer stay separable:
 ///
 /// ```dart
 /// class DividerComponent extends JasprComponent {

@@ -31,8 +31,9 @@ First release. Renders A2UI generative user interfaces in Jaspr, building on
   way to report errors. An action obtained through it never throws out of a
   click handler.
 - `JasprComponent.styles` declares the default rules for the classes a
-  component emits, and `Catalog.styles` gathers them, so a catalog derived with
-  `copyWith` carries the right bundle. `JasprComponent.inline` takes them too.
+  component emits, and the `styles` getter `JasprCatalogComposition` adds to a
+  `Catalog<JasprComponent>` gathers them, so a catalog derived with `copyWith`
+  carries the right bundle. `JasprComponent.inline` takes them too.
   Surface-level markup is left unstyled for the app to own. A surface publishes
   its theme as CSS custom properties.
 - `A2uiParserTransformer` turns a model's text stream into prose and A2UI
