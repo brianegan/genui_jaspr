@@ -3,7 +3,7 @@ library;
 
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:genui_jaspr/src/catalog/components/date_time_input.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/date_time_input.dart';
 import 'package:jaspr_test/client_test.dart';
 
 /// The hop a VM test cannot reach: a real value entered into, or cleared

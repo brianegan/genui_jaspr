@@ -40,6 +40,44 @@ class ImageComponent extends JasprComponent {
   @override
   final ComponentApi api = ImageApi();
 
+  /// The fit is absent here because [build] writes it inline, the model
+  /// choosing it per instance.
+  @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-image'),
+      styles: Styles(
+        raw: {'display': 'block', 'max-width': '100%'},
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-image--icon'),
+      styles: Styles(raw: {'width': '1.5rem', 'height': '1.5rem'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-image--avatar'),
+      styles: Styles(
+        raw: {'width': '2.5rem', 'height': '2.5rem', 'border-radius': '50%'},
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-image--small-feature'),
+      styles: Styles(raw: {'width': '6.25rem', 'height': '6.25rem'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-image--medium-feature'),
+      styles: Styles(raw: {'width': '100%', 'max-width': '18.75rem'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-image--large-feature'),
+      styles: Styles(raw: {'width': '100%', 'max-height': '25rem'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-image--header'),
+      styles: Styles(raw: {'width': '100%', 'height': '12.5rem'}),
+    ),
+  ];
+
   @override
   Component build(ComponentScope scope) {
     final variant = scope.string('variant') ?? 'mediumFeature';

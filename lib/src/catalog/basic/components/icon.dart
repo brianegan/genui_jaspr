@@ -210,6 +210,20 @@ abstract final class IconComponent extends JasprComponent {
   /// a compiled app that provides its own renderer to tree-shake that data.
   factory IconComponent.withRenderer(IconRenderer renderer) =
       _CustomIconComponent;
+
+  @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-icon'),
+      styles: Styles(
+        raw: {
+          'display': 'inline-block',
+          'flex-shrink': '0',
+          'vertical-align': 'middle',
+        },
+      ),
+    ),
+  ];
 }
 
 final class _StandardIconComponent extends IconComponent {

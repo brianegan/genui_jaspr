@@ -51,6 +51,52 @@ class DateTimeInputComponent extends JasprComponent {
   final ComponentApi api = DateTimeInputApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-date-time-input'),
+      styles: Styles(
+        raw: {'display': 'flex', 'flex-direction': 'column', 'gap': '0.25rem'},
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-date-time-input__label'),
+      styles: Styles(raw: {'font-size': '0.875rem', 'font-weight': '500'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-date-time-input__input'),
+      styles: Styles(
+        raw: {
+          'font': 'inherit',
+          'padding': '0.5rem',
+          'border': '1px solid var(--a2ui-border-color, #c4c7c5)',
+          'border-radius': '0.375rem',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-date-time-input__input:focus-visible'),
+      styles: Styles(
+        raw: {'outline': '2px solid var(--a2ui-primary-color, #1a73e8)'},
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-date-time-input__error'),
+      styles: Styles(
+        raw: {
+          'color': 'var(--a2ui-error-color, #b3261e)',
+          'font-size': '0.8125rem',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector(
+        '.a2ui-date-time-input--invalid .a2ui-date-time-input__input',
+      ),
+      styles: Styles(raw: {'border-color': 'var(--a2ui-error-color, #b3261e)'}),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     final variant = scope.string('variant') ?? 'datetime';
     final labelText = scope.string('label');

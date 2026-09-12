@@ -3,7 +3,7 @@
 // ignore_for_file: missing_whitespace_between_adjacent_strings
 
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:genui_jaspr/src/catalog/components/check_box.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/check_box.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 
 import '../support/harness.dart';

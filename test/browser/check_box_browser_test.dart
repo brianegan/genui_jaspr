@@ -3,7 +3,7 @@ library;
 
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:genui_jaspr/genui_jaspr.dart';
-import 'package:genui_jaspr/src/catalog/components/check_box.dart';
+import 'package:genui_jaspr/src/catalog/basic/components/check_box.dart';
 import 'package:jaspr_test/client_test.dart';
 
 /// The hop a VM test cannot reach: a real click on a real checkbox reaching

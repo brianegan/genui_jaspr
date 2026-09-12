@@ -1,11 +1,11 @@
 import 'package:a2ui_core/a2ui_core.dart';
 
-import 'package:genui_jaspr/src/catalog/components/button.dart';
-import 'package:genui_jaspr/src/catalog/components/column.dart';
-import 'package:genui_jaspr/src/catalog/components/row.dart';
-import 'package:genui_jaspr/src/catalog/components/text.dart';
-import 'package:genui_jaspr/src/catalog/components/text_field.dart';
 import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
+import 'package:genui_jaspr/src/catalog/minimal/components/button.dart';
+import 'package:genui_jaspr/src/catalog/minimal/components/column.dart';
+import 'package:genui_jaspr/src/catalog/minimal/components/row.dart';
+import 'package:genui_jaspr/src/catalog/minimal/components/text.dart';
+import 'package:genui_jaspr/src/catalog/minimal/components/text_field.dart';
 
 /// The A2UI minimal catalog, rendered to HTML.
 ///

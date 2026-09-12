@@ -32,10 +32,36 @@ class App extends StatelessComponent {
 /// The app's own styles, alongside the catalog's defaults.
 ///
 /// The catalog rules are included rather than reimplemented, which is the
-/// intended way to use them: take the defaults, then add whatever the
-/// surrounding app needs.
+/// intended way to use them: take the defaults for whatever catalog the app
+/// renders with, then add what the surrounding page needs. The surface wrapper
+/// and the renderer's missing-component fallback are styled here, because they
+/// belong to no component and the package ships no rules for them.
 List<StyleRule> get appStyles => [
-  ...genuiJasprStyles,
+  ...MinimalJasprCatalog().styles,
+  const StyleRule(
+    selector: Selector('.a2ui-surface'),
+    styles: Styles(
+      raw: {
+        'display': 'flex',
+        'flex-direction': 'column',
+        'gap': '0.75rem',
+        'font-family': 'system-ui, sans-serif',
+        'color': 'var(--a2ui-text-color, #1a1a1a)',
+      },
+    ),
+  ),
+  const StyleRule(
+    selector: Selector('.a2ui-missing'),
+    styles: Styles(
+      raw: {
+        'padding': '0.5rem 0.75rem',
+        'border': '1px dashed var(--a2ui-error-color, #b3261e)',
+        'border-radius': '0.375rem',
+        'color': 'var(--a2ui-error-color, #b3261e)',
+        'font-size': '0.875rem',
+      },
+    ),
+  ),
   const StyleRule(
     selector: Selector('body'),
     styles: Styles(

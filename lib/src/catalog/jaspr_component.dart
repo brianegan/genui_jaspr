@@ -1,4 +1,5 @@
 import 'package:a2ui_core/a2ui_core.dart';
+import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
@@ -152,6 +153,14 @@ abstract class JasprComponent implements ComponentApi {
 
   /// Renders the component from its resolved properties.
   Component build(ComponentScope scope);
+
+  /// The default rules for the CSS classes [build] emits.
+  ///
+  /// A component owns the appearance of its own markup, so a catalog can
+  /// gather a complete stylesheet from whatever components it happens to hold
+  /// rather than from a list someone maintains alongside it. Override this to
+  /// style a component; leave it to emit classes a host stylesheet supplies.
+  List<StyleRule> get styles => const [];
 
   @override
   String get name => api.name;

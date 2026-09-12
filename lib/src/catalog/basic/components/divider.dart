@@ -26,6 +26,33 @@ class DividerComponent extends JasprComponent {
   final ComponentApi api = DividerApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-divider'),
+      styles: Styles(
+        raw: {
+          'width': '100%',
+          'height': '0',
+          'margin': '0',
+          'border': '0',
+          'border-top': '1px solid var(--a2ui-border-color, #c4c7c5)',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-divider--vertical'),
+      styles: Styles(
+        raw: {
+          'width': '0',
+          'height': '100%',
+          'border-top': '0',
+          'border-left': '1px solid var(--a2ui-border-color, #c4c7c5)',
+        },
+      ),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) => hr(
     classes: scope.string('axis') == 'vertical'
         ? 'a2ui-divider a2ui-divider--vertical'

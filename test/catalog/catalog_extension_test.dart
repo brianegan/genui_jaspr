@@ -35,6 +35,31 @@ class _UpperFunction extends FunctionImplementation {
 }
 
 void main() {
+  group('Catalog.styles', () {
+    test('gathers the rules of every component in the catalog', () {
+      final catalog = MinimalJasprCatalog().copyWith(add: [IconComponent()]);
+
+      expect(_selectorsOf(catalog.styles), contains('.a2ui-icon'));
+    });
+
+    test('a derivation that drops a component drops its rules too', () {
+      final catalog = MinimalJasprCatalog()
+          .copyWith(add: [IconComponent()])
+          .copyWith(remove: ['Icon']);
+
+      expect(_selectorsOf(catalog.styles), isNot(contains('.a2ui-icon')));
+    });
+
+    test('a component that declares no rules contributes none', () {
+      final component = JasprComponent.inline(
+        _DividerApi(),
+        (scope) => const hr(),
+      );
+
+      expect(component.styles, isEmpty);
+    });
+  });
+
   group('Catalog.copyWith', () {
     test('adds a component under a new id', () {
       final catalog = MinimalJasprCatalog().copyWith(
@@ -96,3 +121,7 @@ void main() {
     });
   });
 }
+
+Set<String> _selectorsOf(List<StyleRule> rules) => {
+  for (final rule in rules) rule.toCss().split('{').first.trim(),
+};

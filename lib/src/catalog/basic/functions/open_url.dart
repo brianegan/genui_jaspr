@@ -1,6 +1,6 @@
 import 'package:a2ui_core/a2ui_core.dart';
-import 'package:genui_jaspr/src/catalog/functions/open_url_stub.dart'
-    if (dart.library.js_interop) 'package:genui_jaspr/src/catalog/functions/open_url_web.dart'
+import 'package:genui_jaspr/src/catalog/basic/functions/open_url_stub.dart'
+    if (dart.library.js_interop) 'package:genui_jaspr/src/catalog/basic/functions/open_url_web.dart'
     as platform;
 import 'package:json_schema_builder/json_schema_builder.dart';
 

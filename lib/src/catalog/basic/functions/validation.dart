@@ -1,5 +1,5 @@
 import 'package:a2ui_core/a2ui_core.dart';
-import 'package:genui_jaspr/src/catalog/functions/standard_schemas.dart';
+import 'package:genui_jaspr/src/catalog/basic/functions/standard_schemas.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
 /// Checks that a JSON value is present and not empty.

@@ -29,6 +29,51 @@ class ModalComponent extends JasprComponent {
   final ComponentApi api = ModalApi();
 
   @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-modal'),
+      styles: Styles(raw: {'display': 'contents'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-modal__trigger'),
+      styles: Styles(raw: {'display': 'inline-block'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-modal__dialog'),
+      styles: Styles(
+        raw: {
+          'box-sizing': 'border-box',
+          'width': 'min(32rem, calc(100% - 2rem))',
+          'max-height': 'calc(100% - 2rem)',
+          'padding': '1rem',
+          'color': 'inherit',
+          'background': 'var(--a2ui-surface-color, #ffffff)',
+          'border': '1px solid var(--a2ui-border-color, #c4c7c5)',
+          'border-radius': '0.5rem',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-modal__dialog::backdrop'),
+      styles: Styles(raw: {'background': 'rgb(0 0 0 / 45%)'}),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-modal__close'),
+      styles: Styles(
+        raw: {
+          'float': 'right',
+          'font': 'inherit',
+          'cursor': 'pointer',
+        },
+      ),
+    ),
+    StyleRule(
+      selector: Selector('.a2ui-modal__content'),
+      styles: Styles(raw: {'clear': 'both'}),
+    ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     final triggerId = scope.string('trigger');
     final contentId = scope.string('content');

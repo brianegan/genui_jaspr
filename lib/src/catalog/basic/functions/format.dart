@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:a2ui_core/a2ui_core.dart' hide FormatStringFunction;
 import 'package:a2ui_core/a2ui_core.dart' as core show FormatStringFunction;
-import 'package:genui_jaspr/src/catalog/functions/standard_schemas.dart';
+import 'package:genui_jaspr/src/catalog/basic/functions/standard_schemas.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';

@@ -24,6 +24,24 @@ class CardComponent extends JasprComponent {
   @override
   final ComponentApi api = CardApi();
 
+  /// A transparent surface plus an outline keeps nested cards distinct
+  /// without tracking their depth or alternating background colours.
+  @override
+  List<StyleRule> get styles => const [
+    StyleRule(
+      selector: Selector('.a2ui-card'),
+      styles: Styles(
+        raw: {
+          'box-sizing': 'border-box',
+          'padding': '1rem',
+          'background': 'transparent',
+          'border': '1px solid var(--a2ui-border-color, #c4c7c5)',
+          'border-radius': '0.5rem',
+        },
+      ),
+    ),
+  ];
+
   @override
   Component build(ComponentScope scope) {
     final childId = scope.string('child');

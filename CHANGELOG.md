@@ -30,7 +30,9 @@ First release. Renders A2UI generative user interfaces in Jaspr, building on
 - `ComponentScope` hands a builder its resolved properties, its children, and a
   way to report errors. An action obtained through it never throws out of a
   click handler.
-- `genuiJasprStyles` provides a default appearance against stable class names.
+- Every component declares the default rules for the classes it emits, and a
+  catalog's `styles` getter gathers them, so a catalog derived with `copyWith`
+  carries the right bundle. Surface-level markup is left unstyled for the app.
   A surface publishes its theme as CSS custom properties.
 - `A2uiParserTransformer` turns a model's text stream into prose and A2UI
   messages, buffering across chunk boundaries, for apps that want the raw events.

@@ -42,8 +42,9 @@ runtime, so they speak exactly the same messages.
 - `BasicJasprCatalog`, with all 18 components, all 14 functions, and the theme
   from the A2UI standard catalog. `MinimalJasprCatalog` remains available when
   five components and one small string function are enough.
-- `genuiJasprStyles`, a finished look against stable class names. Use it,
-  extend it, or replace it.
+- A `styles` getter on every catalog, which gathers the default rules of the
+  components that catalog holds. Use them, extend them, or replace them. A
+  catalog derived with `copyWith` carries the rules for what it actually has.
 - `a2uiInstructions`, which writes the protocol half of your system prompt from
   the catalog, so what the model is told it may send and what the renderer can
   draw cannot drift apart.
@@ -60,11 +61,17 @@ callbacks:
 dart pub add genui_jaspr a2ui_core
 ```
 
-Add the default styles to your `Document`:
+Add your catalog's default styles to your `Document`:
 
 ```dart
-runApp(Document(styles: [...genuiJasprStyles, ...myStyles], body: MyApp()));
+final catalog = MinimalJasprCatalog();
+
+runApp(Document(styles: [...catalog.styles, ...myStyles], body: MyApp()));
 ```
+
+The package styles the components and nothing else. The surface wrapper
+(`.a2ui-surface`) and the renderer's missing-component fallback (`.a2ui-missing`)
+belong to no component, so their appearance is yours to set.
 
 Then create one conversation and render its replies. This runs in the browser,
 under a `@client` component, because a generated surface only exists once the
@@ -314,8 +321,9 @@ are deliberately kept apart:
 
 - Layout the model chose per component, such as `justify` and `align`, is written
   inline, because it varies per instance and cannot live in a stylesheet.
-- Appearance goes through class names, so `genuiJasprStyles` can be replaced
-  wholesale without touching the renderer.
+- Appearance goes through class names, so a catalog's `styles` can be replaced
+  wholesale without touching the renderer. A component declares the rules for
+  the classes it emits, which is how the bundle stays correct for any catalog.
 
 A surface publishes the theme from its `createSurface` message as CSS custom
 properties on its root element, kebab-cased and `--a2ui-` prefixed. So

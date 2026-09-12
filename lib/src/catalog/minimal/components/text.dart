@@ -16,6 +16,35 @@ class TextComponent extends JasprComponent {
   final ComponentApi api = MinimalTextApi();
 
   @override
+  List<StyleRule> get styles => [
+    const StyleRule(
+      selector: Selector('.a2ui-text'),
+      styles: Styles(raw: {'margin': '0'}),
+    ),
+    const StyleRule(
+      selector: Selector('.a2ui-text--body'),
+      styles: Styles(raw: {'font-size': '1rem', 'line-height': '1.5'}),
+    ),
+    const StyleRule(
+      selector: Selector('.a2ui-text--caption'),
+      styles: Styles(raw: {'font-size': '0.8125rem', 'opacity': '0.7'}),
+    ),
+    for (final (className, size) in const [
+      ('a2ui-text--h1', '2rem'),
+      ('a2ui-text--h2', '1.5rem'),
+      ('a2ui-text--h3', '1.25rem'),
+      ('a2ui-text--h4', '1.125rem'),
+      ('a2ui-text--h5', '1rem'),
+    ])
+      StyleRule(
+        selector: Selector('.$className'),
+        styles: Styles(
+          raw: {'font-size': size, 'line-height': '1.25', 'font-weight': '600'},
+        ),
+      ),
+  ];
+
+  @override
   Component build(ComponentScope scope) {
     final variant = scope.string('variant') ?? 'body';
     final content = scope.string('text') ?? '';
