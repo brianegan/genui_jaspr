@@ -133,20 +133,34 @@ typedef ComponentBuilder = Component Function(ComponentScope scope);
 ///
 ///   @override
 ///   Component build(ComponentScope scope) => hr(classes: 'a2ui-divider');
+///
+///   @override
+///   List<StyleRule> get styles => const [
+///     StyleRule(
+///       selector: Selector('.a2ui-divider'),
+///       styles: Styles(raw: {'border': 'none', 'height': '1px'}),
+///     ),
+///   ];
 /// }
 /// ```
 ///
-/// For a one-off, or in a test, [JasprComponent.inline] takes the two halves
+/// For a one-off, or in a test, [JasprComponent.inline] takes the parts
 /// directly without a class of their own.
 abstract class JasprComponent implements ComponentApi {
   /// A constructor for subclasses to call.
   const JasprComponent();
 
   /// A component from its [api] and a [build] closure.
+  ///
+  /// Takes [styles] too, so a catalog extended this way carries rules for what
+  /// [build] emits the same way one extended with a subclass does. Without it
+  /// an inline component would be the one kind a derived bundle could not
+  /// account for.
   const factory JasprComponent.inline(
     ComponentApi api,
-    ComponentBuilder build,
-  ) = _InlineJasprComponent;
+    ComponentBuilder build, {
+    List<StyleRule> styles,
+  }) = _InlineJasprComponent;
 
   /// The protocol definition for this component.
   ComponentApi get api;
@@ -175,10 +189,13 @@ abstract class JasprComponent implements ComponentApi {
 }
 
 final class _InlineJasprComponent extends JasprComponent {
-  const _InlineJasprComponent(this.api, this._build);
+  const _InlineJasprComponent(this.api, this._build, {this.styles = const []});
 
   @override
   final ComponentApi api;
+
+  @override
+  final List<StyleRule> styles;
 
   final ComponentBuilder _build;
 

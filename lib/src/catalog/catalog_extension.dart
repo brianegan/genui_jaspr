@@ -3,11 +3,12 @@ import 'package:genui_jaspr/src/catalog/jaspr_component.dart';
 import 'package:jaspr/dom.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
-/// Derives new catalogs from an existing one.
+/// Derives new catalogs from an existing one, and reads the styles of any.
 ///
 /// A catalog is immutable, so extending the minimal catalog with an app's own
 /// components, or swapping one renderer for another, means building a new one.
-/// This does that without restating everything that stays the same.
+/// [copyWith] does that without restating everything that stays the same, and
+/// [styles] gathers the rules of whatever the result ended up holding.
 extension JasprCatalogComposition on Catalog<JasprComponent> {
   /// The default rules for every class this catalog's components emit.
   ///

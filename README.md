@@ -182,11 +182,8 @@ prompt and skip the paragraph.
 catalog. Its one constructor always includes `Icon`, backed by a private table
 of the 59 names that catalog permits,
 rendered as inline 24px SVG using `currentColor`. It does not load a font, make
-a network request, or add an icon package to your app at runtime:
-
-```dart
-final catalog = BasicJasprCatalog();
-```
+a network request, or add an icon package to your app at runtime. It is the
+`catalog` the snippets above build.
 
 Constructing that catalog keeps all 59 paths, because any standard `Icon`
 message can arrive at runtime. `MinimalJasprCatalog()` remains the

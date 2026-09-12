@@ -67,7 +67,7 @@ void main() {
     'a minimal catalog retains no Basic-only catalog or style code',
     () async {
       final outputDirectory = await Directory.systemTemp.createTemp(
-        'genui_jaspr_styles_',
+        'genui_jaspr_minimal_',
       );
       addTearDown(() => outputDirectory.delete(recursive: true));
 
