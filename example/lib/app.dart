@@ -30,13 +30,15 @@ class App extends StatelessComponent {
   }
 }
 
-/// The app's own styles, alongside the catalog's defaults.
+/// The app's own styles, on top of [appCatalog]'s defaults.
 ///
 /// The catalog rules are included rather than reimplemented, which is the
-/// intended way to use them: take the defaults for whatever catalog the app
-/// renders with, then add what the surrounding page needs. The surface wrapper
-/// and the renderer's missing-component fallback are styled here, because they
-/// belong to no component and the package ships no rules for them.
+/// intended way to use them: take the defaults for the catalog the app renders
+/// with, then add what the surrounding page needs. Reading [appCatalog] is what
+/// keeps the rules the page ships and the components the renderer can build
+/// from drifting apart. The surface wrapper and the renderer's
+/// missing-component fallback are styled here, because they belong to no
+/// component and the package ships no rules for them.
 List<StyleRule> get appStyles => [
   ...appCatalog.styles,
   const StyleRule(
