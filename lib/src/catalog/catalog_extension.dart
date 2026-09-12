@@ -14,11 +14,9 @@ extension JasprCatalogComposition on Catalog<JasprComponent> {
   /// Derived rather than declared, so a catalog built with [copyWith] carries
   /// the rules for what it actually holds. Add these to a Jaspr app's styles
   /// for a finished surface, or leave them out and write your own against the
-  /// same class names, which nothing in the renderer depends on.
-  ///
-  /// Colours read from custom properties a surface publishes from the theme
-  /// the model sent with `createSurface`, so a model can choose an accent at
-  /// runtime while the rules stay static. Each `var()` carries a fallback.
+  /// same class names, which nothing in the renderer depends on. The surface
+  /// wrapper and the renderer's missing-component fallback are not in here:
+  /// no component emits them, so an app styles those two itself.
   List<StyleRule> get styles => [
     for (final component in components.values) ...component.styles,
   ];

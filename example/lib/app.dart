@@ -1,4 +1,5 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr_example/catalog.dart';
 import 'package:genui_jaspr_example/chat.dart';
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
@@ -37,7 +38,7 @@ class App extends StatelessComponent {
 /// and the renderer's missing-component fallback are styled here, because they
 /// belong to no component and the package ships no rules for them.
 List<StyleRule> get appStyles => [
-  ...MinimalJasprCatalog().styles,
+  ...appCatalog.styles,
   const StyleRule(
     selector: Selector('.a2ui-surface'),
     styles: Styles(

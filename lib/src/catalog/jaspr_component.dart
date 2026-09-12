@@ -160,6 +160,11 @@ abstract class JasprComponent implements ComponentApi {
   /// gather a complete stylesheet from whatever components it happens to hold
   /// rather than from a list someone maintains alongside it. Override this to
   /// style a component; leave it to emit classes a host stylesheet supplies.
+  ///
+  /// The rules this package ships read their colours from custom properties a
+  /// surface publishes from the theme the model sent with `createSurface`, so
+  /// a model can choose an accent at runtime while the rules stay static. Each
+  /// `var()` carries a fallback, so an untouched theme still renders sensibly.
   List<StyleRule> get styles => const [];
 
   @override

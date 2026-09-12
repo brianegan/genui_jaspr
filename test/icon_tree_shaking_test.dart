@@ -7,10 +7,23 @@ import 'package:test/test.dart';
 
 const _iconTableMarker = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48';
 
-/// A class only `ChoicePicker` emits, so it stands for the Basic-only catalog
-/// and style code together: the string appears in the component's `build` and
-/// in the rules its `styles` declares, and nowhere a minimal catalog reaches.
-const _basicOnlyMarker = 'a2ui-choice-picker';
+/// A compound selector only `ChoicePicker`'s rules declare, standing for
+/// Basic-only style code.
+///
+/// Its `build` emits both class names, but never adjacent with the second
+/// dotted, so this literal reaches the output through the rules alone. A bare
+/// class name would not: `build` writes those too, and the marker would pass on
+/// catalog code while style code went unmeasured.
+const _basicOnlyStyleMarker =
+    'a2ui-choice-picker--invalid .a2ui-choice-picker__label';
+
+/// A string only `ChoicePicker`'s `build` contains, standing for Basic-only
+/// catalog code.
+///
+/// Style code and catalog code shake out independently, so each gets a marker
+/// of its own. One string that appears in both would let either half carry the
+/// assertion while the other went unmeasured.
+const _basicOnlyBuildMarker = 'mutuallyExclusive';
 
 void main() {
   test(
@@ -47,20 +60,22 @@ void main() {
   );
 
   test(
-    'a minimal catalog reading its styles retains no Basic-only style code',
+    'a minimal catalog retains no Basic-only catalog or style code',
     () async {
       final outputDirectory = await Directory.systemTemp.createTemp(
         'genui_jaspr_styles_',
       );
       addTearDown(() => outputDirectory.delete(recursive: true));
 
-      final minimalOnly = await _compile('import_only', outputDirectory);
+      final minimalOnly = await _compile('minimal_styles', outputDirectory);
       final withBasic = await _compile('minimal_with_basic', outputDirectory);
 
-      // The paired presence assertion is what gives the absence one teeth: a
-      // wrong marker string would make the absence pass while checking nothing.
-      expect(withBasic, contains(_basicOnlyMarker));
-      expect(minimalOnly, isNot(contains(_basicOnlyMarker)));
+      // The paired presence assertions are what give the absence ones teeth: a
+      // wrong marker string would make an absence pass while checking nothing.
+      expect(withBasic, contains(_basicOnlyStyleMarker));
+      expect(withBasic, contains(_basicOnlyBuildMarker));
+      expect(minimalOnly, isNot(contains(_basicOnlyStyleMarker)));
+      expect(minimalOnly, isNot(contains(_basicOnlyBuildMarker)));
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );

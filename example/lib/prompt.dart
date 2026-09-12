@@ -1,4 +1,5 @@
 import 'package:genui_jaspr/genui_jaspr.dart';
+import 'package:genui_jaspr_example/catalog.dart';
 
 /// The system prompt that teaches a model to drive this app's UI.
 ///
@@ -8,7 +9,7 @@ import 'package:genui_jaspr/genui_jaspr.dart';
 /// editing prose.
 final String a2uiSystemPrompt = [
   _role,
-  a2uiInstructions(MinimalJasprCatalog()),
+  a2uiInstructions(appCatalog),
 ].join('\n\n');
 
 const _role = '''

@@ -8,7 +8,4 @@ void main() {
   print(
     '${catalog.id}:${catalog.components.length}:${catalog.functions.length}',
   );
-  for (final rule in catalog.styles) {
-    print(rule.toCss());
-  }
 }
